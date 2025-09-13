@@ -3,9 +3,17 @@
 import { WalletButton } from '@/components/WalletButton';
 import { useAccount } from 'wagmi';
 import { MobileDashboard } from '@/components/MobileDashboard';
+import NanoBananaGenerator from '@/components/NanoBananaGenerator';
+import { useState } from 'react';
 
 export default function Home() {
   const { address, isConnected } = useAccount();
+  const [showGenerator, setShowGenerator] = useState(false);
+
+  // Check if coming from /generate route
+  if (typeof window !== 'undefined' && window.location.pathname === '/generate') {
+    return <NanoBananaGenerator />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-orange-50">

@@ -9,7 +9,7 @@ interface MobileDashboardProps {
 }
 
 export function MobileDashboard({ address }: MobileDashboardProps) {
-  const { isAuthenticated, signIn } = useAuth();
+  const { isAuthenticated, signIn, isLoading } = useAuth();
   const [activeTab, setActiveTab] = useState('home');
   const [points, setPoints] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -18,13 +18,18 @@ export function MobileDashboard({ address }: MobileDashboardProps) {
   const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
+    console.log('MobileDashboard useEffect:', { isAuthenticated, address, isLoading });
+    
     if (isAuthenticated) {
+      console.log('User is authenticated, fetching data');
       fetchUserData();
-    } else {
+    } else if (address && !isLoading) {
+      console.log('User not authenticated, attempting sign-in');
+      // The global state in useAuth will prevent duplicate sign-in attempts
       signIn();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated]);
+  }, [isAuthenticated, address, isLoading]);
 
   const fetchUserData = async () => {
     try {

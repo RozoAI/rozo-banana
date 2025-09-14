@@ -1,8 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Loader2, Zap, Check } from 'lucide-react';
 import { useAccount } from 'wagmi';
+import dynamic from 'next/dynamic';
+
+// Dynamically import ROZO SDK to avoid SSR issues
+const RozoPayButton = dynamic(
+  () => import('@rozoai/intent-pay').then((mod) => mod.RozoPayButton),
+  { ssr: false }
+);
 
 interface PricingTier {
   id: string;
@@ -65,7 +72,7 @@ export default function Recharge() {
         throw new Error('Please authenticate first');
       }
 
-      // Step 1: Create payment order in backend
+      // Create payment order in backend
       const orderResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/payments/create-order`, {
         method: 'POST',
         headers: {
@@ -86,40 +93,16 @@ export default function Recharge() {
       const orderData = await orderResponse.json();
       const { paymentId } = orderData;
 
-      // Step 2: Create ROZO payment link
-      // Using direct integration approach
-      const rozoPaymentUrl = new URL('https://pay.rozo.ai/checkout');
-      
-      // Add payment parameters
-      const paymentParams = new URLSearchParams({
-        appId: ROZO_CONFIG.appId,
-        amount: tier.usd.toString(),
-        currency: 'USD',
-        description: `Purchase ${tier.points} points for Banana`,
-        destinationAddress: ROZO_CONFIG.destinationAddress,
-        destinationChainId: ROZO_CONFIG.chainId.toString(),
-        destinationToken: ROZO_CONFIG.token,
-        metadata: JSON.stringify({
-          paymentId: paymentId,
-          userAddress: address,
-          packageId: tier.id,
-        }),
-        webhookUrl: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/payments/webhook`,
-        returnUrl: `${window.location.origin}/recharge?payment=${paymentId}`,
-        cancelUrl: `${window.location.origin}/recharge`,
-      });
+      // Store payment ID for tracking
+      sessionStorage.setItem('pendingPaymentId', paymentId);
+      sessionStorage.setItem('pendingPackageId', tier.id);
 
-      rozoPaymentUrl.search = paymentParams.toString();
-
-      // Step 3: Redirect to ROZO payment page
-      window.location.href = rozoPaymentUrl.toString();
-      
-      // Note: Payment status will be tracked via webhook
+      // Payment will be handled by RozoPayButton component
+      setIsLoading(false);
 
     } catch (err) {
       console.error('Payment error:', err);
       setError(err instanceof Error ? err.message : 'Payment failed');
-    } finally {
       setIsLoading(false);
     }
   };
@@ -281,23 +264,63 @@ export default function Recharge() {
           </div>
         )}
 
-        {/* Pay Button */}
-        <button
-          onClick={() => selectedTier && handlePayment(selectedTier)}
-          disabled={!selectedTier || isLoading || !isConnected}
-          className="mt-6 w-full py-3 bg-gradient-to-r from-yellow-400 to-orange-400 text-white font-medium rounded-xl hover:from-yellow-500 hover:to-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              Processing...
-            </>
-          ) : (
-            <>
-              Pay {selectedTier ? `$${selectedTier.usd}` : 'Select a package'}
-            </>
-          )}
-        </button>
+        {/* Pay Button with ROZO Integration */}
+        {selectedTier && isConnected ? (
+          <div className="mt-6">
+            <RozoPayButton
+              appId={ROZO_CONFIG.appId}
+              amount={selectedTier.usd}
+              currency="USD"
+              intent={`Purchase ${selectedTier.points} points`}
+              destinationAddress={ROZO_CONFIG.destinationAddress}
+              destinationChainId={ROZO_CONFIG.chainId}
+              destinationToken={ROZO_CONFIG.token}
+              metadata={{
+                packageId: selectedTier.id,
+                userAddress: address,
+                points: selectedTier.points,
+              }}
+              webhookUrl={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/payments/webhook`}
+              onPaymentStarted={async (payId: string) => {
+                console.log('Payment started:', payId);
+                setIsLoading(true);
+                
+                // Create order in backend
+                await handlePayment(selectedTier);
+              }}
+              onPaymentCompleted={(payId: string, txHash: string) => {
+                console.log('Payment completed:', payId, txHash);
+                setIsLoading(false);
+                // Refresh page to update points
+                setTimeout(() => window.location.reload(), 2000);
+              }}
+              onPaymentFailed={(error: any) => {
+                console.error('Payment failed:', error);
+                setIsLoading(false);
+                setError('Payment failed. Please try again.');
+              }}
+              className="w-full py-3 bg-gradient-to-r from-yellow-400 to-orange-400 text-white font-medium rounded-xl hover:from-yellow-500 hover:to-orange-500 transition-all flex items-center justify-center gap-2"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  Pay ${selectedTier.usd}
+                </>
+              )}
+            </RozoPayButton>
+          </div>
+        ) : (
+          <button
+            disabled={true}
+            className="mt-6 w-full py-3 bg-gray-300 text-gray-500 font-medium rounded-xl cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {!isConnected ? 'Connect Wallet First' : 'Select a package'}
+          </button>
+        )}
 
         {/* Terms */}
         <p className="text-xs text-gray-500 text-center mt-4">

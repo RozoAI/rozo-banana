@@ -93,12 +93,13 @@ export function MobileDashboard({ address }: MobileDashboardProps) {
               </button>
               
               <button
-                onClick={() => setActiveTab('history')}
-                className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 text-left hover:shadow-md transition-shadow"
+                onClick={() => window.location.href = '/recharge'}
+                className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 text-left hover:shadow-md transition-shadow relative"
               >
-                <div className="text-3xl mb-2">📊</div>
-                <p className="font-semibold text-gray-900">History</p>
-                <p className="text-sm text-gray-500 mt-1">View activity</p>
+                <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-bold">HOT</div>
+                <div className="text-3xl mb-2">💎</div>
+                <p className="font-semibold text-gray-900">Top Up</p>
+                <p className="text-sm text-gray-500 mt-1">Get points</p>
               </button>
             </div>
           </div>

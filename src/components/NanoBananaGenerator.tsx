@@ -307,19 +307,6 @@ export default function NanoBananaGenerator() {
       </header>
 
       <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Balance Card */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-          <div className="text-center">
-            <p className="text-gray-500 text-sm mb-2">Balance</p>
-            <div className="flex items-center justify-center gap-2">
-              <span className="text-4xl font-bold text-gray-900">{userPoints}</span>
-              <span className="text-gray-500 text-lg">pts</span>
-            </div>
-            {isFirstGeneration && isConnected && (
-              <p className="text-green-600 text-sm mt-2">✨ First generation is free!</p>
-            )}
-          </div>
-        </div>
 
         {/* Generate Image Card */}
         <div className="bg-white rounded-xl shadow-sm p-6">
@@ -383,9 +370,14 @@ export default function NanoBananaGenerator() {
 
           {/* Cost and Generate Button */}
           <div className="flex items-center justify-between">
-            <p className="text-gray-600 text-sm">
-              Cost: {isFirstGeneration ? <span className="text-green-600 font-semibold">Free</span> : `${POINTS_PER_GENERATION} points`}
-            </p>
+            <div>
+              <p className="text-gray-600 text-sm">
+                Cost: {POINTS_PER_GENERATION} points
+              </p>
+              <p className="text-gray-500 text-xs mt-1">
+                Balance: {userPoints} pts
+              </p>
+            </div>
             
             <button
               onClick={handleGenerate}
@@ -449,14 +441,8 @@ export default function NanoBananaGenerator() {
                 </div>
               ) : null}
               
-              {generatedImage.wasFreeTrial && (
-                <p className="text-green-600 text-sm text-center mt-2">
-                  ✨ This was your free trial generation!
-                </p>
-              )}
-              
-              {generatedImage.pointsDeducted > 0 && (
-                <p className="text-gray-600 text-sm text-center mt-1">
+              {generatedImage.pointsDeducted >= 0 && (
+                <p className="text-gray-600 text-sm text-center mt-2">
                   {generatedImage.pointsDeducted} points used
                 </p>
               )}

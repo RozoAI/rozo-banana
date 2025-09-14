@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@rainbow-me/rainbowkit": "^2.2.8",
+    "@rozoai/intent-pay": "^0.0.24",
     "@tanstack/react-query": "^5.87.4",
     "axios": "^1.12.1",
     "lucide-react": "^0.544.0",

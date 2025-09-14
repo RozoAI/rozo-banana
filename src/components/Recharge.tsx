@@ -40,7 +40,7 @@ const ROZO_CONFIG = {
   destinationAddress: '0x5772FBe7a7817ef7F586215CA8b23b8dD22C8897',
   chain: 'base', // Base chain
   token: 'USDC',
-  chainId: '8453', // Base chain ID
+  chainId: 8453, // Base chain ID (number)
 };
 
 export default function Recharge() {
@@ -86,51 +86,35 @@ export default function Recharge() {
       const orderData = await orderResponse.json();
       const { paymentId } = orderData;
 
-      // Step 2: Initialize ROZO payment
-      const rozoPaymentData = {
-        display: {
-          intent: `Purchase ${tier.points} points for Banana`,
-          currency: 'USD',
-        },
-        preferredChain: ROZO_CONFIG.chainId,
-        preferredToken: ROZO_CONFIG.token,
-        destination: {
-          destinationAddress: ROZO_CONFIG.destinationAddress,
-          chainId: ROZO_CONFIG.chainId,
-          amountUnits: tier.usd.toString(),
-        },
-        metadata: {
-          appId: ROZO_CONFIG.appId,
+      // Step 2: Create ROZO payment link
+      // Using direct integration approach
+      const rozoPaymentUrl = new URL('https://pay.rozo.ai/checkout');
+      
+      // Add payment parameters
+      const paymentParams = new URLSearchParams({
+        appId: ROZO_CONFIG.appId,
+        amount: tier.usd.toString(),
+        currency: 'USD',
+        description: `Purchase ${tier.points} points for Banana`,
+        destinationAddress: ROZO_CONFIG.destinationAddress,
+        destinationChainId: ROZO_CONFIG.chainId.toString(),
+        destinationToken: ROZO_CONFIG.token,
+        metadata: JSON.stringify({
           paymentId: paymentId,
           userAddress: address,
           packageId: tier.id,
-          webhookUrl: `${process.env.NEXT_PUBLIC_API_URL}/api/payments/webhook`,
-          externalId: paymentId,
-        },
-      };
-
-      // Step 3: Call ROZO API
-      const rozoResponse = await fetch('https://api.rozo.ai/functions/v1/payment-api', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(rozoPaymentData),
+        }),
+        webhookUrl: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/payments/webhook`,
+        returnUrl: `${window.location.origin}/recharge?payment=${paymentId}`,
+        cancelUrl: `${window.location.origin}/recharge`,
       });
 
-      if (!rozoResponse.ok) {
-        throw new Error('Failed to initialize payment');
-      }
+      rozoPaymentUrl.search = paymentParams.toString();
 
-      const rozoData = await rozoResponse.json();
+      // Step 3: Redirect to ROZO payment page
+      window.location.href = rozoPaymentUrl.toString();
       
-      // Step 4: Redirect to payment page or handle payment URL
-      if (rozoData.paymentUrl) {
-        window.open(rozoData.paymentUrl, '_blank');
-      } else if (rozoData.paymentId) {
-        // Handle payment tracking
-        await trackPaymentStatus(paymentId, rozoData.paymentId);
-      }
+      // Note: Payment status will be tracked via webhook
 
     } catch (err) {
       console.error('Payment error:', err);

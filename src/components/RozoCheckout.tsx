@@ -46,6 +46,7 @@ export default function RozoCheckout() {
   const [selectedTier, setSelectedTier] = useState<PricingTier | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sdkReady, setSdkReady] = useState(false);
 
   const handlePayment = async () => {
     if (!selectedTier || !isConnected || !address) {
@@ -84,8 +85,26 @@ export default function RozoCheckout() {
       const orderData = await orderResponse.json();
       const { paymentId } = orderData;
 
-      // Initialize ROZO Pay modal
-      if (window.RozoPay) {
+      // Check if SDK is loaded
+      if (!window.RozoPay) {
+        // Try loading SDK manually
+        const script = document.createElement('script');
+        script.src = 'https://pay.rozo.ai/sdk/v1/rozopay.js';
+        script.async = true;
+        script.onload = () => {
+          // SDK loaded, retry payment
+          initializePayment();
+        };
+        script.onerror = () => {
+          throw new Error('Failed to load payment system');
+        };
+        document.body.appendChild(script);
+        return;
+      }
+
+      initializePayment();
+
+      function initializePayment() {
         const rozoPay = new window.RozoPay({
           appId: 'rozoBananaMP',
           amount: selectedTier.usd,
@@ -119,8 +138,6 @@ export default function RozoCheckout() {
 
         // Open payment modal
         rozoPay.open();
-      } else {
-        throw new Error('Payment system not initialized');
       }
     } catch (err) {
       console.error('Payment error:', err);
@@ -134,8 +151,15 @@ export default function RozoCheckout() {
       {/* Load ROZO SDK */}
       <Script
         src="https://pay.rozo.ai/sdk/v1/rozopay.js"
-        strategy="lazyOnload"
-        onLoad={() => console.log('ROZO SDK loaded')}
+        strategy="afterInteractive"
+        onLoad={() => {
+          console.log('ROZO SDK loaded');
+          setSdkReady(true);
+        }}
+        onError={() => {
+          console.error('Failed to load ROZO SDK');
+          setError('Payment system unavailable');
+        }}
       />
 
       <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-orange-50">
@@ -265,10 +289,15 @@ export default function RozoCheckout() {
           {/* Pay Button */}
           <button
             onClick={handlePayment}
-            disabled={!selectedTier || isLoading || !isConnected}
+            disabled={!selectedTier || isLoading || !isConnected || !sdkReady}
             className="mt-6 w-full py-3 bg-gradient-to-r from-yellow-400 to-orange-400 text-white font-medium rounded-xl hover:from-yellow-500 hover:to-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
           >
-            {isLoading ? (
+            {!sdkReady ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Loading payment system...
+              </>
+            ) : isLoading ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
                 Processing...

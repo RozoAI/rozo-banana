@@ -1,5 +1,5 @@
-import RozoCheckout from '@/components/RozoCheckout';
+import RozoPayment from '@/components/RozoPayment';
 
 export default function RechargePage() {
-  return <RozoCheckout />;
+  return <RozoPayment />;
 }

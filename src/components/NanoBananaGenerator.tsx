@@ -297,80 +297,62 @@ export default function NanoBananaGenerator() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-yellow-50 to-orange-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">🍌</span>
-            <h1 className="text-xl font-semibold text-gray-800">Banana</h1>
+    <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-orange-50">
+      {/* Header - matching Home page */}
+      <header className="sticky top-0 w-full bg-white/90 backdrop-blur-md border-b border-gray-100 z-50">
+        <div className="max-w-lg mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-2">
+              <span className="text-3xl">🍌</span>
+              <span className="font-bold text-xl">Banana</span>
+            </div>
+            {isConnected ? (
+              <button
+                onClick={() => disconnect()}
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+              >
+                {address?.slice(0, 6)}...{address?.slice(-4)}
+              </button>
+            ) : (
+              <button
+                onClick={handleConnectWallet}
+                className="px-4 py-2 bg-yellow-400 text-white rounded-lg hover:bg-yellow-500 transition-colors text-sm font-medium"
+              >
+                Connect Wallet
+              </button>
+            )}
           </div>
-          
-          {isConnected ? (
-            <button
-              onClick={() => disconnect()}
-              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
-            >
-              {address?.slice(0, 6)}...{address?.slice(-4)}
-            </button>
-          ) : (
-            <button
-              onClick={handleConnectWallet}
-              className="px-4 py-2 bg-yellow-400 text-white rounded-lg hover:bg-yellow-500 transition-colors text-sm font-medium"
-            >
-              Connect Wallet
-            </button>
-          )}
         </div>
       </header>
 
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Style Presets Section */}
+      <div className="max-w-lg mx-auto px-4 py-6">
+        {/* Style Presets Section - Mobile Optimized */}
         {showPresets && (
-          <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-800">✨ Choose a Style</h2>
+          <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base font-semibold text-gray-800">✨ Choose a Style</h2>
               <button
                 onClick={() => setShowPresets(!showPresets)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-500 hover:text-gray-700 p-1"
               >
                 ✕
               </button>
             </div>
             
-            {/* Category Tabs */}
-            <div className="flex gap-2 mb-4 overflow-x-auto">
-              {(['popular', 'artistic', 'fun', 'product'] as const).map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`px-4 py-2 rounded-lg font-medium capitalize transition-colors whitespace-nowrap ${
-                    selectedCategory === cat
-                      ? 'bg-yellow-400 text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  {cat === 'popular' ? '🔥 Popular' : 
-                   cat === 'artistic' ? '🎨 Artistic' :
-                   cat === 'fun' ? '🎮 Fun' : '📦 Product'}
-                </button>
-              ))}
-            </div>
-            
-            {/* Preset Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {currentPresets.map((preset) => (
+            {/* Preset Grid - 2 columns on mobile, no categories for simplicity */}
+            <div className="grid grid-cols-2 gap-2">
+              {STYLE_PRESETS.map((preset) => (
                 <button
                   key={preset.id}
                   onClick={() => handlePresetSelect(preset)}
-                  className="group p-3 bg-gray-50 hover:bg-yellow-50 border-2 border-transparent hover:border-yellow-400 rounded-lg transition-all text-left"
+                  className="group p-3 bg-gray-50 active:bg-yellow-100 hover:bg-yellow-50 border-2 border-transparent hover:border-yellow-400 rounded-lg transition-all text-left"
                   disabled={!isConnected}
                 >
                   <div className="text-2xl mb-1">{preset.emoji}</div>
                   <div className="font-medium text-sm text-gray-800 group-hover:text-yellow-600">
                     {preset.title}
                   </div>
-                  <div className="text-xs text-gray-500 mt-1 line-clamp-2">
+                  <div className="text-xs text-gray-500 mt-0.5 line-clamp-1">
                     {preset.description}
                   </div>
                 </button>
@@ -387,53 +369,53 @@ export default function NanoBananaGenerator() {
                   promptElement.focus();
                 }
               }}
-              className="mt-4 w-full p-3 bg-gradient-to-r from-purple-50 to-blue-50 hover:from-purple-100 hover:to-blue-100 border-2 border-purple-200 rounded-lg transition-all flex items-center justify-center gap-2"
+              className="mt-3 w-full p-2.5 bg-gradient-to-r from-purple-50 to-blue-50 active:from-purple-100 active:to-blue-100 border border-purple-200 rounded-lg transition-all flex items-center justify-center gap-2"
               disabled={!isConnected}
             >
               <Wand2 className="w-4 h-4 text-purple-600" />
-              <span className="font-medium text-purple-600">Write Custom Prompt</span>
+              <span className="text-sm font-medium text-purple-600">Custom Prompt</span>
             </button>
           </div>
         )}
 
-        {/* Generate Image Card */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-800">Generate Image</h2>
-            {!showPresets && customPrompt && (
+        {/* Generate Image Card - Mobile Optimized */}
+        <div className="bg-white rounded-xl shadow-sm p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base font-semibold text-gray-800">Generate Image</h2>
+            {!showPresets && (
               <button
                 onClick={() => setShowPresets(true)}
                 className="text-sm text-yellow-600 hover:text-yellow-700 font-medium"
               >
-                Browse Styles →
+                Styles →
               </button>
             )}
           </div>
           
-          {/* Custom Prompt Input */}
-          <div className="mb-6">
+          {/* Custom Prompt Input - Mobile Optimized */}
+          <div className="mb-4">
             <textarea
               id="prompt-input"
               value={customPrompt}
               onChange={(e) => setCustomPrompt(e.target.value)}
               placeholder="Describe what you want to create..."
-              className="w-full px-4 py-3 border-2 border-yellow-400 rounded-xl focus:outline-none focus:border-yellow-500 resize-none text-gray-700 placeholder-gray-400"
-              rows={3}
+              className="w-full px-3 py-2.5 border-2 border-yellow-400 rounded-lg focus:outline-none focus:border-yellow-500 resize-none text-gray-700 placeholder-gray-400 text-sm"
+              rows={2}
               disabled={!isConnected}
             />
             {customPrompt && (
-              <p className="text-xs text-gray-500 mt-2">
-                💡 Tip: Upload an image below and we&apos;ll transform it based on your prompt
+              <p className="text-xs text-gray-500 mt-1">
+                💡 Upload an image to transform it
               </p>
             )}
           </div>
 
-          {/* Image Upload Area */}
-          <div className="mb-6">
+          {/* Image Upload Area - Mobile Optimized */}
+          <div className="mb-4">
             <div
               onDrop={handleDrop}
               onDragOver={handleDragOver}
-              className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-yellow-400 transition-colors cursor-pointer bg-gray-50"
+              className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-yellow-400 transition-colors cursor-pointer bg-gray-50"
             >
               <input
                 type="file"
@@ -464,21 +446,21 @@ export default function NanoBananaGenerator() {
                 </div>
               ) : (
                 <label htmlFor="image-upload" className="cursor-pointer">
-                  <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                  <p className="text-gray-600 mb-2">Click to upload or drag and drop</p>
-                  <p className="text-gray-400 text-sm">PNG, JPG up to 5MB</p>
+                  <ImageIcon className="w-10 h-10 text-gray-400 mx-auto mb-2" />
+                  <p className="text-gray-600 text-sm mb-1">Tap to upload image</p>
+                  <p className="text-gray-400 text-xs">PNG, JPG up to 5MB</p>
                 </label>
               )}
             </div>
           </div>
 
-          {/* Cost and Generate Button */}
+          {/* Cost and Generate Button - Mobile Optimized */}
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm">
-                Cost: {POINTS_PER_GENERATION} points
+                Cost: {POINTS_PER_GENERATION} pts
               </p>
-              <p className="text-gray-500 text-xs mt-1">
+              <p className="text-gray-500 text-xs">
                 Balance: {userPoints} pts
               </p>
             </div>
@@ -486,7 +468,7 @@ export default function NanoBananaGenerator() {
             <button
               onClick={handleGenerate}
               disabled={isLoading || !customPrompt.trim() || !uploadedImage || !isConnected}
-              className="px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-400 text-white font-medium rounded-xl hover:from-yellow-500 hover:to-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+              className="px-5 py-2.5 bg-gradient-to-r from-yellow-400 to-orange-400 text-white font-medium rounded-lg hover:from-yellow-500 hover:to-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 text-sm"
             >
               {isLoading ? (
                 <>

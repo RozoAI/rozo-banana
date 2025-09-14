@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Upload, Loader2, ImageIcon, Sparkles } from 'lucide-react';
+import { Upload, Loader2, ImageIcon, Sparkles, Wand2 } from 'lucide-react';
 import Image from 'next/image';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { injected } from 'wagmi/connectors';
+import { STYLE_PRESETS, StylePreset } from '@/constants/stylePresets';
 
 interface GeneratedResult {
   imageUrl?: string;
@@ -30,6 +31,8 @@ export default function NanoBananaGenerator() {
   const [userPoints, setUserPoints] = useState<number>(0);
   const [isFirstGeneration, setIsFirstGeneration] = useState(true);
   const [authToken, setAuthToken] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<'popular' | 'artistic' | 'fun' | 'product'>('popular');
+  const [showPresets, setShowPresets] = useState(true);
 
   // Connect wallet
   const handleConnectWallet = async () => {
@@ -192,6 +195,21 @@ export default function NanoBananaGenerator() {
     e.preventDefault();
   };
 
+  // Handle preset selection
+  const handlePresetSelect = (preset: StylePreset) => {
+    setCustomPrompt(preset.prompt);
+    setShowPresets(false);
+    // Scroll to prompt input
+    const promptElement = document.getElementById('prompt-input');
+    if (promptElement) {
+      promptElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      promptElement.focus();
+    }
+  };
+
+  // Get presets for current category
+  const currentPresets = STYLE_PRESETS.filter(p => p.category === selectedCategory);
+
   const handleGenerate = async () => {
     // Check if user is authenticated (either via wallet or saved token)
     if (!authToken && !isConnected) {
@@ -307,21 +325,107 @@ export default function NanoBananaGenerator() {
       </header>
 
       <div className="max-w-4xl mx-auto px-4 py-8">
+        {/* Style Presets Section */}
+        {showPresets && (
+          <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-800">✨ Choose a Style</h2>
+              <button
+                onClick={() => setShowPresets(!showPresets)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+            
+            {/* Category Tabs */}
+            <div className="flex gap-2 mb-4 overflow-x-auto">
+              {(['popular', 'artistic', 'fun', 'product'] as const).map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-4 py-2 rounded-lg font-medium capitalize transition-colors whitespace-nowrap ${
+                    selectedCategory === cat
+                      ? 'bg-yellow-400 text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {cat === 'popular' ? '🔥 Popular' : 
+                   cat === 'artistic' ? '🎨 Artistic' :
+                   cat === 'fun' ? '🎮 Fun' : '📦 Product'}
+                </button>
+              ))}
+            </div>
+            
+            {/* Preset Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {currentPresets.map((preset) => (
+                <button
+                  key={preset.id}
+                  onClick={() => handlePresetSelect(preset)}
+                  className="group p-3 bg-gray-50 hover:bg-yellow-50 border-2 border-transparent hover:border-yellow-400 rounded-lg transition-all text-left"
+                  disabled={!isConnected}
+                >
+                  <div className="text-2xl mb-1">{preset.emoji}</div>
+                  <div className="font-medium text-sm text-gray-800 group-hover:text-yellow-600">
+                    {preset.title}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1 line-clamp-2">
+                    {preset.description}
+                  </div>
+                </button>
+              ))}
+            </div>
+            
+            {/* Custom Option */}
+            <button
+              onClick={() => {
+                setCustomPrompt('');
+                setShowPresets(false);
+                const promptElement = document.getElementById('prompt-input');
+                if (promptElement) {
+                  promptElement.focus();
+                }
+              }}
+              className="mt-4 w-full p-3 bg-gradient-to-r from-purple-50 to-blue-50 hover:from-purple-100 hover:to-blue-100 border-2 border-purple-200 rounded-lg transition-all flex items-center justify-center gap-2"
+              disabled={!isConnected}
+            >
+              <Wand2 className="w-4 h-4 text-purple-600" />
+              <span className="font-medium text-purple-600">Write Custom Prompt</span>
+            </button>
+          </div>
+        )}
 
         {/* Generate Image Card */}
         <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Generate Image</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-800">Generate Image</h2>
+            {!showPresets && customPrompt && (
+              <button
+                onClick={() => setShowPresets(true)}
+                className="text-sm text-yellow-600 hover:text-yellow-700 font-medium"
+              >
+                Browse Styles →
+              </button>
+            )}
+          </div>
           
           {/* Custom Prompt Input */}
           <div className="mb-6">
             <textarea
+              id="prompt-input"
               value={customPrompt}
               onChange={(e) => setCustomPrompt(e.target.value)}
-              placeholder="Make it cyber punk"
+              placeholder="Describe what you want to create..."
               className="w-full px-4 py-3 border-2 border-yellow-400 rounded-xl focus:outline-none focus:border-yellow-500 resize-none text-gray-700 placeholder-gray-400"
               rows={3}
               disabled={!isConnected}
             />
+            {customPrompt && (
+              <p className="text-xs text-gray-500 mt-2">
+                💡 Tip: Upload an image below and we&apos;ll transform it based on your prompt
+              </p>
+            )}
           </div>
 
           {/* Image Upload Area */}

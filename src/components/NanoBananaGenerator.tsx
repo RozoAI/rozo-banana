@@ -317,7 +317,7 @@ export default function NanoBananaGenerator() {
             <textarea
               value={customPrompt}
               onChange={(e) => setCustomPrompt(e.target.value)}
-              placeholder="Generate a image with a pig with bikini"
+              placeholder="Make it cyber punk"
               className="w-full px-4 py-3 border-2 border-yellow-400 rounded-xl focus:outline-none focus:border-yellow-500 resize-none text-gray-700 placeholder-gray-400"
               rows={3}
               disabled={!isConnected}

@@ -333,9 +333,11 @@ export default function NanoBananaGenerator() {
               <h2 className="text-base font-semibold text-gray-800">✨ Choose a Style</h2>
               <button
                 onClick={() => setShowPresets(!showPresets)}
-                className="text-gray-500 hover:text-gray-700 p-1"
+                className="w-6 h-6 flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full transition-colors"
               >
-                ✕
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
             
@@ -439,9 +441,11 @@ export default function NanoBananaGenerator() {
                       setUploadedImage(null);
                       setUploadedFile(null);
                     }}
-                    className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600"
+                    className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-md"
                   >
-                    ✕
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
                   </button>
                 </div>
               ) : (

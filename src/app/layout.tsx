@@ -7,8 +7,13 @@ import { Providers } from '../providers';
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Banana DApp - EVM Invitation Incentive System",
-  description: "Earn points through referrals and generate nano banana images",
+  title: "Banana - AI Image Generation",
+  description: "Generate amazing AI images with points. Earn through referrals!",
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/banana.svg',
+  },
 };
 
 export default function RootLayout({

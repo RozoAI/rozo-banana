@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { pointsAPI, imageAPI } from '@/lib/api';
+import { pointsAPI } from '@/lib/api';
 
 interface MobileDashboardProps {
   address: string;
@@ -14,17 +14,11 @@ export function MobileDashboard({ address }: MobileDashboardProps) {
   const [points, setPoints] = useState(0);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
-  const [prompt, setPrompt] = useState('');
-  const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
-    console.log('MobileDashboard useEffect:', { isAuthenticated, address, isLoading });
-    
     if (isAuthenticated) {
-      console.log('User is authenticated, fetching data');
       fetchUserData();
     } else if (address && !isLoading) {
-      console.log('User not authenticated, attempting sign-in');
       // The global state in useAuth will prevent duplicate sign-in attempts
       signIn();
     }
@@ -49,20 +43,6 @@ export function MobileDashboard({ address }: MobileDashboardProps) {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const generateImage = async () => {
-    if (!prompt.trim() || generating) return;
-    
-    setGenerating(true);
-    try {
-      await imageAPI.generate(prompt);
-      setPrompt('');
-      await fetchUserData(); // Refresh points
-    } catch (error) {
-      console.error('Failed to generate image:', error);
-    } finally {
-      setGenerating(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -104,7 +84,7 @@ export function MobileDashboard({ address }: MobileDashboardProps) {
             {/* Quick Actions */}
             <div className="grid grid-cols-2 gap-4">
               <button
-                onClick={() => setActiveTab('generate')}
+                onClick={() => window.location.href = '/generate'}
                 className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 text-left hover:shadow-md transition-shadow"
               >
                 <div className="text-3xl mb-2">🎨</div>
@@ -124,28 +104,6 @@ export function MobileDashboard({ address }: MobileDashboardProps) {
           </div>
         )}
 
-        {activeTab === 'generate' && (
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h3 className="font-bold text-lg mb-4 text-gray-900">Generate Image</h3>
-            <textarea
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Describe your nano banana image..."
-              className="w-full p-4 border border-gray-200 rounded-xl resize-none text-base focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
-              rows={4}
-            />
-            <div className="mt-4 flex justify-between items-center">
-              <span className="text-sm text-gray-500">Cost: 5 points</span>
-              <button
-                onClick={generateImage}
-                disabled={!prompt.trim() || generating || points < 5}
-                className="px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:from-yellow-600 hover:to-orange-600 transition-all transform active:scale-[0.98]"
-              >
-                {generating ? 'Generating...' : 'Generate'}
-              </button>
-            </div>
-          </div>
-        )}
 
         {activeTab === 'history' && (
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
@@ -162,7 +120,7 @@ export function MobileDashboard({ address }: MobileDashboardProps) {
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100">
         <div className="max-w-lg mx-auto">
-          <div className="grid grid-cols-3">
+          <div className="grid grid-cols-2">
             <button
               onClick={() => setActiveTab('home')}
               className={`py-4 text-center transition-colors ${
@@ -171,15 +129,6 @@ export function MobileDashboard({ address }: MobileDashboardProps) {
             >
               <div className="text-2xl mb-1">🏠</div>
               <p className="text-xs font-medium">Home</p>
-            </button>
-            <button
-              onClick={() => setActiveTab('generate')}
-              className={`py-4 text-center transition-colors ${
-                activeTab === 'generate' ? 'text-yellow-600' : 'text-gray-400'
-              }`}
-            >
-              <div className="text-2xl mb-1">🎨</div>
-              <p className="text-xs font-medium">Create</p>
             </button>
             <button
               onClick={() => setActiveTab('history')}

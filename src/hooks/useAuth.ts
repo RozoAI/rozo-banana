@@ -43,21 +43,16 @@ export function useAuth() {
   }, [isConnected, address]);
 
   const signIn = async () => {
-    console.log('signIn called:', { address, isAuthenticated, isLoading, globalSignInInProgress, globalAuthState });
-    
     if (!address || isAuthenticated || isLoading || globalSignInInProgress) {
-      console.log('signIn early return:', { address, isAuthenticated, isLoading, globalSignInInProgress });
       return;
     }
 
     // Check global state first
     if (globalAuthState[address]) {
-      console.log('Using global auth state for address:', address);
       setIsAuthenticated(true);
       return;
     }
 
-    console.log('Starting sign-in process for address:', address);
     globalSignInInProgress = true;
     setIsLoading(true);
     

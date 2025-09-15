@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Upload, Loader2, Download, Copy, Sparkles } from 'lucide-react';
 import Image from 'next/image';
+import { imageAPI } from '../lib/api';
 
 interface GeneratedImage {
   url: string;
@@ -42,24 +43,10 @@ export default function ImageGenerator() {
     setError(null);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/generate/image`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          prompt,
-          model: selectedModel,
-          size: imageSize,
-          quality: imageQuality,
-          style: imageStyle
-        }),
-      });
+      const data = await imageAPI.generate(prompt);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to generate image');
+      if (!data || data.error) {
+        throw new Error(data?.error || 'Failed to generate image');
       }
 
       setGeneratedImage({

@@ -18,12 +18,17 @@ export function MobileDashboard({ address }: MobileDashboardProps) {
   useEffect(() => {
     if (isAuthenticated) {
       fetchUserData();
-    } else if (address && !isLoading) {
-      // The global state in useAuth will prevent duplicate sign-in attempts
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    // Only attempt sign in once when address is available and not already authenticated
+    if (address && !isAuthenticated && !isLoading) {
       signIn();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, address, isLoading]);
+  }, [address]); // Only depend on address change
 
   const fetchUserData = async () => {
     try {

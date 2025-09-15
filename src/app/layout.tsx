@@ -7,11 +7,11 @@ import { Providers } from '../providers';
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Banana - AI Image Generation",
+  title: "Banana 🍌 - AI Image Generation",
   description: "Generate amazing AI images with points. Earn through referrals!",
   icons: {
-    icon: '/favicon.ico',
-    shortcut: '/favicon.ico',
+    icon: '/banana-favicon.svg',
+    shortcut: '/banana-favicon.svg',
     apple: '/banana.svg',
   },
 };

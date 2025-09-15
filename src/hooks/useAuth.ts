@@ -61,7 +61,7 @@ export function useAuth() {
       const { nonce } = await authAPI.getNonce(address);
 
       // Create SIWE message
-      const message = new SiweMessage({
+      const siweMessage = new SiweMessage({
         domain: window.location.host,
         address,
         statement: 'Sign in to Banana DApp',
@@ -71,7 +71,7 @@ export function useAuth() {
         nonce,
       });
 
-      const messageToSign = message.prepareMessage();
+      const messageToSign = siweMessage.prepareMessage();
 
       // Sign message
       const signature = await signMessageAsync({

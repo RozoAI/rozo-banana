@@ -5,6 +5,7 @@ import { Upload, Loader2, Download, Copy, Sparkles, Wallet, AlertCircle } from '
 import Image from 'next/image';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { injected } from 'wagmi/connectors';
+import { pointsAPI, imageAPI } from '../lib/api';
 
 interface GeneratedImage {
   url: string;
@@ -94,31 +95,15 @@ export default function BananaImageGenerator() {
 
   const fetchUserPoints = async (token: string) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/points/balance`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setUserPoints(data.available_points || 0);
-        
-        // Check if user has generated images before
-        const historyResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/points/history`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          },
-        });
-        
-        if (historyResponse.ok) {
-          const historyData = await historyResponse.json();
-          const hasGeneratedBefore = historyData.history?.some((item: any) => 
-            item.reason === 'Image generation' || item.reason === 'Free trial generation'
-          );
-          setIsFirstGeneration(!hasGeneratedBefore);
-        }
-      }
+      const data = await pointsAPI.getBalance();
+      setUserPoints(data.available_points || 0);
+      
+      // Check if user has generated images before
+      const historyData = await pointsAPI.getHistory();
+      const hasGeneratedBefore = historyData.history?.some((item: any) => 
+        item.reason === 'Image generation' || item.reason === 'Free trial generation'
+      );
+      setIsFirstGeneration(!hasGeneratedBefore);
     } catch (err) {
       console.error('Failed to fetch user points:', err);
     }
@@ -173,26 +158,10 @@ export default function BananaImageGenerator() {
         throw new Error('Please authenticate first');
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/generate/image`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          prompt: `${prompt}. Based on this uploaded image: [image will be processed]`, // In production, include base64 image
-          model: selectedModel,
-          size: imageSize,
-          quality: imageQuality,
-          style: imageStyle,
-          uploadedImageUrl: uploadedImage // Include the uploaded image
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to generate image');
+      const data = await imageAPI.generate(prompt);
+      
+      if (!data || data.error) {
+        throw new Error(data?.error || 'Failed to generate image');
       }
 
       setGeneratedImage({

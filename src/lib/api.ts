@@ -37,11 +37,20 @@ const api = bananaApi;
 // Add auth token to Banana API requests
 bananaApi.interceptors.request.use((config) => {
   const token = localStorage.getItem('rozo_token');
+  console.log('🚀 [BananaAPI] Request interceptor:', {
+    url: config.url,
+    method: config.method,
+    hasToken: !!token,
+    tokenPreview: token ? `${token.substring(0, 20)}...` : null,
+    isSupabaseBackend
+  });
+  
   if (token && isSupabaseBackend) {
     config.headers['X-Auth-Token'] = token;
     config.headers.Authorization = `Bearer ${SUPABASE_ANON_KEY}`;
   } else if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+    console.log('🔑 [BananaAPI] Adding Bearer token to request');
   } else if (isSupabaseBackend && SUPABASE_ANON_KEY) {
     config.headers.Authorization = `Bearer ${SUPABASE_ANON_KEY}`;
   }
@@ -51,8 +60,18 @@ bananaApi.interceptors.request.use((config) => {
 // Add auth token to Points API requests
 pointsApi.interceptors.request.use((config) => {
   const token = localStorage.getItem('rozo_token');
+  console.log('🎯 [PointsAPI] Request interceptor:', {
+    url: config.url,
+    method: config.method,
+    hasToken: !!token,
+    tokenPreview: token ? `${token.substring(0, 20)}...` : null
+  });
+  
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+    console.log('🔑 [PointsAPI] Adding Bearer token to request');
+  } else {
+    console.log('⚠️ [PointsAPI] No token found for request');
   }
   return config;
 });
@@ -60,6 +79,13 @@ pointsApi.interceptors.request.use((config) => {
 // Legacy interceptor for api
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('rozo_token') || localStorage.getItem('auth_token');
+  console.log('📦 [LegacyAPI] Request interceptor:', {
+    url: config.url,
+    method: config.method,
+    hasToken: !!token,
+    tokenSource: localStorage.getItem('rozo_token') ? 'rozo_token' : localStorage.getItem('auth_token') ? 'auth_token' : 'none'
+  });
+  
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -86,32 +112,91 @@ api.interceptors.response.use((response) => response, handleAuthError);
 export const authAPI = {
   // Updated to use Points Service for authentication
   verify: async (message: string, signature: string, address: string, referralCode?: string) => {
-    const { data } = await pointsApi.post('/auth/wallet/verify', {
-      message,
-      signature,
+    console.log('🔐 [authAPI.verify] Sending verification request:', {
       address,
       app_id: 'banana',
-      referral_code: referralCode
+      referralCode,
+      messageLength: message.length,
+      signatureLength: signature.length,
+      signaturePreview: signature.substring(0, 30) + '...'
     });
     
-    if (data.token) {
-      localStorage.setItem('rozo_token', data.token);
-      // Keep auth_token for backward compatibility
-      localStorage.setItem('auth_token', data.token);
+    try {
+      const { data } = await pointsApi.post('/auth/wallet/verify', {
+        message,
+        signature,
+        address,
+        app_id: 'banana',
+        referral_code: referralCode
+      });
+      
+      console.log('✅ [authAPI.verify] Response received:', {
+        hasToken: !!data.token,
+        tokenPreview: data.token ? `${data.token.substring(0, 30)}...` : null,
+        is_new_user: data.is_new_user,
+        error: data.error
+      });
+      
+      if (data.token) {
+        localStorage.setItem('rozo_token', data.token);
+        // Keep auth_token for backward compatibility
+        localStorage.setItem('auth_token', data.token);
+        console.log('💾 [authAPI.verify] Token saved to localStorage');
+      }
+      return data;
+    } catch (error: any) {
+      console.error('❌ [authAPI.verify] Error during verification:', {
+        error: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      throw error;
     }
-    return data;
   },
 
   logout: () => {
+    console.log('🚪 [authAPI.logout] Logging out, clearing all auth data');
+    // Clear all authentication tokens
     localStorage.removeItem('rozo_token');
     localStorage.removeItem('auth_token');
+    localStorage.removeItem('authToken');
+    
+    // Clear user data
+    localStorage.removeItem('rozo_user');
+    localStorage.removeItem('userAddress');
+    
+    // Clear welcome/status flags
+    localStorage.removeItem('auth_expired');
+    localStorage.removeItem('welcome_new_user');
+    localStorage.removeItem('welcome_back_user');
+    localStorage.removeItem('referral_bonus_applied');
+    
+    // Clear affiliate names for all addresses (pattern: affiliateName_*)
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('affiliateName_')) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+    
+    console.log('✅ [authAPI.logout] All auth data cleared');
   },
 
   validateToken: async () => {
     try {
+      const token = localStorage.getItem('rozo_token');
+      console.log('🔍 [authAPI.validateToken] Validating token:', {
+        hasToken: !!token,
+        tokenPreview: token ? `${token.substring(0, 20)}...` : null
+      });
+      
       const { data } = await pointsApi.get('/auth/validate');
+      console.log('✅ [authAPI.validateToken] Validation response:', data);
       return data;
-    } catch (error) {
+    } catch (error: any) {
+      console.log('⚠️ [authAPI.validateToken] Token validation failed, likely expired or invalid');
       return { valid: false };
     }
   },

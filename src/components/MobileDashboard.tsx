@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { pointsAPI } from '@/lib/api';
+import { pointsAPI, creditsAPI } from '@/lib/api';
 
 interface MobileDashboardProps {
   address: string;
@@ -12,7 +12,8 @@ export function MobileDashboard({ address }: MobileDashboardProps) {
   const { isAuthenticated, signIn, isLoading } = useAuth();
   const [activeTab, setActiveTab] = useState('home');
   const [points, setPoints] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [credits, setCredits] = useState(0);
+  const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [affiliateName, setAffiliateName] = useState('');
   const [isEditingName, setIsEditingName] = useState(false);
@@ -25,25 +26,65 @@ export function MobileDashboard({ address }: MobileDashboardProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
 
-  useEffect(() => {
-    // Only attempt sign in once when address is available and not already authenticated
-    if (address && !isAuthenticated && !isLoading) {
-      signIn();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [address]); // Only depend on address change
+  // Removed auto-sign in to let user manually click sign in button
 
   const fetchUserData = async () => {
+    console.log('📊 [MobileDashboard] Fetching user data...');
+    setLoading(true);
     try {
+      // Fetch points balance
+      console.log('💰 [MobileDashboard] Fetching points balance...');
       const balance = await pointsAPI.getBalance();
-      setPoints(balance.points || 0);
+      console.log('✅ [MobileDashboard] Points balance response:', balance);
+      setPoints(balance.balance || balance.points || 0);
+      
+      // Also try to fetch credits
+      try {
+        console.log('💳 [MobileDashboard] Fetching credits balance...');
+        const creditsData = await creditsAPI.getBalance();
+        console.log('✅ [MobileDashboard] Credits balance response:', creditsData);
+        
+        // Extract numeric credits value from various possible response formats
+        let creditsValue = 0;
+        
+        // Handle nested object structure like { available, plan_type, expires_at, used_this_month }
+        if (typeof creditsData === 'object' && creditsData !== null) {
+          if (typeof creditsData.available === 'number') {
+            creditsValue = creditsData.available;
+          } else if (typeof creditsData.credits === 'number') {
+            creditsValue = creditsData.credits;
+          } else if (creditsData.data?.credits) {
+            if (typeof creditsData.data.credits === 'number') {
+              creditsValue = creditsData.data.credits;
+            } else if (typeof creditsData.data.credits.available === 'number') {
+              creditsValue = creditsData.data.credits.available;
+            }
+          } else if (typeof creditsData.balance === 'number') {
+            creditsValue = creditsData.balance;
+          }
+        }
+        
+        console.log('💳 [MobileDashboard] Extracted credits value:', creditsValue);
+        setCredits(creditsValue);
+      } catch (creditsError: any) {
+        console.error('❌ [MobileDashboard] Failed to fetch credits:', {
+          error: creditsError.message,
+          response: creditsError.response?.data,
+          status: creditsError.response?.status
+        });
+      }
+      
       // Load saved affiliate name from localStorage
       const savedName = localStorage.getItem(`affiliateName_${address}`);
       if (savedName) {
         setAffiliateName(savedName);
       }
-    } catch (error) {
-      console.error('Failed to fetch user data:', error);
+    } catch (error: any) {
+      console.error('❌ [MobileDashboard] Failed to fetch user data:', {
+        error: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
     } finally {
       setLoading(false);
     }
@@ -70,7 +111,23 @@ export function MobileDashboard({ address }: MobileDashboardProps) {
   };
 
 
-  if (loading) {
+  if (!isAuthenticated && !isLoading) {
+    return (
+      <div className="flex flex-col justify-center items-center h-screen space-y-4">
+        <div className="text-center">
+          <p className="text-lg text-gray-600 mb-4">Please sign in to access your dashboard</p>
+          <button
+            onClick={() => signIn()}
+            className="px-6 py-3 bg-yellow-500 text-white rounded-lg font-semibold hover:bg-yellow-600 transition-colors"
+          >
+            Sign In with Wallet
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading || isLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-yellow-500"></div>
@@ -80,12 +137,21 @@ export function MobileDashboard({ address }: MobileDashboardProps) {
 
   return (
     <div className="pb-20 min-h-[calc(100vh-5rem)]">
-      {/* Points Display */}
-      <div className="py-8 bg-white rounded-2xl mt-6 shadow-sm border border-gray-100">
-        <div className="text-center">
-          <p className="text-sm text-gray-500 mb-1">Balance</p>
-          <p className="text-5xl font-bold text-gray-900">{points}</p>
-          <p className="text-lg text-gray-600 mt-1">pts</p>
+      {/* Points and Credits Display */}
+      <div className="grid grid-cols-2 gap-4 mt-6">
+        <div className="py-6 bg-white rounded-2xl shadow-sm border border-gray-100">
+          <div className="text-center">
+            <p className="text-xs text-gray-500 mb-1">Points</p>
+            <p className="text-3xl font-bold text-gray-900">{points}</p>
+            <p className="text-sm text-gray-600 mt-1">pts</p>
+          </div>
+        </div>
+        <div className="py-6 bg-white rounded-2xl shadow-sm border border-gray-100">
+          <div className="text-center">
+            <p className="text-xs text-gray-500 mb-1">Credits</p>
+            <p className="text-3xl font-bold text-yellow-600">{credits}</p>
+            <p className="text-sm text-gray-600 mt-1">credits</p>
+          </div>
         </div>
       </div>
 

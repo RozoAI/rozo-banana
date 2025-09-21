@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Upload, Loader2, ImageIcon, Sparkles, Wand2 } from 'lucide-react';
 import Image from 'next/image';
-import { useAccount, useConnect, useDisconnect } from 'wagmi';
+import { useAccount, useConnect, useDisconnect, useSignMessage } from 'wagmi';
 import { injected } from 'wagmi/connectors';
 import { STYLE_PRESETS, StylePreset } from '@/constants/stylePresets';
 import { pointsAPI, imageAPI } from '../lib/api';
@@ -22,10 +22,11 @@ export default function NanoBananaGenerator() {
   const { address, isConnected } = useAccount();
   const { connect } = useConnect();
   const { disconnect } = useDisconnect();
+  const { signMessageAsync } = useSignMessage();
   
   const [customPrompt, setCustomPrompt] = useState('');
-  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [generatedImage, setGeneratedImage] = useState<GeneratedResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -73,26 +74,42 @@ export default function NanoBananaGenerator() {
     try {
       const message = `Sign to authenticate with Nano Banana\nAddress: ${address}\nTimestamp: ${Date.now()}`;
       
+      console.log('🔏 [NanoBanana] Requesting wallet signature...');
+      
+      // Use real wallet signing
+      const signature = await signMessageAsync({
+        message,
+      });
+      
+      console.log('✅ [NanoBanana] Signature obtained:', signature.substring(0, 20) + '...');
+      
       const response = await fetch(`${process.env.NEXT_PUBLIC_POINTS_API_URL || 'http://localhost:3001/points/api'}/auth/wallet/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           address: address.toLowerCase(),
-          signature: 'simulated-signature', // Note: In production, this needs real wallet signing
+          signature, // Now using real signature
           message,
           app_id: 'banana'
         }),
       });
 
+      console.log('📡 [NanoBanana] Auth response status:', response.status);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('🎫 [NanoBanana] Auth successful, token received');
         setAuthToken(data.token);
         localStorage.setItem('authToken', data.token);
+        localStorage.setItem('rozo_token', data.token); // Also save as rozo_token for compatibility
         localStorage.setItem('userAddress', address.toLowerCase());
         await fetchUserPoints(data.token);
+      } else {
+        const errorData = await response.json();
+        console.error('❌ [NanoBanana] Auth failed:', errorData);
       }
     } catch (err) {
-      console.error('Authentication failed:', err);
+      console.error('❌ [NanoBanana] Authentication failed:', err);
     }
   };
 
@@ -141,46 +158,84 @@ export default function NanoBananaGenerator() {
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+    const files = Array.from(e.target.files || []);
+    
+    // Check total count (existing + new)
+    if (uploadedImages.length + files.length > 9) {
+      setError(`Maximum 9 images allowed. You have ${uploadedImages.length} and are trying to add ${files.length} more.`);
+      return;
+    }
+    
+    for (const file of files) {
       if (file.size > 5 * 1024 * 1024) {
-        setError('Image size must be less than 5MB');
+        setError(`Image "${file.name}" is too large. Max size is 5MB`);
         return;
       }
-      
-      setUploadedFile(file);
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const originalDataUrl = reader.result as string;
-        // Compress image if it's too large
-        const compressedDataUrl = await compressImage(originalDataUrl);
-        setUploadedImage(compressedDataUrl);
-        setError(null);
-      };
-      reader.readAsDataURL(file);
     }
+    
+    const newImages: string[] = [];
+    const newFiles: File[] = [];
+    
+    for (const file of files) {
+      const reader = new FileReader();
+      const dataUrl = await new Promise<string>((resolve) => {
+        reader.onloadend = async () => {
+          const originalDataUrl = reader.result as string;
+          // Compress image if it's too large
+          const compressedDataUrl = await compressImage(originalDataUrl);
+          resolve(compressedDataUrl);
+        };
+        reader.readAsDataURL(file);
+      });
+      newImages.push(dataUrl);
+      newFiles.push(file);
+    }
+    
+    setUploadedImages([...uploadedImages, ...newImages]);
+    setUploadedFiles([...uploadedFiles, ...newFiles]);
+    setError(null);
   };
 
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) {
+    const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+    
+    if (files.length === 0) return;
+    
+    // Check total count (existing + new)
+    if (uploadedImages.length + files.length > 9) {
+      setError(`Maximum 9 images allowed. You have ${uploadedImages.length} and are trying to add ${files.length} more.`);
+      return;
+    }
+    
+    for (const file of files) {
       if (file.size > 5 * 1024 * 1024) {
-        setError('Image size must be less than 5MB');
+        setError(`Image "${file.name}" is too large. Max size is 5MB`);
         return;
       }
-      
-      setUploadedFile(file);
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const originalDataUrl = reader.result as string;
-        // Compress image if it's too large
-        const compressedDataUrl = await compressImage(originalDataUrl);
-        setUploadedImage(compressedDataUrl);
-        setError(null);
-      };
-      reader.readAsDataURL(file);
     }
+    
+    const newImages: string[] = [];
+    const newFiles: File[] = [];
+    
+    for (const file of files) {
+      const reader = new FileReader();
+      const dataUrl = await new Promise<string>((resolve) => {
+        reader.onloadend = async () => {
+          const originalDataUrl = reader.result as string;
+          // Compress image if it's too large
+          const compressedDataUrl = await compressImage(originalDataUrl);
+          resolve(compressedDataUrl);
+        };
+        reader.readAsDataURL(file);
+      });
+      newImages.push(dataUrl);
+      newFiles.push(file);
+    }
+    
+    setUploadedImages([...uploadedImages, ...newImages]);
+    setUploadedFiles([...uploadedFiles, ...newFiles]);
+    setError(null);
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -214,14 +269,14 @@ export default function NanoBananaGenerator() {
       return;
     }
 
-    if (!uploadedImage) {
-      setError('Please upload an image');
+    if (uploadedImages.length === 0) {
+      setError('Please upload at least one image (0-9 images)');
       return;
     }
 
-    // Check points (skip for first generation)
-    if (!isFirstGeneration && userPoints < POINTS_PER_GENERATION) {
-      setError(`Insufficient points. You need ${POINTS_PER_GENERATION} points.`);
+    // Check credits (skip for first generation)
+    if (!isFirstGeneration && userCredits < CREDITS_PER_GENERATION) {
+      setError(`Insufficient credits. You need ${CREDITS_PER_GENERATION} credits.`);
       return;
     }
 
@@ -403,37 +458,49 @@ export default function NanoBananaGenerator() {
               <input
                 type="file"
                 accept="image/*"
+                multiple
                 onChange={handleImageUpload}
                 className="hidden"
                 id="image-upload"
                 disabled={!isConnected}
               />
               
-              {uploadedImage ? (
-                <div className="relative w-full h-64">
-                  <Image
-                    src={uploadedImage}
-                    alt="Uploaded"
-                    fill
-                    className="object-contain"
-                  />
-                  <button
-                    onClick={() => {
-                      setUploadedImage(null);
-                      setUploadedFile(null);
-                    }}
-                    className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-md"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
+              {uploadedImages.length > 0 ? (
+                <div>
+                  <div className="grid grid-cols-3 gap-2 mb-2">
+                    {uploadedImages.map((img, idx) => (
+                      <div key={idx} className="relative aspect-square">
+                        <Image
+                          src={img}
+                          alt={`Upload ${idx + 1}`}
+                          fill
+                          className="object-cover rounded"
+                        />
+                        <button
+                          onClick={() => {
+                            const newImages = uploadedImages.filter((_, i) => i !== idx);
+                            const newFiles = uploadedFiles.filter((_, i) => i !== idx);
+                            setUploadedImages(newImages);
+                            setUploadedFiles(newFiles);
+                          }}
+                          className="absolute top-1 right-1 w-6 h-6 flex items-center justify-center bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-md"
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-500 text-center">
+                    {uploadedImages.length}/9 images uploaded
+                  </p>
                 </div>
               ) : (
                 <label htmlFor="image-upload" className="cursor-pointer">
                   <ImageIcon className="w-10 h-10 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-600 text-sm mb-1">Tap to upload image</p>
-                  <p className="text-gray-400 text-xs">PNG, JPG up to 5MB</p>
+                  <p className="text-gray-600 text-sm mb-1">Tap to upload images</p>
+                  <p className="text-gray-400 text-xs">Select 0-9 images (PNG, JPG up to 5MB each)</p>
                 </label>
               )}
             </div>
@@ -452,7 +519,7 @@ export default function NanoBananaGenerator() {
             
             <button
               onClick={handleGenerate}
-              disabled={isLoading || !customPrompt.trim() || !uploadedImage || !isConnected}
+              disabled={isLoading || !customPrompt.trim() || uploadedImages.length === 0 || !isConnected}
               className="px-5 py-2.5 bg-gradient-to-r from-yellow-400 to-orange-400 text-white font-medium rounded-lg hover:from-yellow-500 hover:to-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 text-sm"
             >
               {isLoading ? (
@@ -514,7 +581,7 @@ export default function NanoBananaGenerator() {
               
               {generatedImage.pointsDeducted >= 0 && (
                 <p className="text-gray-600 text-sm text-center mt-2">
-                  {generatedImage.pointsDeducted} points used
+                  {generatedImage.pointsDeducted} credits used
                 </p>
               )}
             </div>

@@ -20,20 +20,37 @@ export function useAuth() {
   useEffect(() => {
     if (address && !hasInitialized.current) {
       const token = localStorage.getItem('rozo_token') || localStorage.getItem('auth_token');
+      console.log('🔐 [useAuth] Checking existing token on mount:', {
+        address,
+        hasToken: !!token,
+        tokenPreview: token ? `${token.substring(0, 20)}...` : null,
+        tokenSource: localStorage.getItem('rozo_token') ? 'rozo_token' : localStorage.getItem('auth_token') ? 'auth_token' : 'none'
+      });
+      
       if (token) {
         // Validate token with Points Service
+        console.log('🔍 [useAuth] Validating token with Points Service...');
         authAPI.validateToken().then((result) => {
+          console.log('✅ [useAuth] Token validation result:', result);
           if (result.valid) {
             setIsAuthenticated(true);
             globalAuthState[address] = true;
+            console.log('✅ [useAuth] Token is valid, user authenticated');
           } else {
             // Token invalid, clear it
+            console.log('❌ [useAuth] Token is invalid, clearing auth');
             authAPI.logout();
             setIsAuthenticated(false);
             globalAuthState[address] = false;
           }
+        }).catch((error) => {
+          console.error('❌ [useAuth] Token validation error:', error);
+          authAPI.logout();
+          setIsAuthenticated(false);
+          globalAuthState[address] = false;
         });
       } else {
+        console.log('⚠️ [useAuth] No existing token found');
         globalAuthState[address] = false;
       }
       hasInitialized.current = true;
@@ -83,6 +100,13 @@ export function useAuth() {
       }
 
       // Verify with Points Service
+      console.log('🔑 [useAuth] Calling authAPI.verify with:', {
+        address,
+        hasSignature: !!signature,
+        messageLength: message.length,
+        referralCode
+      });
+      
       const { token, is_new_user, user, referral_applied } = await authAPI.verify(
         message,
         signature,
@@ -90,7 +114,16 @@ export function useAuth() {
         referralCode
       );
       
+      console.log('🎫 [useAuth] Auth verification response:', {
+        hasToken: !!token,
+        tokenPreview: token ? `${token.substring(0, 30)}...` : null,
+        is_new_user,
+        hasUser: !!user,
+        referral_applied
+      });
+      
       if (token) {
+        console.log('✅ [useAuth] Token received, setting authenticated state');
         setIsAuthenticated(true);
         globalAuthState[address] = true;
         setIsNewUser(is_new_user || false);
@@ -98,6 +131,7 @@ export function useAuth() {
         // Store user data
         if (user) {
           localStorage.setItem('rozo_user', JSON.stringify(user));
+          console.log('💾 [useAuth] User data stored in localStorage');
         }
         
         // Store first login flag

@@ -14,6 +14,9 @@ export function MobileDashboard({ address }: MobileDashboardProps) {
   const [points, setPoints] = useState(0);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [affiliateName, setAffiliateName] = useState('');
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [nameSaved, setNameSaved] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -34,6 +37,11 @@ export function MobileDashboard({ address }: MobileDashboardProps) {
     try {
       const balance = await pointsAPI.getBalance();
       setPoints(balance.points || 0);
+      // Load saved affiliate name from localStorage
+      const savedName = localStorage.getItem(`affiliateName_${address}`);
+      if (savedName) {
+        setAffiliateName(savedName);
+      }
     } catch (error) {
       console.error('Failed to fetch user data:', error);
     } finally {
@@ -41,8 +49,21 @@ export function MobileDashboard({ address }: MobileDashboardProps) {
     }
   };
 
+  const saveAffiliateName = () => {
+    if (affiliateName.trim()) {
+      // Save to localStorage
+      localStorage.setItem(`affiliateName_${address}`, affiliateName.trim());
+      setIsEditingName(false);
+      setNameSaved(true);
+      setTimeout(() => setNameSaved(false), 2000);
+    }
+  };
+
   const copyReferralLink = () => {
-    const link = `${window.location.origin}?ref=${address}`;
+    const baseLink = `${window.location.origin}?ref=`;
+    const link = affiliateName.trim() 
+      ? `${baseLink}${encodeURIComponent(affiliateName.trim())}`
+      : `${baseLink}${address}`;
     navigator.clipboard.writeText(link);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -75,6 +96,54 @@ export function MobileDashboard({ address }: MobileDashboardProps) {
             {/* Referral Card */}
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <h3 className="font-bold text-lg mb-4 text-gray-900">Share & Earn</h3>
+              
+              {/* Affiliate Name Section */}
+              <div className="mb-4">
+                <label className="text-sm text-gray-600 mb-2 block">Your Affiliate Name</label>
+                {isEditingName ? (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={affiliateName}
+                      onChange={(e) => setAffiliateName(e.target.value)}
+                      placeholder="Enter your name"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                      maxLength={30}
+                    />
+                    <button
+                      onClick={saveAffiliateName}
+                      className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsEditingName(false);
+                        setAffiliateName(localStorage.getItem(`affiliateName_${address}`) || '');
+                      }}
+                      className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-900 font-medium">
+                      {affiliateName || address.slice(0, 6) + '...' + address.slice(-4)}
+                    </span>
+                    <button
+                      onClick={() => setIsEditingName(true)}
+                      className="text-sm text-yellow-600 hover:text-yellow-700 font-medium"
+                    >
+                      Edit
+                    </button>
+                  </div>
+                )}
+                {nameSaved && (
+                  <p className="text-sm text-green-600 mt-2">✓ Name saved successfully!</p>
+                )}
+              </div>
+
               <button
                 onClick={copyReferralLink}
                 className="w-full py-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-xl font-semibold text-base hover:from-yellow-600 hover:to-orange-600 transition-all transform active:scale-[0.98]"
@@ -83,6 +152,9 @@ export function MobileDashboard({ address }: MobileDashboardProps) {
               </button>
               <p className="text-sm text-gray-500 mt-3 text-center">
                 Earn 10% from direct referrals
+              </p>
+              <p className="text-xs text-gray-400 mt-2 text-center break-all">
+                Your link: {window.location.origin}?ref={affiliateName ? encodeURIComponent(affiliateName) : address}
               </p>
             </div>
 

@@ -81,7 +81,14 @@ export default function RozoPayment() {
       }
 
       const orderData = await orderResponse.json();
-      const { paymentId } = orderData;
+      
+      // Check if we got a valid paymentId
+      if (!orderData.paymentId && !orderData.id) {
+        console.error('Invalid order response:', orderData);
+        throw new Error(orderData.error || 'Failed to create payment order - no payment ID received');
+      }
+      
+      const paymentId = orderData.paymentId || orderData.id || `temp_${Date.now()}_${address}`;
 
       // Open ROZO payment in iframe/modal
       const paymentUrl = `https://pay.rozo.ai/embed?` + new URLSearchParams({

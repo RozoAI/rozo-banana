@@ -6,31 +6,36 @@ import { useAccount } from 'wagmi';
 
 interface PricingTier {
   id: string;
+  name: string;
   usd: number;
-  points: number;
+  credits: number;
   images: number;
   popular?: boolean;
+  bonus?: string;
+  period?: string;
+  pioneerBonus?: number;
 }
 
 const PRICING_TIERS: PricingTier[] = [
   {
-    id: 'tier_10',
-    usd: 10,
-    points: 120,
-    images: 24,
-  },
-  {
-    id: 'tier_50',
-    usd: 50,
-    points: 800,
-    images: 160,
+    id: 'monthly',
+    name: 'Monthly Membership',
+    usd: 20,
+    credits: 500,
+    images: 100,
+    period: 'month',
     popular: true,
+    pioneerBonus: 1000,
   },
   {
-    id: 'tier_100',
-    usd: 100,
-    points: 2000,
-    images: 400,
+    id: 'yearly',
+    name: 'Yearly Membership',
+    usd: 200,
+    credits: 6000,
+    images: 1200,
+    period: 'year',
+    bonus: 'Save $40',
+    pioneerBonus: 10000,
   },
 ];
 
@@ -50,14 +55,15 @@ export default function RozoPayment() {
     setError(null);
 
     try {
-      // Get auth token
-      const authToken = localStorage.getItem('authToken');
+      // Get auth token - check both possible token names
+      const authToken = localStorage.getItem('rozo_token') || localStorage.getItem('auth_token') || localStorage.getItem('authToken');
       if (!authToken) {
-        throw new Error('Please authenticate first');
+        throw new Error('Please authenticate first. Connect your wallet and sign in.');
       }
 
+      console.log("HELLO", process.env.NEXT_PUBLIC_BANANA_API_URL)
       // Create payment order
-      const orderResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/payments/create-order`, {
+      const orderResponse = await fetch(`${process.env.NEXT_PUBLIC_BANANA_API_URL || 'http://localhost:3000/api'}/payment/create-order`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -66,7 +72,7 @@ export default function RozoPayment() {
         body: JSON.stringify({
           packageId: selectedTier.id,
           amountUsd: selectedTier.usd,
-          points: selectedTier.points,
+          credits: selectedTier.credits,
         }),
       });
 
@@ -82,13 +88,13 @@ export default function RozoPayment() {
         appId: 'rozoBananaMP',
         amount: selectedTier.usd.toString(),
         currency: 'USD',
-        intent: `Buy ${selectedTier.points} points`,
+        intent: `${selectedTier.name} - ${selectedTier.images} images`,
         destinationAddress: '0x5772FBe7a7817ef7F586215CA8b23b8dD22C8897',
         destinationChainId: '8453',
         destinationToken: 'USDC',
         externalId: paymentId,
         userAddress: address,
-        webhookUrl: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/payments/webhook`,
+        webhookUrl: `${process.env.NEXT_PUBLIC_BANANA_API_URL || 'http://localhost:3000/api'}/payment/webhook`,
       }).toString();
 
       // Create modal overlay
@@ -206,8 +212,8 @@ export default function RozoPayment() {
       <div className="max-w-lg mx-auto px-4 py-6">
         {/* Title */}
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Top Up Points</h1>
-          <p className="text-gray-600 text-sm">1 USD = 10 points base rate</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Banana Membership</h1>
+          <p className="text-gray-600 text-sm">Get credits for AI image generation</p>
         </div>
 
         {/* Pricing Tiers */}
@@ -237,34 +243,49 @@ export default function RozoPayment() {
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-2xl font-bold text-gray-900">${tier.usd}</span>
+                      <span className="text-2xl font-bold text-gray-900">
+                        ${tier.usd}{tier.period && <span className="text-lg font-normal">/{tier.period}</span>}
+                      </span>
                       {tier.popular && <Zap className="w-5 h-5 text-yellow-500" />}
                     </div>
                     
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <span className="text-lg font-semibold text-yellow-600">
-                          {tier.points.toLocaleString()} points
+                          {tier.images} images
                         </span>
-                        {tier.usd === 50 && (
+                        {tier.bonus && (
                           <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded">
-                            +60% bonus
-                          </span>
-                        )}
-                        {tier.usd === 100 && (
-                          <span className="bg-purple-100 text-purple-700 text-xs px-2 py-0.5 rounded">
-                            +100% bonus
+                            {tier.bonus}
                           </span>
                         )}
                       </div>
                       
                       <p className="text-sm text-gray-600">
-                        Generate {tier.images} images
+                        {tier.credits} credits {tier.period === 'month' ? 'per month' : 'per year'}
                       </p>
                       
-                      <p className="text-xs text-gray-500">
-                        ${(tier.usd / tier.images).toFixed(2)} per image
-                      </p>
+                      {tier.period === 'month' && (
+                        <p className="text-xs text-gray-500">
+                          Credits expire monthly, auto-renew fills to 500
+                        </p>
+                      )}
+                      {tier.period === 'year' && (
+                        <p className="text-xs text-gray-500">
+                          Lock in for long-term savings
+                        </p>
+                      )}
+                      
+                      {tier.pioneerBonus && (
+                        <div className="mt-2 p-2 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg">
+                          <p className="text-xs font-semibold text-purple-700">
+                            🎁 Pioneer Bonus (First 100 buyers)
+                          </p>
+                          <p className="text-xs text-purple-600">
+                            Get +{tier.pioneerBonus.toLocaleString()} $ROZO points
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -283,20 +304,6 @@ export default function RozoPayment() {
               </button>
             </div>
           ))}
-        </div>
-
-        {/* Payment Method */}
-        <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-blue-600">💳</span>
-            <span className="font-medium text-blue-900">Payment Method</span>
-          </div>
-          <p className="text-sm text-blue-700">
-            Pay with USDC on Base chain via ROZO
-          </p>
-          <p className="text-xs text-blue-600 mt-1">
-            Secure payment powered by ROZO AI
-          </p>
         </div>
 
         {/* Error Message */}

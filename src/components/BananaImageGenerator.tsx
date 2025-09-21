@@ -68,7 +68,7 @@ export default function BananaImageGenerator() {
       
       // In a real implementation, you would sign the message with the wallet
       // For now, we'll simulate authentication
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/auth/login`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BANANA_API_URL || 'http://localhost:3000'}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

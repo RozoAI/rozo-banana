@@ -73,7 +73,7 @@ export default function Recharge() {
       }
 
       // Create payment order in backend
-      const orderResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/payments/create-order`, {
+      const orderResponse = await fetch(`${process.env.NEXT_PUBLIC_BANANA_API_URL || 'http://localhost:3000'}/api/payments/create-order`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -112,7 +112,7 @@ export default function Recharge() {
     const checkStatus = async () => {
       try {
         const authToken = localStorage.getItem('authToken');
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payments/status/${paymentId}`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BANANA_API_URL}/api/payments/status/${paymentId}`, {
           headers: {
             'Authorization': `Bearer ${authToken}`
           }
@@ -280,7 +280,7 @@ export default function Recharge() {
                 userAddress: address,
                 points: selectedTier.points,
               }}
-              webhookUrl={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/payments/webhook`}
+              webhookUrl={`${process.env.NEXT_PUBLIC_BANANA_API_URL || 'http://localhost:3000'}/api/payments/webhook`}
               onPaymentStarted={async (payId: string) => {
                 console.log('Payment started:', payId);
                 setIsLoading(true);

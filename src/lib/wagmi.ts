@@ -1,8 +1,9 @@
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
 import { mainnet } from 'wagmi/chains';
 
-// Use a default project ID for development, but you should replace this with your actual WalletConnect project ID
-const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'default-project-id';
+// Use a placeholder project ID for development if not provided
+// To get a real project ID: https://cloud.walletconnect.com/
+const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'wallet-conenct-id';
 
 export const config = getDefaultConfig({
   appName: 'Banana',

@@ -16,7 +16,7 @@ interface GeneratedResult {
   wasFreeTrial: boolean;
 }
 
-const POINTS_PER_GENERATION = 5;  // 5 points per generation (first one free)
+const CREDITS_PER_GENERATION = 5;  // 5 credits per generation
 
 export default function NanoBananaGenerator() {
   const { address, isConnected } = useAccount();
@@ -29,7 +29,7 @@ export default function NanoBananaGenerator() {
   const [generatedImage, setGeneratedImage] = useState<GeneratedResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [userPoints, setUserPoints] = useState<number>(0);
+  const [userCredits, setUserCredits] = useState<number>(0);
   const [isFirstGeneration, setIsFirstGeneration] = useState(true);
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<'popular' | 'artistic' | 'fun' | 'product'>('popular');
@@ -73,13 +73,14 @@ export default function NanoBananaGenerator() {
     try {
       const message = `Sign to authenticate with Nano Banana\nAddress: ${address}\nTimestamp: ${Date.now()}`;
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/auth/login`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_POINTS_API_URL || 'http://localhost:3001/points/api'}/auth/wallet/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           address: address.toLowerCase(),
-          signature: 'simulated-signature',
-          message
+          signature: 'simulated-signature', // Note: In production, this needs real wallet signing
+          message,
+          app_id: 'banana'
         }),
       });
 
@@ -97,8 +98,10 @@ export default function NanoBananaGenerator() {
 
   const fetchUserPoints = async (token: string) => {
     try {
-      const data = await pointsAPI.getBalance();
-      setUserPoints(data.available_points || 0);
+      // Get credits balance from the Banana Backend
+      const { creditsAPI } = await import('../lib/api');
+      const data = await creditsAPI.getBalance();
+      setUserCredits(data.credits || 0);
       
       // Check generation history
       const historyData = await pointsAPI.getHistory();
@@ -257,9 +260,11 @@ export default function NanoBananaGenerator() {
         wasFreeTrial: data.metadata?.wasFreeTrial || false
       });
 
-      // Update points
-      if (data.metadata?.pointsRemaining !== undefined) {
-        setUserPoints(data.metadata.pointsRemaining);
+      // Update credits
+      if (data.metadata?.creditsRemaining !== undefined) {
+        setUserCredits(data.metadata.creditsRemaining);
+      } else if (data.data?.credits_remaining !== undefined) {
+        setUserCredits(data.data.credits_remaining);
       }
 
       if (data.metadata?.wasFreeTrial) {
@@ -438,10 +443,10 @@ export default function NanoBananaGenerator() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm">
-                Cost: {POINTS_PER_GENERATION} pts
+                Cost: {CREDITS_PER_GENERATION} credits
               </p>
               <p className="text-gray-500 text-xs">
-                Balance: {userPoints} pts
+                Balance: {userCredits} credits
               </p>
             </div>
             

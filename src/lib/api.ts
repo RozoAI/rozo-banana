@@ -7,7 +7,7 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 // Legacy support for Supabase backend
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || BANANA_API_URL;
+const API_BASE_URL = process.env.NEXT_PUBLIC_BANANA_API_URL || BANANA_API_URL;
 const isSupabaseBackend = API_BASE_URL.includes('supabase.co') || API_BASE_URL.includes('auth.rozo.ai');
 
 // Banana Backend API client

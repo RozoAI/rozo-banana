@@ -65,7 +65,7 @@ export default function RozoCheckout() {
       }
 
       // Create payment order
-      const orderResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/payments/create-order`, {
+      const orderResponse = await fetch(`${process.env.NEXT_PUBLIC_BANANA_API_URL || 'http://localhost:3000'}/api/payments/create-order`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -118,7 +118,7 @@ export default function RozoCheckout() {
             userAddress: address,
             packageId: selectedTier.id,
           },
-          webhookUrl: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/payments/webhook`,
+          webhookUrl: `${process.env.NEXT_PUBLIC_BANANA_API_URL || 'http://localhost:3000'}/api/payments/webhook`,
           onSuccess: (txHash: string) => {
             console.log('Payment successful:', txHash);
             setIsLoading(false);

@@ -205,7 +205,7 @@ export default function ImageGenerator() {
 
               <button
                 onClick={handleGenerate}
-                disabled={isLoading || !prompt.trim()}
+                disabled={isLoading || (!prompt.trim() && uploadedImages.length === 0)}
                 className="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-white font-semibold py-3 rounded-lg hover:from-yellow-500 hover:to-yellow-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
                 {isLoading ? (

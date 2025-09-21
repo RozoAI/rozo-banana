@@ -82,7 +82,7 @@ export function MobileDashboard({ address }: MobileDashboardProps) {
                 {copied ? '✓ Copied!' : 'Copy Referral Link'}
               </button>
               <p className="text-sm text-gray-500 mt-3 text-center">
-                Earn 20% from direct referrals
+                Earn 10% from direct referrals
               </p>
             </div>
 

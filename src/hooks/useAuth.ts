@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useAccount, useSignMessage } from 'wagmi';
-import { SiweMessage } from 'siwe';
 import { authAPI } from '@/lib/api';
 
 // Global state to prevent multiple sign-in attempts
@@ -14,15 +13,26 @@ export function useAuth() {
   const { signMessageAsync } = useSignMessage();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isNewUser, setIsNewUser] = useState(false);
   const hasInitialized = useRef(false);
 
   // Check for existing auth token on mount and when address changes
   useEffect(() => {
     if (address && !hasInitialized.current) {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('rozo_token') || localStorage.getItem('auth_token');
       if (token) {
-        setIsAuthenticated(true);
-        globalAuthState[address] = true;
+        // Validate token with Points Service
+        authAPI.validateToken().then((result) => {
+          if (result.valid) {
+            setIsAuthenticated(true);
+            globalAuthState[address] = true;
+          } else {
+            // Token invalid, clear it
+            authAPI.logout();
+            setIsAuthenticated(false);
+            globalAuthState[address] = false;
+          }
+        });
       } else {
         globalAuthState[address] = false;
       }
@@ -42,7 +52,7 @@ export function useAuth() {
     }
   }, [isConnected, address]);
 
-  const signIn = async () => {
+  const signIn = async (referralCode?: string) => {
     if (!address || isAuthenticated || isLoading || globalSignInInProgress) {
       return;
     }
@@ -57,33 +67,48 @@ export function useAuth() {
     setIsLoading(true);
     
     try {
-      // Get nonce from backend
-      const { nonce } = await authAPI.getNonce(address);
-
-      // Create SIWE message
-      const siweMessage = new SiweMessage({
-        domain: window.location.host,
-        address,
-        statement: 'Sign in to Banana DApp',
-        uri: window.location.origin,
-        version: '1',
-        chainId: 1,
-        nonce,
-      });
-
-      const messageToSign = siweMessage.prepareMessage();
+      // Create message for Points Service authentication
+      const nonce = Date.now().toString();
+      const message = `Sign this message to authenticate with ROZO\n\nNonce: ${nonce}\nTimestamp: ${new Date().toISOString()}`;
 
       // Sign message
       const signature = await signMessageAsync({
-        message: messageToSign,
+        message,
       });
 
-      // Verify with backend
-      const { token } = await authAPI.verify(messageToSign, signature, address);
+      // Check for referral code in URL if not provided
+      if (!referralCode) {
+        const urlParams = new URLSearchParams(window.location.search);
+        referralCode = urlParams.get('ref') || undefined;
+      }
+
+      // Verify with Points Service
+      const { token, is_new_user, user, referral_applied } = await authAPI.verify(
+        message,
+        signature,
+        address,
+        referralCode
+      );
       
       if (token) {
         setIsAuthenticated(true);
         globalAuthState[address] = true;
+        setIsNewUser(is_new_user || false);
+        
+        // Store user data
+        if (user) {
+          localStorage.setItem('rozo_user', JSON.stringify(user));
+        }
+        
+        // Store first login flag
+        if (is_new_user) {
+          localStorage.setItem('welcome_new_user', 'true');
+          if (referral_applied) {
+            localStorage.setItem('referral_bonus_applied', 'true');
+          }
+        } else {
+          localStorage.setItem('welcome_back_user', 'true');
+        }
       }
     } catch (error) {
       console.error('Sign in failed:', error);
@@ -106,6 +131,7 @@ export function useAuth() {
   return {
     isAuthenticated,
     isLoading,
+    isNewUser,
     signIn,
     signOut,
     address,

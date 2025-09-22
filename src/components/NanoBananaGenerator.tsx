@@ -3,7 +3,7 @@
 import { STYLE_PRESETS, StylePreset } from "@/constants/stylePresets";
 import { ImageIcon, Loader2, Sparkles, Wand2 } from "lucide-react";
 import Image from "next/image";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useAccount, useConnect, useDisconnect, useSignMessage } from "wagmi";
 import { injected } from "wagmi/connectors";
 import { imageAPI, pointsAPI } from "../lib/api";
@@ -39,6 +39,7 @@ export default function NanoBananaGenerator() {
     "popular" | "artistic" | "fun" | "product"
   >("popular");
   const [showPresets, setShowPresets] = useState(true);
+  const hasFetched = useRef(false);
 
   // Connect wallet
   const handleConnectWallet = async () => {
@@ -61,7 +62,10 @@ export default function NanoBananaGenerator() {
     if (token) {
       console.log("🔑 [NanoBanana] Found existing token");
       setAuthToken(token);
-      fetchUserPoints(token);
+      if (!hasFetched.current) {
+        fetchUserPoints(token);
+        hasFetched.current = true;
+      }
       // If we have a saved address but wallet isn't connected, still show as authenticated
       if (!isConnected && savedAddress) {
         // User is authenticated but wallet not connected - this is ok

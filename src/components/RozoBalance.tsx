@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { rozoAPI, creditsAPI } from '@/lib/api';
-import { useAuth } from '@/hooks/useAuth';
-import { Coins, Zap, TrendingUp, RefreshCw } from 'lucide-react';
+import { useAuth } from "@/hooks/useAuth";
+import { creditsAPI, rozoAPI } from "@/lib/api";
+import { Coins, RefreshCw, TrendingUp, Zap } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 interface BalanceData {
   rozo: {
@@ -23,20 +23,21 @@ export function RozoBalance() {
   const [balance, setBalance] = useState<BalanceData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const hasFetched = useRef(false);
 
   const fetchBalance = async () => {
     if (!isAuthenticated) return;
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
       // Parallel fetch from both services
       const [rozoData, creditsData] = await Promise.all([
         rozoAPI.getBalance(),
-        creditsAPI.getBalance()
+        creditsAPI.getBalance(),
       ]);
-      
+
       setBalance({
         rozo: {
           balance: rozoData.balance || 0,
@@ -47,18 +48,23 @@ export function RozoBalance() {
           available: creditsData.credits?.available || 0,
           expiresAt: creditsData.credits?.expires_at || null,
           planType: creditsData.credits?.plan_type || null,
-        }
+        },
       });
     } catch (err) {
-      console.error('Failed to fetch balance:', err);
-      setError('Failed to load balance');
+      console.error("Failed to fetch balance:", err);
+      setError("Failed to load balance");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchBalance();
+    if (isAuthenticated) {
+      if (!hasFetched.current) {
+        fetchBalance();
+        hasFetched.current = true;
+      }
+    }
   }, [isAuthenticated]);
 
   if (!isAuthenticated || !balance) {
@@ -79,28 +85,32 @@ export function RozoBalance() {
             disabled={loading}
             className="p-1 hover:bg-white/20 rounded transition-colors"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
           </button>
         </div>
-        
+
         <div className="text-3xl font-bold mb-3">
           {balance.rozo.balance.toLocaleString()} ROZO
         </div>
-        
+
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div className="bg-white/10 rounded p-2">
             <div className="flex items-center gap-1 mb-1">
               <TrendingUp className="w-3 h-3" />
               <span className="opacity-75">Earned</span>
             </div>
-            <div className="font-semibold">+{balance.rozo.totalEarned.toLocaleString()}</div>
+            <div className="font-semibold">
+              +{balance.rozo.totalEarned.toLocaleString()}
+            </div>
           </div>
           <div className="bg-white/10 rounded p-2">
             <div className="flex items-center gap-1 mb-1">
               <Zap className="w-3 h-3" />
               <span className="opacity-75">Spent</span>
             </div>
-            <div className="font-semibold">-{balance.rozo.totalSpent.toLocaleString()}</div>
+            <div className="font-semibold">
+              -{balance.rozo.totalSpent.toLocaleString()}
+            </div>
           </div>
         </div>
       </div>
@@ -109,30 +119,33 @@ export function RozoBalance() {
       <div className="bg-gradient-to-r from-yellow-400 to-orange-500 rounded-xl p-4 text-white">
         <div className="flex items-center gap-2 mb-2">
           <Zap className="w-5 h-5" />
-          <span className="text-sm font-medium opacity-90">Generation Credits</span>
+          <span className="text-sm font-medium opacity-90">
+            Generation Credits
+          </span>
         </div>
-        
+
         <div className="text-2xl font-bold mb-2">
           {balance.credits.available} Credits
         </div>
-        
+
         {balance.credits.planType && (
           <div className="flex items-center justify-between text-sm">
             <span className="opacity-75">
-              {balance.credits.planType === 'monthly' ? 'Monthly Plan' : 'Yearly Plan'}
+              {balance.credits.planType === "monthly"
+                ? "Monthly Plan"
+                : "Yearly Plan"}
             </span>
             {balance.credits.expiresAt && (
               <span className="opacity-75">
-                Expires: {new Date(balance.credits.expiresAt).toLocaleDateString()}
+                Expires:{" "}
+                {new Date(balance.credits.expiresAt).toLocaleDateString()}
               </span>
             )}
           </div>
         )}
-        
+
         {!balance.credits.planType && (
-          <div className="text-sm opacity-75">
-            No active plan
-          </div>
+          <div className="text-sm opacity-75">No active plan</div>
         )}
       </div>
 

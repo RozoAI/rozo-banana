@@ -43,7 +43,19 @@ export default function ImageGenerator() {
     setError(null);
 
     try {
-      const data = await imageAPI.generate(prompt);
+
+      let images: string[] = [];
+      
+      if (uploadedImage) {
+        images = [uploadedImage];
+      }
+   
+      const data = await imageAPI.generate({
+        prompt: prompt,
+        style: imageStyle,
+        aspect_ratio: imageSize,
+        images: images,
+      });
 
       if (!data || data.error) {
         throw new Error(data?.error || 'Failed to generate image');
@@ -205,7 +217,7 @@ export default function ImageGenerator() {
 
               <button
                 onClick={handleGenerate}
-                disabled={isLoading || (!prompt.trim() && uploadedImages.length === 0)}
+                disabled={isLoading || (!prompt.trim() && uploadedImage === null)}
                 className="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-white font-semibold py-3 rounded-lg hover:from-yellow-500 hover:to-yellow-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
                 {isLoading ? (

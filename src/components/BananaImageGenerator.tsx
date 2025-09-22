@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Upload, Loader2, Download, Copy, Sparkles, Wallet, AlertCircle } from 'lucide-react';
+import { AlertCircle, Copy, Download, Loader2, Sparkles, Upload, Wallet } from 'lucide-react';
 import Image from 'next/image';
+import React, { useEffect, useState } from 'react';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { injected } from 'wagmi/connectors';
-import { pointsAPI, imageAPI } from '../lib/api';
+import { imageAPI, pointsAPI } from '../lib/api';
 
 interface GeneratedImage {
   url: string;
@@ -158,7 +158,12 @@ export default function BananaImageGenerator() {
         throw new Error('Please authenticate first');
       }
 
-      const data = await imageAPI.generate(prompt);
+      const data = await imageAPI.generate({
+        prompt: prompt,
+        images: [uploadedImage],
+        style: imageStyle,
+        aspect_ratio: imageSize,
+      });
       
       if (!data || data.error) {
         throw new Error(data?.error || 'Failed to generate image');

@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { Loader2, Zap, Check } from 'lucide-react';
-import { useAccount } from 'wagmi';
+import { Check, Loader2, Zap } from "lucide-react";
+import { useState } from "react";
+import { useAccount } from "wagmi";
 
 interface PricingTier {
   id: string;
@@ -18,23 +18,23 @@ interface PricingTier {
 
 const PRICING_TIERS: PricingTier[] = [
   {
-    id: 'monthly',
-    name: 'Monthly Membership',
+    id: "monthly",
+    name: "Monthly Membership",
     usd: 20,
     credits: 500,
     images: 100,
-    period: 'month',
+    period: "month",
     popular: true,
     pioneerBonus: 1000,
   },
   {
-    id: 'yearly',
-    name: 'Yearly Membership',
+    id: "yearly",
+    name: "Yearly Membership",
     usd: 200,
     credits: 6000,
     images: 1200,
-    period: 'year',
-    bonus: 'Save 17%',
+    period: "year",
+    bonus: "Save 17%",
     pioneerBonus: 12000,
   },
 ];
@@ -47,7 +47,7 @@ export default function RozoPayment() {
 
   const openRozoPayment = async () => {
     if (!selectedTier || !isConnected || !address) {
-      setError('Please connect wallet and select a package');
+      setError("Please connect wallet and select a package");
       return;
     }
 
@@ -56,55 +56,67 @@ export default function RozoPayment() {
 
     try {
       // Get auth token - check both possible token names
-      const authToken = localStorage.getItem('rozo_token') || localStorage.getItem('auth_token') || localStorage.getItem('authToken');
+      const authToken =
+        localStorage.getItem("rozo_token") ||
+        localStorage.getItem("auth_token") ||
+        localStorage.getItem("authToken");
       if (!authToken) {
-        throw new Error('Please authenticate first. Connect your wallet and sign in.');
+        throw new Error(
+          "Please authenticate first. Connect your wallet and sign in."
+        );
       }
 
-      console.log("HELLO", process.env.NEXT_PUBLIC_BANANA_API_URL)
+      console.log("HELLO", process.env.NEXT_PUBLIC_BANANA_API_URL);
       // Create payment order
-      const apiUrl = process.env.NEXT_PUBLIC_BANANA_API_URL || 'https://eslabobvkchgpokxszwv.supabase.co/functions/v1';
-      const orderResponse = await fetch(`${apiUrl}/banana-payment-create-order`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`
-        },
-        body: JSON.stringify({
-          plan_type: selectedTier.id,
-          return_url: window.location.origin + '/payment/success'
-        }),
-      });
+      const apiUrl =
+        process.env.NEXT_PUBLIC_BANANA_API_URL ||
+        "https://eslabobvkchgpokxszwv.supabase.co/functions/v1";
+      const orderResponse = await fetch(
+        `${apiUrl}/banana-payment-create-order`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+          body: JSON.stringify({
+            plan_type: selectedTier.id,
+            return_url: window.location.origin + "/payment/success",
+          }),
+        }
+      );
 
       if (!orderResponse.ok) {
-        throw new Error('Failed to create payment order');
+        throw new Error("Failed to create payment order");
       }
 
       const orderData = await orderResponse.json();
-      
+
       // Generate externalId using user address + timestamp as suggested
       const timestamp = Date.now();
       const externalId = `${address}_${timestamp}`;
-      
+
       // Use backend paymentId if available, otherwise use our generated externalId
       const paymentId = orderData.paymentId || orderData.id || externalId;
 
       // Open ROZO payment in iframe/modal
-      const paymentUrl = `https://pay.rozo.ai/embed?` + new URLSearchParams({
-        appId: 'rozoBananaMP',
-        amount: selectedTier.usd.toString(),
-        currency: 'USD',
-        intent: `${selectedTier.name} - ${selectedTier.images} images`,
-        destinationAddress: '0x5772FBe7a7817ef7F586215CA8b23b8dD22C8897',
-        destinationChainId: '8453',
-        destinationToken: 'USDC',
-        externalId: externalId,
-        userAddress: address,
-        webhookUrl: `${apiUrl}/banana-payment-webhook`,
-      }).toString();
+      const paymentUrl =
+        `https://pay.rozo.ai/embed?` +
+        new URLSearchParams({
+          appId: "rozoBananaMP",
+          amount: selectedTier.usd.toString(),
+          currency: "USD",
+          intent: `${selectedTier.name} - ${selectedTier.images} images`,
+          destinationAddress: "0x5772FBe7a7817ef7F586215CA8b23b8dD22C8897",
+          destinationChainId: "8453",
+          destinationToken: "USDC",
+          externalId: externalId,
+          userAddress: address,
+          webhookUrl: `${apiUrl}/banana-payment-webhook`,
+        }).toString();
 
       // Create modal overlay
-      const modal = document.createElement('div');
+      const modal = document.createElement("div");
       modal.style.cssText = `
         position: fixed;
         top: 0;
@@ -119,7 +131,7 @@ export default function RozoPayment() {
       `;
 
       // Create iframe container
-      const container = document.createElement('div');
+      const container = document.createElement("div");
       container.style.cssText = `
         background: white;
         border-radius: 16px;
@@ -132,8 +144,8 @@ export default function RozoPayment() {
       `;
 
       // Create close button
-      const closeBtn = document.createElement('button');
-      closeBtn.innerHTML = '×';
+      const closeBtn = document.createElement("button");
+      closeBtn.innerHTML = "×";
       closeBtn.style.cssText = `
         position: absolute;
         top: 10px;
@@ -153,7 +165,7 @@ export default function RozoPayment() {
       };
 
       // Create iframe
-      const iframe = document.createElement('iframe');
+      const iframe = document.createElement("iframe");
       iframe.src = paymentUrl;
       iframe.style.cssText = `
         width: 100%;
@@ -162,20 +174,20 @@ export default function RozoPayment() {
       `;
 
       // Listen for payment completion
-      window.addEventListener('message', function handleMessage(event) {
-        if (event.origin !== 'https://pay.rozo.ai') return;
-        
-        if (event.data.type === 'payment_success') {
-          console.log('Payment successful:', event.data);
+      window.addEventListener("message", function handleMessage(event) {
+        if (event.origin !== "https://pay.rozo.ai") return;
+
+        if (event.data.type === "payment_success") {
+          console.log("Payment successful:", event.data);
           document.body.removeChild(modal);
-          window.removeEventListener('message', handleMessage);
+          window.removeEventListener("message", handleMessage);
           // Refresh to update points
           setTimeout(() => window.location.reload(), 2000);
-        } else if (event.data.type === 'payment_failed') {
-          console.error('Payment failed:', event.data);
+        } else if (event.data.type === "payment_failed") {
+          console.error("Payment failed:", event.data);
           document.body.removeChild(modal);
-          window.removeEventListener('message', handleMessage);
-          setError('Payment failed. Please try again.');
+          window.removeEventListener("message", handleMessage);
+          setError("Payment failed. Please try again.");
           setIsLoading(false);
         }
       });
@@ -185,10 +197,9 @@ export default function RozoPayment() {
       container.appendChild(iframe);
       modal.appendChild(container);
       document.body.appendChild(modal);
-
     } catch (err) {
-      console.error('Payment error:', err);
-      setError(err instanceof Error ? err.message : 'Payment failed');
+      console.error("Payment error:", err);
+      setError(err instanceof Error ? err.message : "Payment failed");
       setIsLoading(false);
     }
   };
@@ -201,14 +212,24 @@ export default function RozoPayment() {
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-2">
               <span className="text-3xl">🍌</span>
-              <span className="font-bold text-xl">Banana</span>
+              <span className="font-bold text-xl text-black">Banana</span>
             </div>
             <button
               onClick={() => window.history.back()}
               className="text-gray-600 hover:text-gray-800"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
@@ -218,8 +239,12 @@ export default function RozoPayment() {
       <div className="max-w-lg mx-auto px-4 py-6">
         {/* Title */}
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Banana Membership</h1>
-          <p className="text-gray-600 text-sm">Get credits for AI image generation</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            Banana Membership
+          </h1>
+          <p className="text-gray-600 text-sm">
+            Get credits for AI image generation
+          </p>
         </div>
 
         {/* Pricing Tiers */}
@@ -229,8 +254,8 @@ export default function RozoPayment() {
               key={tier.id}
               className={`relative bg-white rounded-xl shadow-sm border-2 transition-all ${
                 selectedTier?.id === tier.id
-                  ? 'border-yellow-400 shadow-md'
-                  : 'border-gray-200 hover:border-gray-300'
+                  ? "border-yellow-400 shadow-md"
+                  : "border-gray-200 hover:border-gray-300"
               }`}
             >
               {tier.popular && (
@@ -250,11 +275,18 @@ export default function RozoPayment() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-2xl font-bold text-gray-900">
-                        ${tier.usd}{tier.period && <span className="text-lg font-normal">/{tier.period}</span>}
+                        ${tier.usd}
+                        {tier.period && (
+                          <span className="text-lg font-normal">
+                            /{tier.period}
+                          </span>
+                        )}
                       </span>
-                      {tier.popular && <Zap className="w-5 h-5 text-yellow-500" />}
+                      {tier.popular && (
+                        <Zap className="w-5 h-5 text-yellow-500" />
+                      )}
                     </div>
-                    
+
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <span className="text-lg font-semibold text-yellow-600">
@@ -266,29 +298,31 @@ export default function RozoPayment() {
                           </span>
                         )}
                       </div>
-                      
+
                       <p className="text-sm text-gray-600">
-                        {tier.credits} credits {tier.period === 'month' ? 'per month' : 'per year'}
+                        {tier.credits} credits{" "}
+                        {tier.period === "month" ? "per month" : "per year"}
                       </p>
-                      
-                      {tier.period === 'month' && (
+
+                      {tier.period === "month" && (
                         <p className="text-xs text-gray-500">
                           Credits expire monthly, auto-renew fills to 500
                         </p>
                       )}
-                      {tier.period === 'year' && (
+                      {tier.period === "year" && (
                         <p className="text-xs text-gray-500">
                           Lock in for long-term savings
                         </p>
                       )}
-                      
+
                       {tier.pioneerBonus && (
                         <div className="mt-2 p-2 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg">
                           <p className="text-xs font-semibold text-purple-700">
                             🎁 Pioneer Bonus (First 100 buyers)
                           </p>
                           <p className="text-xs text-purple-600">
-                            Get +{tier.pioneerBonus.toLocaleString()} $ROZO points
+                            Get +{tier.pioneerBonus.toLocaleString()} $ROZO
+                            points
                           </p>
                         </div>
                       )}
@@ -296,11 +330,13 @@ export default function RozoPayment() {
                   </div>
 
                   <div className="flex items-center">
-                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                      selectedTier?.id === tier.id
-                        ? 'border-yellow-400 bg-yellow-400'
-                        : 'border-gray-300'
-                    }`}>
+                    <div
+                      className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                        selectedTier?.id === tier.id
+                          ? "border-yellow-400 bg-yellow-400"
+                          : "border-gray-300"
+                      }`}
+                    >
                       {selectedTier?.id === tier.id && (
                         <Check className="w-4 h-4 text-white" />
                       )}
@@ -332,7 +368,7 @@ export default function RozoPayment() {
             </>
           ) : (
             <>
-              Pay {selectedTier ? `$${selectedTier.usd}` : 'Select a package'}
+              Pay {selectedTier ? `$${selectedTier.usd}` : "Select a package"}
             </>
           )}
         </button>

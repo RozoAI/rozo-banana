@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { RozoPayButton, useRozoPayUI } from '@rozoai/intent-pay';
-import { baseUSDC } from '@rozoai/intent-common';
+import { baseUSDC, PaymentCompletedEvent } from '@rozoai/intent-common';
 import { getAddress, isAddress, parseUnits } from 'viem';
 import { useAuth } from '@/hooks/useAuth';
 import { CreditCard, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
@@ -51,14 +51,14 @@ function RozoIntentPayContent() {
         toChain: baseUSDC.chainId,
         toAddress: getAddress(RECIPIENT_ADDRESS),
         toToken: getAddress(baseUSDC.token),
-        toAmount: parseUnits(selectedPlan.price.toString(), baseUSDC.decimals).toString(),
+        toUnits: selectedPlan.price.toString(),
       });
     }
   }, [selectedPlan, resetPayment]);
 
-  const handlePaymentSuccess = async (txHash: string) => {
+  const handlePaymentSuccess = (event: PaymentCompletedEvent) => {
     setPaymentStatus('success');
-    console.log('Payment successful:', txHash);
+    console.log('Payment successful:', event);
     
     // The webhook will handle crediting the user account
     // Show success message
@@ -69,16 +69,16 @@ function RozoIntentPayContent() {
     }, 3000);
   };
 
-  const handlePaymentError = (error: any) => {
-    setPaymentStatus('error');
-    setErrorMessage(error?.message || 'Payment failed');
-    console.error('Payment error:', error);
+  // const handlePaymentError = (error: any) => {
+  //   setPaymentStatus('error');
+  //   setErrorMessage(error?.message || 'Payment failed');
+  //   console.error('Payment error:', error);
     
-    setTimeout(() => {
-      setPaymentStatus('idle');
-      setErrorMessage(null);
-    }, 5000);
-  };
+  //   setTimeout(() => {
+  //     setPaymentStatus('idle');
+  //     setErrorMessage(null);
+  //   }, 5000);
+  // };
 
   if (!isAuthenticated) {
     return (
@@ -186,16 +186,22 @@ function RozoIntentPayContent() {
           </div>
 
           {paymentStatus === 'idle' && (
-            <RozoPayButton
-              onSuccess={handlePaymentSuccess}
-              onError={handlePaymentError}
-              className="w-full"
+              <RozoPayButton.Custom
+              appId='rozoBananaMP'
+              onPaymentCompleted={handlePaymentSuccess}
+              // onError={handlePaymentError}
+              toChain={baseUSDC.chainId}
+              toAddress={getAddress(RECIPIENT_ADDRESS)}
+              toToken={getAddress(baseUSDC.token)}
+              toUnits={selectedPlan.price.toString()}
             >
-              <div className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold py-4 px-6 rounded-lg hover:from-yellow-500 hover:to-orange-600 transition-all flex items-center justify-center gap-2">
-                <CreditCard className="w-5 h-5" />
-                Pay with ROZO Intent Pay
-              </div>
-            </RozoPayButton>
+              {({ show }) => (
+                <div className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold py-4 px-6 rounded-lg hover:from-yellow-500 hover:to-orange-600 transition-all flex items-center justify-center gap-2">
+                  <CreditCard className="w-5 h-5" />
+                  Pay with ROZO Intent Pay
+                </div>
+              )}
+            </RozoPayButton.Custom>
           )}
 
           {paymentStatus === 'processing' && (
@@ -243,8 +249,6 @@ function RozoIntentPayContent() {
 
 export function RozoIntentPay() {
   return (
-    <RozoPayWrapper>
       <RozoIntentPayContent />
-    </RozoPayWrapper>
   );
 }

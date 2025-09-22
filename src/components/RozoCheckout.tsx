@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Loader2, Zap, Check } from 'lucide-react';
-import { useAccount } from 'wagmi';
-import Script from 'next/script';
+import { Check, Loader2, Zap } from "lucide-react";
+import Script from "next/script";
+import { useState } from "react";
+import { useAccount } from "wagmi";
 
 interface PricingTier {
   id: string;
@@ -15,14 +15,14 @@ interface PricingTier {
 
 const PRICING_TIERS: PricingTier[] = [
   {
-    id: 'monthly',
+    id: "monthly",
     usd: 20,
     points: 500,
     images: 100,
     popular: true,
   },
   {
-    id: 'yearly',
+    id: "yearly",
     usd: 200,
     points: 6000,
     images: 1200,
@@ -44,7 +44,7 @@ export default function RozoCheckout() {
 
   const handlePayment = async () => {
     if (!selectedTier || !isConnected || !address) {
-      setError('Please connect wallet and select a package');
+      setError("Please connect wallet and select a package");
       return;
     }
 
@@ -53,50 +53,55 @@ export default function RozoCheckout() {
 
     try {
       // Get auth token
-      const authToken = localStorage.getItem('authToken');
+      const authToken = localStorage.getItem("authToken");
       if (!authToken) {
-        throw new Error('Please authenticate first');
+        throw new Error("Please authenticate first");
       }
 
       // Create payment order
-      const apiUrl = process.env.NEXT_PUBLIC_BANANA_API_URL || 'https://eslabobvkchgpokxszwv.supabase.co/functions/v1';
-      const orderResponse = await fetch(`${apiUrl}/banana-payment-create-order`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`
-        },
-        body: JSON.stringify({
-          plan_type: selectedTier.id,
-          return_url: window.location.origin + '/payment/success'
-        }),
-      });
+      const apiUrl =
+        process.env.NEXT_PUBLIC_BANANA_API_URL ||
+        "https://eslabobvkchgpokxszwv.supabase.co/functions/v1";
+      const orderResponse = await fetch(
+        `${apiUrl}/banana-payment-create-order`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+          body: JSON.stringify({
+            plan_type: selectedTier.id,
+            return_url: window.location.origin + "/payment/success",
+          }),
+        }
+      );
 
       if (!orderResponse.ok) {
-        throw new Error('Failed to create payment order');
+        throw new Error("Failed to create payment order");
       }
 
       const orderData = await orderResponse.json();
-      
+
       // Generate externalId using user address + timestamp as suggested
       const timestamp = Date.now();
       const externalId = `${address}_${timestamp}`;
-      
+
       // Use backend paymentId if available, otherwise use our generated externalId
       const paymentId = orderData.paymentId || orderData.id || externalId;
 
       // Check if SDK is loaded
       if (!window.RozoPay) {
         // Try loading SDK manually
-        const script = document.createElement('script');
-        script.src = 'https://pay.rozo.ai/sdk/v1/rozopay.js';
+        const script = document.createElement("script");
+        script.src = "https://pay.rozo.ai/sdk/v1/rozopay.js";
         script.async = true;
         script.onload = () => {
           // SDK loaded, retry payment
           initializePayment();
         };
         script.onerror = () => {
-          throw new Error('Failed to load payment system');
+          throw new Error("Failed to load payment system");
         };
         document.body.appendChild(script);
         return;
@@ -106,13 +111,13 @@ export default function RozoCheckout() {
 
       function initializePayment() {
         const rozoPay = new window.RozoPay({
-          appId: 'rozoBananaMP',
+          appId: "rozoBananaMP",
           amount: selectedTier!.usd,
-          currency: 'USD',
+          currency: "USD",
           intent: `Buy ${selectedTier!.points} points for Banana`,
-          destinationAddress: '0x5772FBe7a7817ef7F586215CA8b23b8dD22C8897',
+          destinationAddress: "0x5772FBe7a7817ef7F586215CA8b23b8dD22C8897",
           destinationChainId: 8453,
-          destinationToken: 'USDC',
+          destinationToken: "USDC",
           metadata: {
             paymentId: paymentId,
             userAddress: address,
@@ -121,18 +126,18 @@ export default function RozoCheckout() {
           externalId: externalId,
           webhookUrl: `${apiUrl}/banana-payment-webhook`,
           onSuccess: (txHash: string) => {
-            console.log('Payment successful:', txHash);
+            console.log("Payment successful:", txHash);
             setIsLoading(false);
             // Refresh to update points
             setTimeout(() => window.location.reload(), 2000);
           },
           onError: (error: any) => {
-            console.error('Payment error:', error);
-            setError('Payment failed');
+            console.error("Payment error:", error);
+            setError("Payment failed");
             setIsLoading(false);
           },
           onClose: () => {
-            console.log('Payment modal closed');
+            console.log("Payment modal closed");
             setIsLoading(false);
           },
         });
@@ -141,8 +146,8 @@ export default function RozoCheckout() {
         rozoPay.open();
       }
     } catch (err) {
-      console.error('Payment error:', err);
-      setError(err instanceof Error ? err.message : 'Payment failed');
+      console.error("Payment error:", err);
+      setError(err instanceof Error ? err.message : "Payment failed");
       setIsLoading(false);
     }
   };
@@ -154,12 +159,12 @@ export default function RozoCheckout() {
         src="https://pay.rozo.ai/sdk/v1/rozopay.js"
         strategy="afterInteractive"
         onLoad={() => {
-          console.log('ROZO SDK loaded');
+          console.log("ROZO SDK loaded");
           setSdkReady(true);
         }}
         onError={() => {
-          console.error('Failed to load ROZO SDK');
-          setError('Payment system unavailable');
+          console.error("Failed to load ROZO SDK");
+          setError("Payment system unavailable");
         }}
       />
 
@@ -170,14 +175,24 @@ export default function RozoCheckout() {
             <div className="flex justify-between items-center">
               <div className="flex items-center space-x-2">
                 <span className="text-3xl">🍌</span>
-                <span className="font-bold text-xl">Banana</span>
+                <span className="font-bold text-xl text-black">Banana</span>
               </div>
               <button
                 onClick={() => window.history.back()}
                 className="text-gray-600 hover:text-gray-800"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -187,8 +202,12 @@ export default function RozoCheckout() {
         <div className="max-w-lg mx-auto px-4 py-6">
           {/* Title */}
           <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Choose Your Plan</h1>
-            <p className="text-gray-600 text-sm">Select a plan to generate AI images</p>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              Choose Your Plan
+            </h1>
+            <p className="text-gray-600 text-sm">
+              Select a plan to generate AI images
+            </p>
           </div>
 
           {/* Pricing Tiers */}
@@ -198,8 +217,8 @@ export default function RozoCheckout() {
                 key={tier.id}
                 className={`relative bg-white rounded-xl shadow-sm border-2 transition-all ${
                   selectedTier?.id === tier.id
-                    ? 'border-yellow-400 shadow-md'
-                    : 'border-gray-200 hover:border-gray-300'
+                    ? "border-yellow-400 shadow-md"
+                    : "border-gray-200 hover:border-gray-300"
                 }`}
               >
                 {tier.popular && (
@@ -218,31 +237,35 @@ export default function RozoCheckout() {
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-2xl font-bold text-gray-900">${tier.usd}</span>
-                        {tier.popular && <Zap className="w-5 h-5 text-yellow-500" />}
+                        <span className="text-2xl font-bold text-gray-900">
+                          ${tier.usd}
+                        </span>
+                        {tier.popular && (
+                          <Zap className="w-5 h-5 text-yellow-500" />
+                        )}
                       </div>
-                      
+
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
                           <span className="text-lg font-semibold text-yellow-600">
                             {tier.points.toLocaleString()} points
                           </span>
-                          {tier.id === 'monthly' && (
+                          {tier.id === "monthly" && (
                             <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded">
                               Popular
                             </span>
                           )}
-                          {tier.id === 'yearly' && (
+                          {tier.id === "yearly" && (
                             <span className="bg-purple-100 text-purple-700 text-xs px-2 py-0.5 rounded">
                               Save 17%
                             </span>
                           )}
                         </div>
-                        
+
                         <p className="text-sm text-gray-600">
                           Generate {tier.images} images
                         </p>
-                        
+
                         <p className="text-xs text-gray-500">
                           ${(tier.usd / tier.images).toFixed(2)} per image
                         </p>
@@ -250,11 +273,13 @@ export default function RozoCheckout() {
                     </div>
 
                     <div className="flex items-center">
-                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                        selectedTier?.id === tier.id
-                          ? 'border-yellow-400 bg-yellow-400'
-                          : 'border-gray-300'
-                      }`}>
+                      <div
+                        className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                          selectedTier?.id === tier.id
+                            ? "border-yellow-400 bg-yellow-400"
+                            : "border-gray-300"
+                        }`}
+                      >
                         {selectedTier?.id === tier.id && (
                           <Check className="w-4 h-4 text-white" />
                         )}
@@ -305,7 +330,7 @@ export default function RozoCheckout() {
               </>
             ) : (
               <>
-                Pay {selectedTier ? `$${selectedTier.usd}` : 'Select a package'}
+                Pay {selectedTier ? `$${selectedTier.usd}` : "Select a package"}
               </>
             )}
           </button>

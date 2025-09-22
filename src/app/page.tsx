@@ -1,42 +1,57 @@
-'use client';
+"use client";
 
-import { WalletButton } from '@/components/WalletButton';
-import { useAccount } from 'wagmi';
-import { MobileDashboard } from '@/components/MobileDashboard';
-import NanoBananaGenerator from '@/components/NanoBananaGenerator';
-import { useState, useEffect } from 'react';
-import { Toast } from '@/components/Toast';
+import { MobileDashboard } from "@/components/MobileDashboard";
+import NanoBananaGenerator from "@/components/NanoBananaGenerator";
+import { Toast } from "@/components/Toast";
+import { WalletButton } from "@/components/WalletButton";
+import { useEffect, useState } from "react";
+import { useAccount } from "wagmi";
 
 export default function Home() {
   const { address, isConnected } = useAccount();
   const [showGenerator, setShowGenerator] = useState(false);
-  const [toastMessage, setToastMessage] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'warning' } | null>(null);
+  const [toastMessage, setToastMessage] = useState<{
+    message: string;
+    type: "success" | "error" | "info" | "warning";
+  } | null>(null);
 
   useEffect(() => {
     // Check for JWT expiration
-    if (typeof window !== 'undefined') {
-      const authExpired = localStorage.getItem('auth_expired');
-      if (authExpired === 'true') {
-        setToastMessage({ message: 'Session expired. Please sign in again.', type: 'warning' });
-        localStorage.removeItem('auth_expired');
+    if (typeof window !== "undefined") {
+      const authExpired = localStorage.getItem("auth_expired");
+      if (authExpired === "true") {
+        setToastMessage({
+          message: "Session expired. Please sign in again.",
+          type: "warning",
+        });
+        localStorage.removeItem("auth_expired");
       }
 
       // Check for welcome messages
-      const welcomeNew = localStorage.getItem('welcome_new_user');
-      const welcomeBack = localStorage.getItem('welcome_back_user');
-      
-      if (welcomeNew === 'true') {
-        setToastMessage({ message: '🎉 Welcome to Banana! Happy to have you here!', type: 'success' });
-        localStorage.removeItem('welcome_new_user');
-      } else if (welcomeBack === 'true') {
-        setToastMessage({ message: 'Welcome back! Good to see you again!', type: 'success' });
-        localStorage.removeItem('welcome_back_user');
+      const welcomeNew = localStorage.getItem("welcome_new_user");
+      const welcomeBack = localStorage.getItem("welcome_back_user");
+
+      if (welcomeNew === "true") {
+        setToastMessage({
+          message: "🎉 Welcome to Banana! Happy to have you here!",
+          type: "success",
+        });
+        localStorage.removeItem("welcome_new_user");
+      } else if (welcomeBack === "true") {
+        setToastMessage({
+          message: "Welcome back! Good to see you again!",
+          type: "success",
+        });
+        localStorage.removeItem("welcome_back_user");
       }
     }
   }, [isConnected]);
 
   // Check if coming from /generate route
-  if (typeof window !== 'undefined' && window.location.pathname === '/generate') {
+  if (
+    typeof window !== "undefined" &&
+    window.location.pathname === "/generate"
+  ) {
     return <NanoBananaGenerator />;
   }
 
@@ -54,7 +69,7 @@ export default function Home() {
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-2">
               <span className="text-3xl">🍌</span>
-              <span className="font-bold text-xl">Banana</span>
+              <span className="font-bold text-xl text-black">Banana</span>
             </div>
             <WalletButton />
           </div>
@@ -68,19 +83,29 @@ export default function Home() {
               <div className="space-y-6">
                 <span className="text-8xl block">🍌</span>
                 <div>
-                  <h1 className="text-4xl font-bold text-gray-900 mb-2">Welcome to Rozo Banana</h1>
-                  <p className="text-lg text-gray-600">Edit images with few clicks</p>
+                  <h1 className="text-4xl font-bold text-gray-900 mb-2">
+                    Welcome to Rozo Banana
+                  </h1>
+                  <p className="text-lg text-gray-600">
+                    Edit images with few clicks
+                  </p>
                 </div>
               </div>
-              
+
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 space-y-4">
                 <div className="flex items-center space-x-3">
                   <span className="text-2xl">🎨</span>
-                  <p className="text-base text-gray-700 text-left">Generate and Edit images in seconds</p>
+                  <p className="text-base text-gray-700 text-left">
+                    Generate and Edit images in seconds
+                  </p>
                 </div>
                 <div className="flex items-center space-x-3">
                   <span className="text-2xl">💰</span>
-                  <p className="text-base text-gray-700 text-left">Invite friends and earn <span className="font-semibold text-yellow-600">10%</span> rewards</p>
+                  <p className="text-base text-gray-700 text-left">
+                    Invite friends and earn{" "}
+                    <span className="font-semibold text-yellow-600">10%</span>{" "}
+                    rewards
+                  </p>
                 </div>
               </div>
             </div>

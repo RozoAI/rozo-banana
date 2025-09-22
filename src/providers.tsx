@@ -1,11 +1,17 @@
 "use client";
 
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
-import { RozoPayProvider } from "@rozoai/intent-pay";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import dynamic from "next/dynamic";
 import * as React from "react";
 import { WagmiProvider } from "wagmi";
 import { rozoPayConfig } from "./lib/wagmi";
+
+// Dynamically import RozoPayProvider with ssr: false
+const RozoPayProvider = dynamic(
+  () => import("@rozoai/intent-pay").then((mod) => mod.RozoPayProvider),
+  { ssr: false }
+);
 
 // Create QueryClient outside component to prevent re-initialization
 const queryClient = new QueryClient({
@@ -62,7 +68,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <ProviderErrorBoundary>
       <WagmiProvider config={rozoPayConfig}>
         <QueryClientProvider client={queryClient}>
-          <RozoPayProvider>
+          <RozoPayProvider debugMode={false}>
             <RainbowKitProvider
               showRecentTransactions={false}
               modalSize="compact"

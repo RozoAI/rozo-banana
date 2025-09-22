@@ -26,7 +26,14 @@ export function MobileDashboard({ address }: MobileDashboardProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
 
-  // Removed auto-sign in to let user manually click sign in button
+  useEffect(() => {
+    // Auto sign-in when address is available and not authenticated
+    if (address && !isAuthenticated && !isLoading) {
+      console.log('🔄 [MobileDashboard] Auto signing in...');
+      signIn();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [address, isAuthenticated]);
 
   const fetchUserData = async () => {
     console.log('📊 [MobileDashboard] Fetching user data...');

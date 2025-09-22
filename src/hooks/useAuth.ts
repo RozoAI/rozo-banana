@@ -84,9 +84,9 @@ export function useAuth() {
     setIsLoading(true);
     
     try {
-      // Create message for Points Service authentication
+      // Create message for Supabase authentication (matching backend format)
       const nonce = Date.now().toString();
-      const message = `Sign this message to authenticate with ROZO\n\nNonce: ${nonce}\nTimestamp: ${new Date().toISOString()}`;
+      const message = `Welcome to ROZO Points!\n\nPlease sign this message to verify your wallet.\n\nNonce: ${nonce}`;
 
       // Sign message
       const signature = await signMessageAsync({
@@ -99,7 +99,7 @@ export function useAuth() {
         referralCode = urlParams.get('ref') || undefined;
       }
 
-      // Verify with Points Service
+      // Verify with Supabase auth-wallet-verify endpoint
       console.log('🔑 [useAuth] Calling authAPI.verify with:', {
         address,
         hasSignature: !!signature,
@@ -107,19 +107,20 @@ export function useAuth() {
         referralCode
       });
       
-      const { token, is_new_user, user, referral_applied } = await authAPI.verify(
+      const result = await authAPI.verify(
         message,
         signature,
         address,
         referralCode
       );
       
+      const { token, is_new_user, user } = result;
+      
       console.log('🎫 [useAuth] Auth verification response:', {
         hasToken: !!token,
         tokenPreview: token ? `${token.substring(0, 30)}...` : null,
         is_new_user,
-        hasUser: !!user,
-        referral_applied
+        hasUser: !!user
       });
       
       if (token) {

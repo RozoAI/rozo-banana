@@ -15,23 +15,17 @@ interface PricingTier {
 
 const PRICING_TIERS: PricingTier[] = [
   {
-    id: 'tier_10',
-    usd: 10,
-    points: 120,
-    images: 24,
-  },
-  {
-    id: 'tier_50',
-    usd: 50,
-    points: 800,
-    images: 160,
+    id: 'monthly',
+    usd: 20,
+    points: 500,
+    images: 100,
     popular: true,
   },
   {
-    id: 'tier_100',
-    usd: 100,
-    points: 2000,
-    images: 400,
+    id: 'yearly',
+    usd: 200,
+    points: 6000,
+    images: 1200,
   },
 ];
 
@@ -65,16 +59,16 @@ export default function RozoCheckout() {
       }
 
       // Create payment order
-      const orderResponse = await fetch(`${process.env.NEXT_PUBLIC_BANANA_API_URL || 'http://localhost:3000'}/api/payments/create-order`, {
+      const apiUrl = process.env.NEXT_PUBLIC_BANANA_API_URL || 'https://eslabobvkchgpokxszwv.supabase.co/functions/v1';
+      const orderResponse = await fetch(`${apiUrl}/banana-payment-create-order`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${authToken}`
         },
         body: JSON.stringify({
-          packageId: selectedTier.id,
-          amountUsd: selectedTier.usd,
-          points: selectedTier.points,
+          plan_type: selectedTier.id,
+          return_url: window.location.origin + '/payment/success'
         }),
       });
 
@@ -83,7 +77,13 @@ export default function RozoCheckout() {
       }
 
       const orderData = await orderResponse.json();
-      const { paymentId } = orderData;
+      
+      // Generate externalId using user address + timestamp as suggested
+      const timestamp = Date.now();
+      const externalId = `${address}_${timestamp}`;
+      
+      // Use backend paymentId if available, otherwise use our generated externalId
+      const paymentId = orderData.paymentId || orderData.id || externalId;
 
       // Check if SDK is loaded
       if (!window.RozoPay) {
@@ -107,18 +107,19 @@ export default function RozoCheckout() {
       function initializePayment() {
         const rozoPay = new window.RozoPay({
           appId: 'rozoBananaMP',
-          amount: selectedTier.usd,
+          amount: selectedTier!.usd,
           currency: 'USD',
-          intent: `Buy ${selectedTier.points} points for Banana`,
+          intent: `Buy ${selectedTier!.points} points for Banana`,
           destinationAddress: '0x5772FBe7a7817ef7F586215CA8b23b8dD22C8897',
           destinationChainId: 8453,
           destinationToken: 'USDC',
           metadata: {
             paymentId: paymentId,
             userAddress: address,
-            packageId: selectedTier.id,
+            plan_type: selectedTier!.id,
           },
-          webhookUrl: `${process.env.NEXT_PUBLIC_BANANA_API_URL || 'http://localhost:3000'}/api/payments/webhook`,
+          externalId: externalId,
+          webhookUrl: `${apiUrl}/banana-payment-webhook`,
           onSuccess: (txHash: string) => {
             console.log('Payment successful:', txHash);
             setIsLoading(false);
@@ -186,8 +187,8 @@ export default function RozoCheckout() {
         <div className="max-w-lg mx-auto px-4 py-6">
           {/* Title */}
           <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Top Up Points</h1>
-            <p className="text-gray-600 text-sm">1 USD = 10 points base rate</p>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Choose Your Plan</h1>
+            <p className="text-gray-600 text-sm">Select a plan to generate AI images</p>
           </div>
 
           {/* Pricing Tiers */}
@@ -226,14 +227,14 @@ export default function RozoCheckout() {
                           <span className="text-lg font-semibold text-yellow-600">
                             {tier.points.toLocaleString()} points
                           </span>
-                          {tier.usd === 50 && (
+                          {tier.id === 'monthly' && (
                             <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded">
-                              +60% bonus
+                              Popular
                             </span>
                           )}
-                          {tier.usd === 100 && (
+                          {tier.id === 'yearly' && (
                             <span className="bg-purple-100 text-purple-700 text-xs px-2 py-0.5 rounded">
-                              +100% bonus
+                              Save 17%
                             </span>
                           )}
                         </div>

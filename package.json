@@ -11,7 +11,7 @@
   "dependencies": {
     "@rainbow-me/rainbowkit": "^2.2.8",
     "@rozoai/intent-common": "^0.0.20",
-    "@rozoai/intent-pay": "^0.0.24",
+    "@rozoai/intent-pay": "^0.0.25",
     "@tanstack/react-query": "^5.89.0",
     "axios": "^1.12.1",
     "lucide-react": "^0.544.0",
@@ -31,6 +31,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.5.3",
+    "playwright": "^1.55.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

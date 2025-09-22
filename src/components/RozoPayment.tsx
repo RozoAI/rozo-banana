@@ -34,8 +34,8 @@ const PRICING_TIERS: PricingTier[] = [
     credits: 6000,
     images: 1200,
     period: 'year',
-    bonus: 'Save $40',
-    pioneerBonus: 10000,
+    bonus: 'Save 17%',
+    pioneerBonus: 12000,
   },
 ];
 
@@ -63,16 +63,16 @@ export default function RozoPayment() {
 
       console.log("HELLO", process.env.NEXT_PUBLIC_BANANA_API_URL)
       // Create payment order
-      const orderResponse = await fetch(`${process.env.NEXT_PUBLIC_BANANA_API_URL || 'http://localhost:3000/api'}/payment/create-order`, {
+      const apiUrl = process.env.NEXT_PUBLIC_BANANA_API_URL || 'https://eslabobvkchgpokxszwv.supabase.co/functions/v1';
+      const orderResponse = await fetch(`${apiUrl}/banana-payment-create-order`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${authToken}`
         },
         body: JSON.stringify({
-          packageId: selectedTier.id,
-          amountUsd: selectedTier.usd,
-          credits: selectedTier.credits,
+          plan_type: selectedTier.id,
+          return_url: window.location.origin + '/payment/success'
         }),
       });
 
@@ -82,13 +82,12 @@ export default function RozoPayment() {
 
       const orderData = await orderResponse.json();
       
-      // Check if we got a valid paymentId
-      if (!orderData.paymentId && !orderData.id) {
-        console.error('Invalid order response:', orderData);
-        throw new Error(orderData.error || 'Failed to create payment order - no payment ID received');
-      }
+      // Generate externalId using user address + timestamp as suggested
+      const timestamp = Date.now();
+      const externalId = `${address}_${timestamp}`;
       
-      const paymentId = orderData.paymentId || orderData.id || `temp_${Date.now()}_${address}`;
+      // Use backend paymentId if available, otherwise use our generated externalId
+      const paymentId = orderData.paymentId || orderData.id || externalId;
 
       // Open ROZO payment in iframe/modal
       const paymentUrl = `https://pay.rozo.ai/embed?` + new URLSearchParams({
@@ -99,9 +98,9 @@ export default function RozoPayment() {
         destinationAddress: '0x5772FBe7a7817ef7F586215CA8b23b8dD22C8897',
         destinationChainId: '8453',
         destinationToken: 'USDC',
-        externalId: paymentId,
+        externalId: externalId,
         userAddress: address,
-        webhookUrl: `${process.env.NEXT_PUBLIC_BANANA_API_URL || 'http://localhost:3000/api'}/payment/webhook`,
+        webhookUrl: `${apiUrl}/banana-payment-webhook`,
       }).toString();
 
       // Create modal overlay

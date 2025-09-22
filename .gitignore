@@ -2,7 +2,9 @@
 
 docs
 
+CLAUDE.md
 
+tests/
 # dependencies
 /node_modules
 /.pnp

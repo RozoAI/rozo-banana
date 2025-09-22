@@ -48,13 +48,15 @@ export default function NanoBananaGenerator() {
 
   // Load auth token and user data on mount
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
+    // Try to get token from multiple sources
+    const token = localStorage.getItem('rozo_token') || localStorage.getItem('auth_token') || localStorage.getItem('authToken');
     const savedAddress = localStorage.getItem('userAddress');
-    if (token && savedAddress) {
+    if (token) {
+      console.log('🔑 [NanoBanana] Found existing token');
       setAuthToken(token);
       fetchUserPoints(token);
       // If we have a saved address but wallet isn't connected, still show as authenticated
-      if (!isConnected) {
+      if (!isConnected && savedAddress) {
         // User is authenticated but wallet not connected - this is ok
         console.log('User authenticated with saved token');
       }
@@ -83,7 +85,7 @@ export default function NanoBananaGenerator() {
       
       console.log('✅ [NanoBanana] Signature obtained:', signature.substring(0, 20) + '...');
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_POINTS_API_URL || 'http://localhost:3001/points/api'}/auth/wallet/verify`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_POINTS_API_URL || 'http://localhost:3001/points/api'}/auth-wallet-verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -100,8 +102,10 @@ export default function NanoBananaGenerator() {
         const data = await response.json();
         console.log('🎫 [NanoBanana] Auth successful, token received');
         setAuthToken(data.token);
+        // Save token in all formats for compatibility
+        localStorage.setItem('rozo_token', data.token);
+        localStorage.setItem('auth_token', data.token);
         localStorage.setItem('authToken', data.token);
-        localStorage.setItem('rozo_token', data.token); // Also save as rozo_token for compatibility
         localStorage.setItem('userAddress', address.toLowerCase());
         await fetchUserPoints(data.token);
       } else {
@@ -115,17 +119,48 @@ export default function NanoBananaGenerator() {
 
   const fetchUserPoints = async (token: string) => {
     try {
+      // Ensure token is in localStorage for API interceptors
+      if (!localStorage.getItem('rozo_token')) {
+        localStorage.setItem('rozo_token', token);
+      }
+      
       // Get credits balance from the Banana Backend
       const { creditsAPI } = await import('../lib/api');
       const data = await creditsAPI.getBalance();
-      setUserCredits(data.credits || 0);
+      console.log('💳 [NanoBanana] Credits response:', data);
+      
+      // Extract credits value from various response formats
+      let creditsValue = 0;
+      if (typeof data === 'object' && data !== null) {
+        // Handle different response formats
+        if (typeof data.available === 'number') {
+          creditsValue = data.available;
+        } else if (typeof data.credits === 'number') {
+          creditsValue = data.credits;
+        } else if (data.data?.credits) {
+          if (typeof data.data.credits === 'number') {
+            creditsValue = data.data.credits;
+          } else if (typeof data.data.credits.available === 'number') {
+            creditsValue = data.data.credits.available;
+          }
+        } else if (typeof data.balance === 'number') {
+          creditsValue = data.balance;
+        }
+      }
+      
+      setUserCredits(creditsValue);
+      console.log('💰 [NanoBanana] Set credits to:', creditsValue);
       
       // Check generation history
-      const historyData = await pointsAPI.getHistory();
-      const hasGeneratedBefore = historyData.history?.some((item: any) => 
-        item.reason === 'Image generation' || item.reason === 'Free trial generation'
-      );
-      setIsFirstGeneration(!hasGeneratedBefore);
+      try {
+        const historyData = await pointsAPI.getHistory();
+        const hasGeneratedBefore = historyData.history?.some((item: any) => 
+          item.reason === 'Image generation' || item.reason === 'Free trial generation'
+        );
+        setIsFirstGeneration(!hasGeneratedBefore);
+      } catch (histErr) {
+        console.log('⚠️ [NanoBanana] Could not fetch history:', histErr);
+      }
     } catch (err) {
       console.error('Failed to fetch user points:', err);
     }
@@ -284,35 +319,51 @@ export default function NanoBananaGenerator() {
     setError(null);
 
     try {
-      const token = authToken || localStorage.getItem('authToken');
+      // Try multiple token sources
+      const token = authToken || localStorage.getItem('rozo_token') || localStorage.getItem('auth_token') || localStorage.getItem('authToken');
       
       if (!token) {
         throw new Error('Please authenticate first');
       }
 
-      // Use the imageAPI to generate image
-      const data = await imageAPI.generate(customPrompt);
+      // Use the imageAPI to generate image - pass prompt and images
+      console.log('🎨 [Generate] Sending request with:', { 
+        prompt: customPrompt, 
+        imageCount: uploadedImages.length 
+      });
+      
+      const data = await imageAPI.generate({
+        prompt: customPrompt,
+        images: uploadedImages // Base64 encoded images
+      });
+      
+      console.log('📦 [Generate] Response received:', data);
       
       if (!data || data.error) {
-        throw new Error(data?.error || 'Failed to generate response');
+        throw new Error(data?.error || data?.message || 'Failed to generate response');
       }
 
       // The generate endpoint returns either text response or image URL
-      if (!data.success) {
-        throw new Error(data.error || 'Generation failed');
+      if (!data.success && !data.response && !data.imageUrl && !data.data) {
+        throw new Error(data.error || data.message || 'Generation failed');
       }
       
-      // Check for response content
-      if (!data.response && !data.imageUrl) {
-        throw new Error('No response generated from AI');
+      // Check for response content - handle different response formats
+      if (!data.response && !data.imageUrl && !data.data?.response && !data.data?.imageUrl) {
+        console.error('❌ [Generate] No content in response:', data);
+        throw new Error('No response generated from AI. The backend may be experiencing issues.');
       }
 
+      // Handle different response formats from backend
+      const imageUrl = data.imageUrl || data.data?.imageUrl || null;
+      const response = data.response || data.data?.response || null;
+      
       setGeneratedImage({
-        imageUrl: data.imageUrl || null,
-        response: data.response || null,
+        imageUrl: imageUrl,
+        response: response,
         prompt: customPrompt,
-        pointsDeducted: data.metadata?.pointsDeducted || 0,
-        wasFreeTrial: data.metadata?.wasFreeTrial || false
+        pointsDeducted: data.metadata?.pointsDeducted || data.data?.pointsDeducted || 0,
+        wasFreeTrial: data.metadata?.wasFreeTrial || data.data?.wasFreeTrial || false
       });
 
       // Update credits
@@ -325,8 +376,25 @@ export default function NanoBananaGenerator() {
       if (data.metadata?.wasFreeTrial) {
         setIsFirstGeneration(false);
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+    } catch (err: any) {
+      console.error('❌ [Generate] Error:', err);
+      
+      // Better error handling with more details
+      let errorMessage = 'An error occurred';
+      if (err.response?.data?.error) {
+        errorMessage = err.response.data.error;
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      // Add status code if available
+      if (err.response?.status) {
+        errorMessage = `Request failed with status code ${err.response.status}: ${errorMessage}`;
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -338,25 +406,10 @@ export default function NanoBananaGenerator() {
       <header className="sticky top-0 w-full bg-white/90 backdrop-blur-md border-b border-gray-100 z-50">
         <div className="max-w-lg mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-2">
+            <a href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
               <span className="text-3xl">🍌</span>
               <span className="font-bold text-xl">Banana</span>
-            </div>
-            {isConnected ? (
-              <button
-                onClick={() => disconnect()}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
-              >
-                {address?.slice(0, 6)}...{address?.slice(-4)}
-              </button>
-            ) : (
-              <button
-                onClick={handleConnectWallet}
-                className="px-4 py-2 bg-yellow-400 text-white rounded-lg hover:bg-yellow-500 transition-colors text-sm font-medium"
-              >
-                Connect Wallet
-              </button>
-            )}
+            </a>
           </div>
         </div>
       </header>
@@ -491,6 +544,16 @@ export default function NanoBananaGenerator() {
                         </button>
                       </div>
                     ))}
+                    {/* Add more images button */}
+                    {uploadedImages.length < 9 && (
+                      <label htmlFor="image-upload" className="relative aspect-square cursor-pointer">
+                        <div className="w-full h-full border-2 border-dashed border-gray-300 rounded flex items-center justify-center hover:border-yellow-400 hover:bg-yellow-50 transition-colors">
+                          <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                          </svg>
+                        </div>
+                      </label>
+                    )}
                   </div>
                   <p className="text-xs text-gray-500 text-center">
                     {uploadedImages.length}/9 images uploaded

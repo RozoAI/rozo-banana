@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 export function WalletButton() {
   return (
@@ -13,21 +13,21 @@ export function WalletButton() {
         authenticationStatus,
         mounted,
       }) => {
-        const ready = mounted && authenticationStatus !== 'loading';
+        const ready = mounted && authenticationStatus !== "loading";
         const connected =
           ready &&
           account &&
           chain &&
-          (!authenticationStatus || authenticationStatus === 'authenticated');
+          (!authenticationStatus || authenticationStatus === "authenticated");
 
         return (
           <div
             {...(!ready && {
-              'aria-hidden': true,
-              'style': {
+              "aria-hidden": true,
+              style: {
                 opacity: 0,
-                pointerEvents: 'none',
-                userSelect: 'none',
+                pointerEvents: "none",
+                userSelect: "none",
               },
             })}
           >
@@ -48,7 +48,7 @@ export function WalletButton() {
                 <button
                   onClick={openAccountModal}
                   type="button"
-                  className="px-3 py-2 bg-white border rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+                  className="px-3 py-2 bg-white border rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors text-black cursor-pointer"
                 >
                   {account.displayName}
                 </button>

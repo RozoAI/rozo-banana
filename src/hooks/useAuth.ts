@@ -97,33 +97,69 @@ export function useAuth() {
       const nonce = Date.now().toString();
       const message = `Welcome to ROZO Points!\n\nPlease sign this message to verify your wallet.\n\nNonce: ${nonce}`;
 
-      // Sign message
-      const signature = await signMessageAsync({
-        message,
-      });
+      let signature = "";
+      let token = "";
+      let is_new_user = false;
+      let user = null;
 
-      // Check for referral code in URL if not provided
-      if (!referralCode) {
-        const urlParams = new URLSearchParams(window.location.search);
-        referralCode = urlParams.get("ref") || undefined;
+      const itemSigned = localStorage.getItem("rozo_signed_addresses");
+      if (itemSigned) {
+        const signedAddresses = JSON.parse(itemSigned);
+        if (signedAddresses.address === address) {
+          signature = signedAddresses.signature;
+          token =
+            localStorage.getItem("rozo_token") ||
+            localStorage.getItem("auth_token") ||
+            "";
+          is_new_user = localStorage.getItem("is_new_user") === "true" || false;
+          user = localStorage.getItem("rozo_user");
+        }
+      } else {
+        // Sign message
+        signature = await signMessageAsync({
+          message,
+        });
+        localStorage.setItem(
+          "rozo_signed_addresses",
+          JSON.stringify({
+            address,
+            signature,
+          })
+        );
+
+        // Check for referral code in URL if not provided
+        if (!referralCode) {
+          const urlParams = new URLSearchParams(window.location.search);
+          referralCode = urlParams.get("ref") || undefined;
+        }
+
+        // Verify with Supabase auth-wallet-verify endpoint
+        console.log("🔑 [useAuth] Calling authAPI.verify with:", {
+          address,
+          hasSignature: !!signature,
+          messageLength: message.length,
+          referralCode,
+        });
+
+        const result = await authAPI.verify(
+          message,
+          signature,
+          address,
+          referralCode
+        );
+
+        const {
+          token: tokenResult,
+          is_new_user: is_new_userResult,
+          user: userResult,
+        } = result;
+        token =
+          tokenResult ||
+          localStorage.getItem("rozo_token") ||
+          localStorage.getItem("auth_token");
+        is_new_user = is_new_userResult || false;
+        user = userResult || localStorage.getItem("rozo_user");
       }
-
-      // Verify with Supabase auth-wallet-verify endpoint
-      console.log("🔑 [useAuth] Calling authAPI.verify with:", {
-        address,
-        hasSignature: !!signature,
-        messageLength: message.length,
-        referralCode,
-      });
-
-      const result = await authAPI.verify(
-        message,
-        signature,
-        address,
-        referralCode
-      );
-
-      const { token, is_new_user, user } = result;
 
       console.log("🎫 [useAuth] Auth verification response:", {
         hasToken: !!token,
@@ -169,6 +205,7 @@ export function useAuth() {
     setIsAuthenticated(false);
     if (address) {
       globalAuthState[address] = false;
+      localStorage.removeItem("rozo_signed_addresses");
     }
   };
 

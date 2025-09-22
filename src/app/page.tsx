@@ -45,7 +45,41 @@ export default function Home() {
         localStorage.removeItem("welcome_back_user");
       }
     }
-  }, [isConnected]);
+    console.warn("🔑 [Home] isConnected:", isConnected);
+    console.warn("🔑 [Home] address:", address);
+    if (!isConnected || !address) {
+      const signedAddresses = localStorage.getItem("rozo_signed_addresses");
+      console.warn("🔑 [Home] signedAddresses:", signedAddresses);
+      if (signedAddresses) {
+        const signedAddressesObj = JSON.parse(signedAddresses);
+        console.warn("🔑 [Home] signedAddressesObj:", signedAddressesObj);
+        if (signedAddressesObj.address !== address) {
+          console.warn("🔑 [Home] signedAddressesObj.address !== address");
+          // authAPI.logout();
+        }
+      }
+    }
+
+    if (isConnected && address) {
+      const signedAddresses = localStorage.getItem("rozo_signed_addresses");
+      console.warn("🔑 [Home] signedAddresses:", signedAddresses);
+      if (signedAddresses) {
+        const signedAddressesObj = JSON.parse(signedAddresses);
+        if (signedAddressesObj.address !== address) {
+          console.warn("🔑 [Home] signedAddressesObj.address === address");
+          localStorage.removeItem("rozo_signed_addresses");
+          localStorage.removeItem("rozo_token");
+          localStorage.removeItem("auth_token");
+          localStorage.removeItem("rozo_user");
+          localStorage.removeItem("userAddress");
+          localStorage.removeItem("auth_expired");
+          localStorage.removeItem("welcome_new_user");
+          localStorage.removeItem("welcome_back_user");
+          localStorage.removeItem("authToken");
+        }
+      }
+    }
+  }, [isConnected, address]);
 
   // Check if coming from /generate route
   if (

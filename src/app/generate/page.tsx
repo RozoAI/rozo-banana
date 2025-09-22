@@ -1,4 +1,5 @@
-import NanoBananaGenerator from '@/components/NanoBananaGenerator';
+"use client";
+import NanoBananaGenerator from "@/components/NanoBananaGenerator";
 
 export default function GeneratePage() {
   return <NanoBananaGenerator />;

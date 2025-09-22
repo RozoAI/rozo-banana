@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
-import { WagmiProvider } from 'wagmi';
-import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
-import { RozoPayProvider } from '@rozoai/intent-pay';
-import { config } from './lib/wagmi';
+import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
+import { RozoPayProvider } from "@rozoai/intent-pay";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import * as React from "react";
+import { WagmiProvider } from "wagmi";
+import { rozoPayConfig } from "./lib/wagmi";
 
 // Create QueryClient outside component to prevent re-initialization
 const queryClient = new QueryClient({
@@ -32,7 +32,7 @@ class ProviderErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: Error) {
-    console.error('Provider error:', error);
+    console.error("Provider error:", error);
   }
 
   render() {
@@ -60,14 +60,16 @@ class ProviderErrorBoundary extends React.Component<
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ProviderErrorBoundary>
-      <WagmiProvider config={config}>
+      <WagmiProvider config={rozoPayConfig}>
         <QueryClientProvider client={queryClient}>
-          <RainbowKitProvider 
-            showRecentTransactions={false}
-            modalSize="compact"
-          >
-            {children}
-          </RainbowKitProvider>
+          <RozoPayProvider>
+            <RainbowKitProvider
+              showRecentTransactions={false}
+              modalSize="compact"
+            >
+              {children}
+            </RainbowKitProvider>
+          </RozoPayProvider>
         </QueryClientProvider>
       </WagmiProvider>
     </ProviderErrorBoundary>

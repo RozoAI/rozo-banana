@@ -349,15 +349,15 @@ export default function NanoBananaGenerator() {
       }
       
       // Check for response content - handle different response formats
-      if (!data.response && !data.imageUrl && !data.data?.response && !data.data?.imageUrl) {
+      if (!data.response && !data.imageUrl && !data.data?.response && !data.data?.imageUrl && !data.image?.dataUrl) {
         console.error('❌ [Generate] No content in response:', data);
         throw new Error('No response generated from AI. The backend may be experiencing issues.');
       }
 
       // Handle different response formats from backend
-      const imageUrl = data.imageUrl || data.data?.imageUrl || null;
-      const response = data.response || data.data?.response || null;
-      
+      const imageUrl = data.imageUrl || data.data?.imageUrl || data.image?.dataUrl || null;
+      const response = data.response || data.data?.response || data.image?.prompt || null;
+
       setGeneratedImage({
         imageUrl: imageUrl,
         response: response,

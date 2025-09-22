@@ -1,18 +1,19 @@
+import "@rainbow-me/rainbowkit/styles.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { Providers } from "../providers";
 import "./globals.css";
-import '@rainbow-me/rainbowkit/styles.css';
-import { Providers } from '../providers';
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Banana 🍌 - AI Image Generation",
-  description: "Generate amazing AI images with points. Earn through referrals!",
+  description:
+    "Generate amazing AI images with points. Earn through referrals!",
   icons: {
-    icon: '/banana-favicon.svg',
-    shortcut: '/banana-favicon.svg',
-    apple: '/banana.svg',
+    icon: "/banana-favicon.svg",
+    shortcut: "/banana-favicon.svg",
+    apple: "/banana.svg",
   },
 };
 
@@ -24,9 +25,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} antialiased`}>
-        <Providers>
-          {children}
-        </Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

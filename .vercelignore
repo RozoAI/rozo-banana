@@ -1,0 +1,37 @@
+# Test files
+test-*.sh
+test-*.js
+simulate-*.js
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
+# Documentation
+*.md
+README.md
+
+# Development files
+.env.local
+.env.development
+.vscode/
+.idea/
+
+# Testing
+playwright.config.ts
+playwright-report/
+test-results/
+
+# Build artifacts
+.turbo/
+.next/cache/
+
+# Node modules (handled by Vercel)
+node_modules/
+
+# Large dependencies that should be external
+node_modules/@playwright/
+node_modules/playwright/
+node_modules/@types/
+node_modules/eslint/
+node_modules/@eslint/

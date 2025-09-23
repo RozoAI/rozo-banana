@@ -34,30 +34,11 @@ export function useAuth() {
       });
 
       if (token) {
-        // Validate token with Points Service
-        console.log("🔍 [useAuth] Validating token with Points Service...");
-        authAPI
-          .validateToken()
-          .then((result) => {
-            console.log("✅ [useAuth] Token validation result:", result);
-            if (result.valid) {
-              setIsAuthenticated(true);
-              globalAuthState[address] = true;
-              console.log("✅ [useAuth] Token is valid, user authenticated");
-            } else {
-              // Token invalid, clear it
-              console.log("❌ [useAuth] Token is invalid, clearing auth");
-              authAPI.logout();
-              setIsAuthenticated(false);
-              globalAuthState[address] = false;
-            }
-          })
-          .catch((error) => {
-            console.error("❌ [useAuth] Token validation error:", error);
-            authAPI.logout();
-            setIsAuthenticated(false);
-            globalAuthState[address] = false;
-          });
+        // If token exists, assume authenticated
+        // If token is invalid, API calls will fail and trigger logout
+        console.log("✅ [useAuth] Token found, user authenticated");
+        setIsAuthenticated(true);
+        globalAuthState[address] = true;
       } else {
         console.log("⚠️ [useAuth] No existing token found");
         globalAuthState[address] = false;

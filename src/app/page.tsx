@@ -27,23 +27,6 @@ export default function Home() {
         localStorage.removeItem("auth_expired");
       }
 
-      // Check for welcome messages
-      const welcomeNew = localStorage.getItem("welcome_new_user");
-      const welcomeBack = localStorage.getItem("welcome_back_user");
-
-      if (welcomeNew === "true") {
-        setToastMessage({
-          message: "🎉 Welcome to Banana! Happy to have you here!",
-          type: "success",
-        });
-        localStorage.removeItem("welcome_new_user");
-      } else if (welcomeBack === "true") {
-        setToastMessage({
-          message: "Welcome back! Good to see you again!",
-          type: "success",
-        });
-        localStorage.removeItem("welcome_back_user");
-      }
     }
     console.warn("🔑 [Home] isConnected:", isConnected);
     console.warn("🔑 [Home] address:", address);
@@ -117,11 +100,14 @@ export default function Home() {
               <div className="space-y-6">
                 <span className="text-8xl block">🍌</span>
                 <div>
-                  <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                    Welcome to Rozo Banana
+                  <h1 className="text-4xl font-bold text-gray-900 mb-3">
+                    ROZO Banana
                   </h1>
-                  <p className="text-lg text-gray-600">
-                    Edit images with few clicks
+                  <p className="text-xl font-semibold text-gray-700">
+                    Create stunning images instantly
+                  </p>
+                  <p className="text-lg text-gray-600 mt-1">
+                    AI-powered editing in seconds
                   </p>
                 </div>
               </div>
@@ -129,16 +115,16 @@ export default function Home() {
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 space-y-4">
                 <div className="flex items-center space-x-3">
                   <span className="text-2xl">🎨</span>
-                  <p className="text-base text-gray-700 text-left">
-                    Generate and Edit images in seconds
+                  <p className="text-base font-medium text-gray-800 text-left">
+                    Generate and edit AI images instantly
                   </p>
                 </div>
                 <div className="flex items-center space-x-3">
                   <span className="text-2xl">💰</span>
-                  <p className="text-base text-gray-700 text-left">
-                    Invite friends and earn{" "}
-                    <span className="font-semibold text-yellow-600">10%</span>{" "}
-                    rewards
+                  <p className="text-base font-medium text-gray-800 text-left">
+                    Earn{" "}
+                    <span className="font-bold text-yellow-600">10%</span>{" "}
+                    rewards from referrals
                   </p>
                 </div>
               </div>

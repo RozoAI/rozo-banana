@@ -93,13 +93,17 @@ api.interceptors.request.use((config) => {
 // Handle JWT expiration for both API clients
 const handleAuthError = (error: any) => {
   console.log("🔐 [handleAuthError] Error:", error);
-  if (error.response?.status === 401) {
-    // localStorage.removeItem("rozo_token");
-    // localStorage.removeItem("auth_token");
-    // localStorage.setItem('auth_expired', 'true');
-    // if (typeof window !== 'undefined') {
-    //   window.location.href = '/';
-    // }
+  if (error.response?.status === 401 || error.response?.status === 403) {
+    console.log("❌ [handleAuthError] Token invalid/expired, logging out...");
+    localStorage.removeItem("rozo_token");
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("rozo_user");
+    localStorage.removeItem("userAddress");
+    localStorage.removeItem("rozo_signed_addresses");
+    localStorage.setItem('auth_expired', 'true');
+    if (typeof window !== 'undefined') {
+      window.location.href = '/';
+    }
   }
   return Promise.reject(error);
 };

@@ -37,12 +37,16 @@ const paymentPlans: PaymentPlan[] = [
   },
 ];
 
+// Track OG members count
+let ogMembersCount = 2; // Starting from 2/100
+
 function RozoIntentPayContent() {
   const { isAuthenticated, address } = useAuth();
   const { resetPayment } = useRozoPayUI();
   const [selectedPlan, setSelectedPlan] = useState<PaymentPlan>(paymentPlans[0]);
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [currentOGCount, setCurrentOGCount] = useState(ogMembersCount);
 
   useEffect(() => {
     // Reset payment when plan changes
@@ -111,7 +115,14 @@ function RozoIntentPayContent() {
             {plan.popular && (
               <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                 <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold">
-                  MOST POPULAR
+                  50% CASHBACK • LIMITED 100
+                </span>
+              </div>
+            )}
+            {plan.id === 'yearly' && (
+              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                <span className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-3 py-1 rounded-full text-xs font-bold">
+                  77% REWARDS • LIMITED 10
                 </span>
               </div>
             )}
@@ -130,23 +141,33 @@ function RozoIntentPayContent() {
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-5 h-5 text-green-500" />
-                  <span className="text-gray-700">
-                    <strong>{plan.credits}</strong> generation credits
+                  <span className="text-gray-700 text-lg font-semibold">
+                    {plan.credits} credits
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-500" />
-                  <span className="text-gray-700">
-                    <strong>+{plan.rozo} ROZO</strong> reward tokens
-                  </span>
-                </div>
-                {plan.id === 'yearly' && (
+                {plan.id === 'monthly' && (
                   <div className="flex items-center gap-2">
                     <CheckCircle className="w-5 h-5 text-green-500" />
                     <span className="text-gray-700">
-                      <strong>Save $40</strong> compared to monthly
+                      <strong className="text-yellow-600">50% cashback</strong> (1000 ROZO points)
                     </span>
                   </div>
+                )}
+                {plan.id === 'yearly' && (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-5 h-5 text-green-500" />
+                      <span className="text-gray-700">
+                        <strong className="text-purple-600">77% rewards</strong> (12000 ROZO points)
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-5 h-5 text-green-500" />
+                      <span className="text-gray-700">
+                        <strong>Save $40</strong> compared to monthly
+                      </span>
+                    </div>
+                  </>
                 )}
               </div>
             </div>
@@ -177,31 +198,63 @@ function RozoIntentPayContent() {
         </div>
 
         <div className="mt-6 border-t pt-6">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-            <p className="text-sm text-blue-800">
-              <strong>Network:</strong> Base Chain<br />
-              <strong>Payment Token:</strong> USDC<br />
-              <strong>Recipient:</strong> {RECIPIENT_ADDRESS.slice(0, 6)}...{RECIPIENT_ADDRESS.slice(-4)}
-            </p>
+          {/* Payment Method Icons */}
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg">
+              <CreditCard className="w-5 h-5 text-gray-600" />
+              <span className="text-sm font-medium text-gray-700">Card</span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg">
+              <svg className="w-5 h-5 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="6" width="18" height="12" rx="2" />
+                <path d="M3 10h18" />
+              </svg>
+              <span className="text-sm font-medium text-gray-700">Bank</span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg">
+              <svg className="w-5 h-5 text-gray-600" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+              </svg>
+              <span className="text-sm font-medium text-gray-700">Crypto</span>
+            </div>
           </div>
 
           {paymentStatus === 'idle' && (
+            <div className="space-y-3">
               <RozoPayButton.Custom
-              appId='rozoBananaMP'
-              onPaymentCompleted={handlePaymentSuccess}
-              // onError={handlePaymentError}
-              toChain={baseUSDC.chainId}
-              toAddress={getAddress(RECIPIENT_ADDRESS)}
-              toToken={getAddress(baseUSDC.token)}
-              toUnits={selectedPlan.price.toString()}
-            >
-              {({ show }) => (
-                <div className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold py-4 px-6 rounded-lg hover:from-yellow-500 hover:to-orange-600 transition-all flex items-center justify-center gap-2">
-                  <CreditCard className="w-5 h-5" />
-                  Pay with ROZO Intent Pay
+                appId='rozoBananaMP'
+                onPaymentCompleted={handlePaymentSuccess}
+                // onError={handlePaymentError}
+                toChain={baseUSDC.chainId}
+                toAddress={getAddress(RECIPIENT_ADDRESS)}
+                toToken={getAddress(baseUSDC.token)}
+                toUnits={selectedPlan.price.toString()}
+              >
+                {({ show }) => (
+                  <button
+                    onClick={show}
+                    className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold py-4 px-6 rounded-lg hover:from-yellow-500 hover:to-orange-600 transition-all"
+                  >
+                    Become OG
+                  </button>
+                )}
+              </RozoPayButton.Custom>
+              
+              {/* Progress indicator */}
+              <div className="flex items-center justify-between px-2">
+                <span className="text-sm text-gray-600">
+                  {currentOGCount}/100 OG members
+                </span>
+                <div className="flex-1 mx-4">
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-gradient-to-r from-yellow-400 to-orange-500 h-2 rounded-full transition-all"
+                      style={{ width: `${currentOGCount}%` }}
+                    />
+                  </div>
                 </div>
-              )}
-            </RozoPayButton.Custom>
+              </div>
+            </div>
           )}
 
           {paymentStatus === 'processing' && (

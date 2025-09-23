@@ -290,15 +290,16 @@ export const rozoAPI = {
   },
 
   getTransactions: async (page = 1, limit = 20) => {
-    const offset = (page - 1) * limit;
-    const { data } = await pointsApi.get(
-      `/points-transactions?limit=${limit}&offset=${offset}`
-    );
-    // Handle new response format
-    if (data.success && data.data) {
-      return data.data;
-    }
-    return data;
+    // NOTE: The legacy `/points-transactions` endpoint is no longer used.
+    // Return an empty history payload to keep callers working without hitting the API.
+    return {
+      history: [],
+      pagination: {
+        page,
+        limit,
+        total: 0,
+      },
+    } as any;
   },
 };
 

@@ -149,22 +149,31 @@ export default function NanoBananaGenerator() {
       const data = await creditsAPI.getBalance();
       console.log("💳 [NanoBanana] Credits response:", data);
 
-      // Extract credits value from various response formats
+      // Extract credits value from various possible response formats
       let creditsValue = 0;
       if (typeof data === "object" && data !== null) {
-        // Handle different response formats
-        if (typeof data.available === "number") {
-          creditsValue = data.available;
-        } else if (typeof data.credits === "number") {
-          creditsValue = data.credits;
-        } else if (data.data?.credits) {
-          if (typeof data.data.credits === "number") {
-            creditsValue = data.data.credits;
-          } else if (typeof data.data.credits.available === "number") {
-            creditsValue = data.data.credits.available;
+        // 1) Plain number fields
+        if (typeof (data as any).available === "number") {
+          creditsValue = (data as any).available;
+        } else if (typeof (data as any).credits === "number") {
+          creditsValue = (data as any).credits;
+        // 2) Top-level object with nested available: { credits: { available: N } }
+        } else if (
+          (data as any).credits &&
+          typeof (data as any).credits.available === "number"
+        ) {
+          creditsValue = (data as any).credits.available;
+        // 3) Nested under data: { data: { credits: number | { available: number } } }
+        } else if ((data as any).data?.credits) {
+          if (typeof (data as any).data.credits === "number") {
+            creditsValue = (data as any).data.credits;
+          } else if (
+            typeof (data as any).data.credits.available === "number"
+          ) {
+            creditsValue = (data as any).data.credits.available;
           }
-        } else if (typeof data.balance === "number") {
-          creditsValue = data.balance;
+        } else if (typeof (data as any).balance === "number") {
+          creditsValue = (data as any).balance;
         }
       }
 
@@ -749,16 +758,17 @@ export default function NanoBananaGenerator() {
                   </div>
                 </div>
               ) : null}
-
+{/* 
               {generatedImage.pointsDeducted >= 0 && (
                 <p className="text-gray-600 text-sm text-center mt-2">
                   {generatedImage.pointsDeducted} credits used
                 </p>
-              )}
+              )} */}
             </div>
           )}
         </div>
       </div>
+
     </div>
   );
 }

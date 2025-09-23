@@ -374,11 +374,6 @@ export default function BananaImageGenerator() {
                 </div>
               )}
 
-              {!isConnected && (
-                <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg">
-                  <p className="text-sm">Connect your wallet to start generating images. First generation is free!</p>
-                </div>
-              )}
             </div>
 
             {/* Output Section */}

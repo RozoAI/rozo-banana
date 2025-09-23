@@ -4,6 +4,8 @@ import { MobileDashboard } from "@/components/MobileDashboard";
 import NanoBananaGenerator from "@/components/NanoBananaGenerator";
 import { Toast } from "@/components/Toast";
 import { WalletButton } from "@/components/WalletButton";
+import Image from "next/image";
+import { HOME_GALLERY_IMAGES } from "@/constants/homeGallery";
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 
@@ -95,7 +97,7 @@ export default function Home() {
 
       <main className="max-w-lg mx-auto px-4">
         {!isConnected ? (
-          <div className="flex flex-col items-center justify-center min-h-[calc(100vh-5rem)] py-8">
+          <div className="flex flex-col items-center justify-start min-h-[calc(100vh-5rem)] py-8">
             <div className="text-center space-y-8 w-full">
               <div className="space-y-6">
                 <span className="text-8xl block">🍌</span>
@@ -103,12 +105,6 @@ export default function Home() {
                   <h1 className="text-4xl font-bold text-gray-900 mb-3">
                     ROZO Banana
                   </h1>
-                  <p className="text-xl font-semibold text-gray-700">
-                    Create stunning images instantly
-                  </p>
-                  <p className="text-lg text-gray-600 mt-1">
-                    AI-powered editing in seconds
-                  </p>
                 </div>
               </div>
 
@@ -116,16 +112,36 @@ export default function Home() {
                 <div className="flex items-center space-x-3">
                   <span className="text-2xl">🎨</span>
                   <p className="text-base font-medium text-gray-800 text-left">
-                    Generate and edit AI images instantly
+                    Generate with Nano Banana
                   </p>
                 </div>
                 <div className="flex items-center space-x-3">
                   <span className="text-2xl">💰</span>
                   <p className="text-base font-medium text-gray-800 text-left">
-                    Earn{" "}
                     <span className="font-bold text-yellow-600">10%</span>{" "}
                     rewards from referrals
                   </p>
+                </div>
+              </div>
+
+              {/* Public Gallery Preview (no auth, no API) */}
+              <div className="mt-6 bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-lg font-semibold text-gray-900">Gallery</h2>
+                  <button
+                    onClick={() => (window.location.href = "/gallery")}
+                    className="text-sm text-yellow-600 hover:text-yellow-700"
+                  >
+                    View all
+                  </button>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  {HOME_GALLERY_IMAGES.slice(0, 6).map((src, idx) => (
+                    <div key={idx} className="relative w-full aspect-square overflow-hidden rounded-lg bg-gray-100">
+                      {/* Using next/image for optimization; falls back to public/ paths */}
+                      <Image src={src} alt={`Gallery ${idx + 1}`} fill className="object-cover" />
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

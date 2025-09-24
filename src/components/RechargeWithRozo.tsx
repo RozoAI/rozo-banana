@@ -2,7 +2,7 @@
 
 import { baseUSDC } from "@rozoai/intent-common";
 import { RozoPayButton, useRozoPayUI } from "@rozoai/intent-pay";
-import { Check, Loader2, Zap } from "lucide-react";
+import { Check, HelpCircle, Loader2, Zap } from "lucide-react";
 import { useState } from "react";
 import { getAddress } from "viem";
 
@@ -183,6 +183,13 @@ export default function RechargeContent() {
                         <span className="text-lg font-semibold text-yellow-600">
                           {tier.credits.toLocaleString()} credits
                         </span>
+                        <div className="group relative">
+                          <HelpCircle className="w-3.5 h-3.5 text-gray-400 cursor-help" />
+                          <div className="absolute left-0 bottom-full mb-1 hidden group-hover:block z-10 w-56 p-2 bg-gray-800 text-white text-xs rounded shadow-lg">
+                            • Credits expire after 30 days<br/>
+                            • Points never expire
+                          </div>
+                        </div>
                         {tier.id === "monthly" && (
                           <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded">
                             50% Cashback

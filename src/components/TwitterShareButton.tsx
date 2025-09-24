@@ -69,7 +69,7 @@ export function TwitterShareButton({
 
     // Use share page URL if available, otherwise use image URL
     if (imageUrl) {
-      const shareUrl = `${window.location.origin}/share/${encodeURIComponent(
+      const shareUrl = `https://b.rozo.ai/share/${encodeURIComponent(
         imageUrl
       )}?ref=${encodeURIComponent(userReferralCode)}`;
       params.set("url", shareUrl);

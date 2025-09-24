@@ -1,12 +1,10 @@
 "use client";
 
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
-import { RozoPayProvider } from "@rozoai/intent-pay";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import * as React from "react";
 import { WagmiProvider } from "wagmi";
 import { walletConnectConfig } from "./lib/walletConnect";
-import { rozoPayConfig } from "./lib/wagmi";
 
 // Create QueryClient outside component to prevent re-initialization
 const queryClient = new QueryClient({
@@ -58,26 +56,25 @@ class ProviderErrorBoundary extends React.Component<
   }
 }
 
-export function Providers({ children }: { children: React.ReactNode }) {
-  // Use WalletConnect config for mobile support, fallback to Rozo config
-  const [isMobile, setIsMobile] = React.useState(false);
-  
+function ProvidersContent({ children }: { children: React.ReactNode }) {
+  const [RozoPayProvider, setRozoPayProvider] = React.useState<React.ComponentType<any> | null>(null);
+
   React.useEffect(() => {
-    // Detect mobile device
-    const checkMobile = () => {
-      const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
-      return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
-    };
-    setIsMobile(checkMobile());
+    // Dynamically import RozoPayProvider only on client side
+    import("@rozoai/intent-pay")
+      .then((module) => {
+        setRozoPayProvider(() => module.RozoPayProvider);
+      })
+      .catch((error) => {
+        console.warn("RozoPayProvider not available:", error);
+      });
   }, []);
 
-  // Use WalletConnect config for mobile, Rozo config for desktop
-  const config = isMobile ? walletConnectConfig : rozoPayConfig;
-
+  // Always use walletConnectConfig which works on both client and server
   return (
-    <ProviderErrorBoundary>
-      <WagmiProvider config={config}>
-        <QueryClientProvider client={queryClient}>
+    <WagmiProvider config={walletConnectConfig}>
+      <QueryClientProvider client={queryClient}>
+        {RozoPayProvider ? (
           <RozoPayProvider debugMode={false}>
             <RainbowKitProvider
               showRecentTransactions={false}
@@ -86,8 +83,23 @@ export function Providers({ children }: { children: React.ReactNode }) {
               {children}
             </RainbowKitProvider>
           </RozoPayProvider>
-        </QueryClientProvider>
-      </WagmiProvider>
+        ) : (
+          <RainbowKitProvider
+            showRecentTransactions={false}
+            modalSize="compact"
+          >
+            {children}
+          </RainbowKitProvider>
+        )}
+      </QueryClientProvider>
+    </WagmiProvider>
+  );
+}
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  return (
+    <ProviderErrorBoundary>
+      <ProvidersContent>{children}</ProvidersContent>
     </ProviderErrorBoundary>
   );
 }

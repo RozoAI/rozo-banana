@@ -1,7 +1,7 @@
 // Polyfill for crypto.randomUUID which may not be available in all environments
 if (typeof window !== 'undefined' && !window.crypto?.randomUUID) {
   if (window.crypto && !window.crypto.randomUUID) {
-    window.crypto.randomUUID = function(): string {
+    window.crypto.randomUUID = function() {
       // Fallback implementation using crypto.getRandomValues
       const bytes = new Uint8Array(16);
       crypto.getRandomValues(bytes);
@@ -18,7 +18,7 @@ if (typeof window !== 'undefined' && !window.crypto?.randomUUID) {
         hex.slice(12, 16),
         hex.slice(16, 20),
         hex.slice(20, 32)
-      ].join('-');
+      ].join('-') as `${string}-${string}-${string}-${string}-${string}`;
     };
   }
 }

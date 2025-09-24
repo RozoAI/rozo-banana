@@ -4,7 +4,7 @@ import { mainnet, polygon, arbitrum, optimism, base } from "wagmi/chains";
 import { walletConnect, injected } from "wagmi/connectors";
 
 // WalletConnect v2 Project ID - you should get your own from https://cloud.walletconnect.com
-const WALLETCONNECT_PROJECT_ID = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "YOUR_PROJECT_ID";
+const WALLETCONNECT_PROJECT_ID = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "ab8fa47f01e6a72c58bbb76577656051";
 
 // Chains configuration
 export const chains = [mainnet, polygon, arbitrum, optimism, base] as const;
@@ -25,7 +25,7 @@ export const walletConnectConfig = createConfig({
       metadata: {
         name: "Banana DApp",
         description: "Banana DApp - Generate and manage your digital bananas",
-        url: typeof window !== "undefined" ? window.location.origin : "http://localhost:3000",
+        url: typeof window !== "undefined" ? window.location.origin : "https://banana.rozo.ai",
         icons: ["https://avatars.githubusercontent.com/u/37784886"],
       },
     }),
@@ -41,6 +41,11 @@ export const walletConnectConfig = createConfig({
 
 // Create standalone WalletConnect provider for direct integration
 export async function createWalletConnectProvider() {
+  // Only initialize on client side
+  if (typeof window === "undefined") {
+    return null;
+  }
+
   const provider = await EthereumProvider.init({
     projectId: WALLETCONNECT_PROJECT_ID,
     chains: [1], // Mainnet
@@ -49,7 +54,7 @@ export async function createWalletConnectProvider() {
     metadata: {
       name: "Banana DApp",
       description: "Banana DApp - Generate and manage your digital bananas",
-      url: typeof window !== "undefined" ? window.location.origin : "http://localhost:3000",
+      url: window.location.origin,
       icons: ["https://avatars.githubusercontent.com/u/37784886"],
     },
     qrModalOptions: {
@@ -59,6 +64,6 @@ export async function createWalletConnectProvider() {
       },
     },
   });
-  
+
   return provider;
 }

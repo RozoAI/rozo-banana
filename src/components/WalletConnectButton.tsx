@@ -11,12 +11,14 @@ export function WalletConnectButton() {
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // Detect if running on mobile
-    const checkMobile = () => {
-      const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
-      return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
-    };
-    setIsMobile(checkMobile());
+    // Detect if running on mobile - only on client side
+    if (typeof window !== "undefined") {
+      const checkMobile = () => {
+        const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+        return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
+      };
+      setIsMobile(checkMobile());
+    }
   }, []);
 
   const formatAddress = (addr: string) => {
@@ -77,18 +79,20 @@ export function WalletConnectButton() {
     );
   }
 
+  // During SSR and initial client render, show a consistent button state
+  // to avoid hydration mismatches
   return (
     <button
       onClick={handleConnect}
       className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg hover:from-yellow-600 hover:to-orange-600 transition-all transform hover:scale-105 shadow-lg"
     >
-      {isMobile ? (
+      {isMobile === true ? (
         <Smartphone className="w-4 h-4" />
       ) : (
         <Wallet className="w-4 h-4" />
       )}
       <span className="font-medium">
-        {isMobile ? "Connect Mobile Wallet" : "Connect Wallet"}
+        {isMobile === true ? "Connect Mobile Wallet" : "Connect Wallet"}
       </span>
     </button>
   );

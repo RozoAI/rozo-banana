@@ -4,19 +4,33 @@ import { MobileDashboard } from "@/components/MobileDashboard";
 import NanoBananaGenerator from "@/components/NanoBananaGenerator";
 import { Toast } from "@/components/Toast";
 import { WalletButton } from "@/components/WalletButton";
+import { TwitterShareButton } from "@/components/TwitterShareButton";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
+import { useSearchParams } from "next/navigation";
 
 export default function Home() {
   const { address, isConnected } = useAccount();
+  const searchParams = useSearchParams();
   const [showGenerator, setShowGenerator] = useState(false);
   const [toastMessage, setToastMessage] = useState<{
     message: string;
     type: "success" | "error" | "info" | "warning";
   } | null>(null);
-  const [galleryImages, setGalleryImages] = useState<string[]>([]);
+  const [galleryImages, setGalleryImages] = useState<Array<{url: string, id: string}>>([]);
   const [galleryLoading, setGalleryLoading] = useState(false);
+
+  // Handle referral code from URL
+  useEffect(() => {
+    const referralCode = searchParams.get('ref');
+    if (referralCode) {
+      // Save referral code to localStorage and cookie
+      localStorage.setItem('referralCode', referralCode);
+      document.cookie = `referralCode=${referralCode}; path=/; max-age=${60 * 60 * 24 * 30}`; // 30 days
+      console.log('Referral code saved:', referralCode);
+    }
+  }, [searchParams]);
 
   // Fetch public gallery images
   useEffect(() => {
@@ -31,7 +45,10 @@ export default function Home() {
         const data = await response.json();
         
         if (data.success && data.data?.images) {
-          setGalleryImages(data.data.images.map((img: any) => img.url || img.image_url).filter(Boolean));
+          setGalleryImages(data.data.images.map((img: any) => ({
+            url: img.url || img.image_url,
+            id: img.id
+          })).filter((img: any) => img.url));
         }
       } catch (error) {
         console.error("Failed to fetch gallery images:", error);
@@ -163,15 +180,24 @@ export default function Home() {
                   </div>
                 ) : galleryImages.length > 0 ? (
                   <div className="grid grid-cols-3 gap-3">
-                    {galleryImages.slice(0, 18).map((src, idx) => (
-                      <div key={idx} className="relative w-full aspect-square overflow-hidden rounded-lg bg-gray-100">
+                    {galleryImages.slice(0, 6).map((img, idx) => (
+                      <div key={idx} className="relative w-full aspect-square overflow-hidden rounded-lg bg-gray-100 group">
                         <Image 
-                          src={src} 
+                          src={img.url} 
                           alt={`Gallery ${idx + 1}`} 
                           fill 
                           className="object-cover" 
                           unoptimized
                         />
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+                          <TwitterShareButton 
+                            imageUrl={img.url}
+                            shareId={img.id}
+                            className="text-xs px-2 py-1"
+                          >
+                            Share
+                          </TwitterShareButton>
+                        </div>
                       </div>
                     ))}
                   </div>

@@ -7,6 +7,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useAccount, useConnect, useDisconnect, useSignMessage } from "wagmi";
 import { injected } from "wagmi/connectors";
 import { imageAPI, pointsAPI } from "../lib/api";
+import { TwitterShareButton } from "./TwitterShareButton";
 
 interface GeneratedResult {
   imageUrl?: string;
@@ -752,17 +753,27 @@ export default function NanoBananaGenerator() {
                       className="object-contain rounded-lg"
                     />
                   </div>
-                  <button
-                    onClick={() => {
-                      const a = document.createElement("a");
-                      a.href = generatedImage.imageUrl!;
-                      a.download = `banana-${Date.now()}.png`;
-                      a.click();
-                    }}
-                    className="w-full mt-3 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                  >
-                    Download Image
-                  </button>
+                  <div className="flex gap-2 mt-3">
+                    <button
+                      onClick={() => {
+                        const a = document.createElement("a");
+                        a.href = generatedImage.imageUrl!;
+                        a.download = `banana-${Date.now()}.png`;
+                        a.click();
+                      }}
+                      className="flex-1 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                    >
+                      Download Image
+                    </button>
+                    <TwitterShareButton
+                      imageUrl={generatedImage.imageUrl}
+                      prompt={generatedImage.prompt}
+                      shareId={generatedImage.imageUrl?.split('/').pop()?.split('.')[0]} // Extract ID from URL
+                      className="px-4 py-2"
+                    >
+                      Share
+                    </TwitterShareButton>
+                  </div>
                 </>
               ) : generatedImage.response ? (
                 // Display text response

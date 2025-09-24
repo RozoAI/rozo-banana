@@ -5,6 +5,7 @@ import { imageAPI } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 import { useAccount } from 'wagmi';
 import { WalletButton } from '@/components/WalletButton';
+import { TwitterShareButton } from '@/components/TwitterShareButton';
 
 interface GeneratedImage {
   id: string;
@@ -165,15 +166,23 @@ export default function GalleryPage() {
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                       loading="lazy"
                     />
-                    {image.prompt && (
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <div className="absolute bottom-0 left-0 right-0 p-2">
-                          <p className="text-white text-xs line-clamp-2">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="absolute bottom-0 left-0 right-0 p-2">
+                        {image.prompt && (
+                          <p className="text-white text-xs line-clamp-2 mb-2">
                             {image.prompt}
                           </p>
-                        </div>
+                        )}
+                        <TwitterShareButton
+                          imageUrl={image.image_url || image.url}
+                          prompt={image.prompt}
+                          shareId={image.id}
+                          className="text-xs px-2 py-1"
+                        >
+                          Share
+                        </TwitterShareButton>
                       </div>
-                    )}
+                    </div>
                   </div>
                 ))}
               </div>

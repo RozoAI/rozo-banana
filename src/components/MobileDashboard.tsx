@@ -3,6 +3,7 @@
 import { useAuth } from "@/hooks/useAuth";
 import { creditsAPI, pointsAPI } from "@/lib/api";
 import { useEffect, useRef, useState } from "react";
+import { TwitterShareButton } from "./TwitterShareButton";
 
 interface MobileDashboardProps {
   address: string;

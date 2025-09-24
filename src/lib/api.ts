@@ -35,7 +35,13 @@ const api = bananaApi;
 
 // Add auth token to Banana API requests
 bananaApi.interceptors.request.use((config) => {
-  const token = localStorage.getItem("rozo_token");
+  // Check if we're in browser environment
+  let token = null;
+  
+  if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+    token = localStorage.getItem("rozo_token");
+  }
+  
   console.log("🚀 [BananaAPI] Request interceptor:", {
     url: config.url,
     method: config.method,
@@ -52,7 +58,13 @@ bananaApi.interceptors.request.use((config) => {
 
 // Add auth token to Points API requests
 pointsApi.interceptors.request.use((config) => {
-  const token = localStorage.getItem("rozo_token");
+  // Check if we're in browser environment
+  let token = null;
+  
+  if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+    token = localStorage.getItem("rozo_token");
+  }
+  
   console.log("🎯 [PointsAPI] Request interceptor:", {
     url: config.url,
     method: config.method,
@@ -71,17 +83,24 @@ pointsApi.interceptors.request.use((config) => {
 
 // Legacy interceptor for api
 api.interceptors.request.use((config) => {
-  const token =
-    localStorage.getItem("rozo_token") || localStorage.getItem("auth_token");
+  // Check if we're in browser environment
+  let token = null;
+  let tokenSource = "none";
+  
+  if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+    token = localStorage.getItem("rozo_token") || localStorage.getItem("auth_token");
+    tokenSource = localStorage.getItem("rozo_token")
+      ? "rozo_token"
+      : localStorage.getItem("auth_token")
+      ? "auth_token"
+      : "none";
+  }
+  
   console.log("📦 [LegacyAPI] Request interceptor:", {
     url: config.url,
     method: config.method,
     hasToken: !!token,
-    tokenSource: localStorage.getItem("rozo_token")
-      ? "rozo_token"
-      : localStorage.getItem("auth_token")
-      ? "auth_token"
-      : "none",
+    tokenSource: tokenSource,
   });
 
   if (token) {
@@ -102,13 +121,13 @@ const handleAuthError = (error: any) => {
   
   if ((error.response?.status === 401 || error.response?.status === 403) && !isInsufficientCredits) {
     console.log("❌ [handleAuthError] Token invalid/expired, logging out...");
-    localStorage.removeItem("rozo_token");
-    localStorage.removeItem("auth_token");
-    localStorage.removeItem("rozo_user");
-    localStorage.removeItem("userAddress");
-    localStorage.removeItem("rozo_signed_addresses");
-    localStorage.setItem('auth_expired', 'true');
     if (typeof window !== 'undefined') {
+      localStorage.removeItem("rozo_token");
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("rozo_user");
+      localStorage.removeItem("userAddress");
+      localStorage.removeItem("rozo_signed_addresses");
+      localStorage.setItem('auth_expired', 'true');
       window.location.href = '/';
     }
   }
@@ -159,14 +178,14 @@ export const authAPI = {
       if (data.success && data.data) {
         const { token, user } = data.data;
 
-        if (token) {
+        if (token && typeof window !== 'undefined') {
           localStorage.setItem("rozo_token", token);
           // Keep auth_token for backward compatibility
           localStorage.setItem("auth_token", token);
           console.log("💾 [authAPI.verify] Token saved to localStorage");
         }
 
-        if (user) {
+        if (user && typeof window !== 'undefined') {
           localStorage.setItem("rozo_user", JSON.stringify(user));
           console.log("💾 [authAPI.verify] User data saved to localStorage");
         }
@@ -191,6 +210,9 @@ export const authAPI = {
 
   logout: () => {
     console.log("🚪 [authAPI.logout] Logging out, clearing all auth data");
+    if (typeof window === 'undefined') {
+      return;
+    }
     // Clear all authentication tokens
     // localStorage.removeItem("rozo_token");
     // localStorage.removeItem("auth_token");
@@ -222,7 +244,7 @@ export const authAPI = {
 
   validateToken: async () => {
     try {
-      const token = localStorage.getItem("rozo_token");
+      const token = typeof window !== 'undefined' ? localStorage.getItem("rozo_token") : null;
       console.log("🔍 [authAPI.validateToken] Validating token:", {
         hasToken: !!token,
         tokenPreview: token ? `${token.substring(0, 20)}...` : null,

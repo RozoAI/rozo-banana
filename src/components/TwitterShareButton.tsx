@@ -69,8 +69,16 @@ export function TwitterShareButton({
 
     // Use share page URL if available, otherwise use image URL
     if (imageUrl) {
-      const shareUrl = `https://b.rozo.ai/share/${encodeURIComponent(
-        imageUrl
+      // Convert full Supabase URL to just the filename if needed
+      let imageFilename = imageUrl;
+      try {
+        if (imageUrl) {
+          const parts = imageUrl.split("/");
+          imageFilename = parts[parts.length - 1];
+        }
+      } catch {}
+      const shareUrl = `${window.location.origin}/share/${encodeURIComponent(
+        imageFilename
       )}?ref=${encodeURIComponent(userReferralCode)}`;
       params.set("url", shareUrl);
     } else if (shareId) {

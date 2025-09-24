@@ -43,7 +43,7 @@ export default function SharePage() {
           setImage({
             created_at: data.created_at || new Date().toISOString(),
             id: data.id || (params.id as string),
-            image_url: data.id || (params.id as string),
+            image_url: `https://eslabobvkchgpokxszwv.supabase.co/storage/v1/object/public/generated-images/rozobanana/${data.id}`,
             prompt:
               data.prompt || "AI-generated image created with ROZO Banana",
           });

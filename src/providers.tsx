@@ -5,6 +5,7 @@ import { RozoPayProvider } from "@rozoai/intent-pay";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import * as React from "react";
 import { WagmiProvider } from "wagmi";
+import { walletConnectConfig } from "./lib/walletConnect";
 import { rozoPayConfig } from "./lib/wagmi";
 
 // Create QueryClient outside component to prevent re-initialization
@@ -58,9 +59,24 @@ class ProviderErrorBoundary extends React.Component<
 }
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  // Use WalletConnect config for mobile support, fallback to Rozo config
+  const [isMobile, setIsMobile] = React.useState(false);
+  
+  React.useEffect(() => {
+    // Detect mobile device
+    const checkMobile = () => {
+      const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+      return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
+    };
+    setIsMobile(checkMobile());
+  }, []);
+
+  // Use WalletConnect config for mobile, Rozo config for desktop
+  const config = isMobile ? walletConnectConfig : rozoPayConfig;
+
   return (
     <ProviderErrorBoundary>
-      <WagmiProvider config={rozoPayConfig}>
+      <WagmiProvider config={config}>
         <QueryClientProvider client={queryClient}>
           <RozoPayProvider debugMode={false}>
             <RainbowKitProvider

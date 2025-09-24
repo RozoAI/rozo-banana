@@ -4,7 +4,7 @@ import { MobileDashboard } from "@/components/MobileDashboard";
 import NanoBananaGenerator from "@/components/NanoBananaGenerator";
 import { Toast } from "@/components/Toast";
 import { TwitterShareButton } from "@/components/TwitterShareButton";
-import { WalletButton } from "@/components/WalletButton";
+import { WalletConnectButton } from "@/components/WalletConnectButton";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
@@ -151,7 +151,7 @@ export default function Home() {
               <span className="text-3xl">🍌</span>
               <span className="font-bold text-xl text-black">Banana</span>
             </div>
-            <WalletButton />
+            <WalletConnectButton />
           </div>
         </div>
       </header>

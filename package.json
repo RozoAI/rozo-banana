@@ -14,6 +14,8 @@
     "@rozoai/intent-common": "^0.0.20",
     "@rozoai/intent-pay": "^0.0.25",
     "@tanstack/react-query": "^5.89.0",
+    "@walletconnect/ethereum-provider": "^2.21.9",
+    "@walletconnect/modal": "^2.7.0",
     "axios": "^1.12.1",
     "lucide-react": "^0.544.0",
     "next": "15.5.3",

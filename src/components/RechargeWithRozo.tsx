@@ -185,8 +185,10 @@ export default function RechargeContent() {
                         </span>
                         <div className="group relative">
                           <HelpCircle className="w-3.5 h-3.5 text-gray-400 cursor-help" />
-                          <div className="absolute left-0 bottom-full mb-1 hidden group-hover:block z-10 w-56 p-2 bg-gray-800 text-white text-xs rounded shadow-lg">
-                            • Credits expire after 30 days<br/>
+                          <div className="absolute left-0 bottom-full mb-1 hidden group-hover:block z-10 w-64 p-2 bg-gray-800 text-white text-xs rounded shadow-lg">
+                            {tier.id === "monthly" 
+                              ? "• credits expire after 30 days" 
+                              : "• 500 credits added each month"}<br/>
                             • Points never expire
                           </div>
                         </div>

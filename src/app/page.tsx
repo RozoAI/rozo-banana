@@ -5,7 +5,6 @@ import NanoBananaGenerator from "@/components/NanoBananaGenerator";
 import { Toast } from "@/components/Toast";
 import { WalletButton } from "@/components/WalletButton";
 import Image from "next/image";
-import { HOME_GALLERY_IMAGES } from "@/constants/homeGallery";
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 
@@ -16,6 +15,33 @@ export default function Home() {
     message: string;
     type: "success" | "error" | "info" | "warning";
   } | null>(null);
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
+  const [galleryLoading, setGalleryLoading] = useState(false);
+
+  // Fetch public gallery images
+  useEffect(() => {
+    const fetchGalleryImages = async () => {
+      if (isConnected) return; // Skip if user is connected
+      
+      setGalleryLoading(true);
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_BANANA_API_URL || "https://.supabase.co/functions/v1"}/banana-public-gallery?page=1&limit=18&sort=newest`
+        );
+        const data = await response.json();
+        
+        if (data.success && data.data?.images) {
+          setGalleryImages(data.data.images.map((img: any) => img.url || img.image_url).filter(Boolean));
+        }
+      } catch (error) {
+        console.error("Failed to fetch gallery images:", error);
+      } finally {
+        setGalleryLoading(false);
+      }
+    };
+
+    fetchGalleryImages();
+  }, [isConnected]);
 
   useEffect(() => {
     // Check for JWT expiration
@@ -124,25 +150,36 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Public Gallery Preview (no auth, no API) */}
+              {/* Public Gallery Preview */}
               <div className="mt-6 bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-lg font-semibold text-gray-900">Gallery</h2>
-                  <button
-                    onClick={() => (window.location.href = "/gallery")}
-                    className="text-sm text-yellow-600 hover:text-yellow-700"
-                  >
-                    View all
-                  </button>
                 </div>
-                <div className="grid grid-cols-3 gap-3">
-                  {HOME_GALLERY_IMAGES.slice(0, 6).map((src, idx) => (
-                    <div key={idx} className="relative w-full aspect-square overflow-hidden rounded-lg bg-gray-100">
-                      {/* Using next/image for optimization; falls back to public/ paths */}
-                      <Image src={src} alt={`Gallery ${idx + 1}`} fill className="object-cover" />
-                    </div>
-                  ))}
-                </div>
+                {galleryLoading ? (
+                  <div className="grid grid-cols-3 gap-3">
+                    {Array.from({ length: 18 }).map((_, idx) => (
+                      <div key={idx} className="w-full aspect-square bg-gray-200 rounded-lg animate-pulse" />
+                    ))}
+                  </div>
+                ) : galleryImages.length > 0 ? (
+                  <div className="grid grid-cols-3 gap-3">
+                    {galleryImages.slice(0, 18).map((src, idx) => (
+                      <div key={idx} className="relative w-full aspect-square overflow-hidden rounded-lg bg-gray-100">
+                        <Image 
+                          src={src} 
+                          alt={`Gallery ${idx + 1}`} 
+                          fill 
+                          className="object-cover" 
+                          unoptimized
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>No images available</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

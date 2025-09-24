@@ -33,7 +33,6 @@ export default function NanoBananaGenerator() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [userCredits, setUserCredits] = useState<number>(0);
-  const [isFirstGeneration, setIsFirstGeneration] = useState(true);
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<
     "popular" | "artistic" | "fun" | "product"
@@ -180,18 +179,6 @@ export default function NanoBananaGenerator() {
       setUserCredits(creditsValue);
       console.log("💰 [NanoBanana] Set credits to:", creditsValue);
 
-      // Check generation history
-      try {
-        const historyData = await pointsAPI.getHistory();
-        const hasGeneratedBefore = historyData.history?.some(
-          (item: any) =>
-            item.reason === "Image generation" ||
-            item.reason === "Free trial generation"
-        );
-        setIsFirstGeneration(!hasGeneratedBefore);
-      } catch (histErr) {
-        console.log("⚠️ [NanoBanana] Could not fetch history:", histErr);
-      }
     } catch (err) {
       console.error("Failed to fetch user points:", err);
     }
@@ -351,11 +338,17 @@ export default function NanoBananaGenerator() {
       return;
     }
 
-    // Check credits (skip for first generation)
-    if (!isFirstGeneration && userCredits < CREDITS_PER_GENERATION) {
-      setError(
-        `Insufficient credits. You need ${CREDITS_PER_GENERATION} credits.`
-      );
+    // Check credits
+    if (userCredits < CREDITS_PER_GENERATION) {
+      if (userCredits === 0) {
+        setError(
+          "You need credits to generate images. Please top up first to continue creating amazing content!"
+        );
+      } else {
+        setError(
+          `Insufficient credits. You need ${CREDITS_PER_GENERATION} credits.`
+        );
+      }
       return;
     }
 
@@ -449,8 +442,12 @@ export default function NanoBananaGenerator() {
         errorMessage = err.message;
       }
 
-      // Add status code if available
-      if (err.response?.status) {
+      // Clean up error message for insufficient credits
+      if (errorMessage.toLowerCase().includes('insufficient') || 
+          errorMessage.toLowerCase().includes('credits') ||
+          errorMessage.toLowerCase().includes('balance')) {
+        errorMessage = "Insufficient credits";
+      } else if (err.response?.status) {
         errorMessage = `Request failed with status code ${err.response.status}: ${errorMessage}`;
       }
 
@@ -690,34 +687,54 @@ export default function NanoBananaGenerator() {
               </p>
             </div>
 
-            <button
-              onClick={handleGenerate}
-              disabled={
-                isLoading ||
-                !customPrompt.trim() ||
-                uploadedImages.length === 0 ||
-                !isConnected
-              }
-              className="px-5 py-2.5 bg-gradient-to-r from-yellow-400 to-orange-400 text-white font-medium rounded-lg hover:from-yellow-500 hover:to-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 text-sm"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-5 h-5" />
-                  Generate
-                </>
-              )}
-            </button>
+            {userCredits === 0 ? (
+              <button
+                onClick={() => (window.location.href = "/recharge")}
+                className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all flex items-center gap-2 text-sm"
+              >
+                <Sparkles className="w-5 h-5" />
+                Top Up
+              </button>
+            ) : (
+              <button
+                onClick={handleGenerate}
+                disabled={
+                  isLoading ||
+                  !customPrompt.trim() ||
+                  uploadedImages.length === 0 ||
+                  !isConnected
+                }
+                className="px-5 py-2.5 bg-gradient-to-r from-yellow-400 to-orange-400 text-white font-medium rounded-lg hover:from-yellow-500 hover:to-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 text-sm"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-5 h-5" />
+                    Generate
+                  </>
+                )}
+              </button>
+            )}
           </div>
 
           {/* Error Message */}
           {error && (
             <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
-              {error}
+              <div className="flex items-center justify-between">
+                <span>{error}</span>
+                {userCredits === 0 && error.includes("top up") && (
+                  <button
+                    onClick={() => (window.location.href = "/recharge")}
+                    className="ml-3 px-3 py-1 bg-yellow-500 text-white text-xs rounded hover:bg-yellow-600 transition-colors"
+                  >
+                    Top Up
+                  </button>
+                )}
+              </div>
             </div>
           )}
 

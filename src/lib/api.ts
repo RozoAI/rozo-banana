@@ -93,7 +93,14 @@ api.interceptors.request.use((config) => {
 // Handle JWT expiration for both API clients
 const handleAuthError = (error: any) => {
   console.log("🔐 [handleAuthError] Error:", error);
-  if (error.response?.status === 401 || error.response?.status === 403) {
+  
+  // Check if it's an insufficient credits error - don't logout for this
+  const errorMessage = error.response?.data?.error || error.response?.data?.message || '';
+  const isInsufficientCredits = errorMessage.toLowerCase().includes('insufficient') || 
+                                errorMessage.toLowerCase().includes('credits') ||
+                                errorMessage.toLowerCase().includes('balance');
+  
+  if ((error.response?.status === 401 || error.response?.status === 403) && !isInsufficientCredits) {
     console.log("❌ [handleAuthError] Token invalid/expired, logging out...");
     localStorage.removeItem("rozo_token");
     localStorage.removeItem("auth_token");

@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
-import Image from 'next/image';
-import { TwitterShareButton } from '@/components/TwitterShareButton';
+import { TwitterShareButton } from "@/components/TwitterShareButton";
+import Image from "next/image";
+import { useParams, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 interface ShareImage {
   id: string;
@@ -22,12 +22,14 @@ export default function SharePage() {
 
   // Handle referral code from URL
   useEffect(() => {
-    const referralCode = searchParams.get('ref');
+    const referralCode = searchParams.get("ref");
     if (referralCode) {
       // Save referral code to localStorage and cookie
-      localStorage.setItem('referralCode', referralCode);
-      document.cookie = `referralCode=${referralCode}; path=/; max-age=${60 * 60 * 24 * 30}`; // 30 days
-      console.log('Referral code saved:', referralCode);
+      localStorage.setItem("referralCode", referralCode);
+      document.cookie = `referralCode=${referralCode}; path=/; max-age=${
+        60 * 60 * 24 * 30
+      }`; // 30 days
+      console.log("Referral code saved:", referralCode);
     }
   }, [searchParams]);
 
@@ -38,24 +40,38 @@ export default function SharePage() {
         const response = await fetch(`/api/share/${params.id}`);
         if (response.ok) {
           const data = await response.json();
-          setImage(data);
+          setImage({
+            created_at: data.created_at || new Date().toISOString(),
+            id: data.id || (params.id as string),
+            image_url: data.id || (params.id as string),
+            prompt:
+              data.prompt || "AI-generated image created with ROZO Banana",
+          });
+          setLoading(false);
           return;
         }
       } catch (apiError) {
-        console.warn('API fetch failed, using fallback:', apiError);
+        console.warn("API fetch failed, using fallback:", apiError);
       }
 
       // Fallback: create a mock image object for demo
       try {
+        let imageUrl = "";
+        if (params.id && params.id.includes("https")) {
+          imageUrl = decodeURIComponent(params.id as string);
+        } else {
+          imageUrl = `https://eslabobvkchgpokxszwv.supabase.co/storage/v1/object/public/generated-images/rozobanana/${params.id}`;
+        }
+
         setImage({
           id: params.id as string,
-          image_url: `https://eslabobvkchgpokxszwv.supabase.co/storage/v1/object/public/banana-images/${params.id}.png`,
+          image_url: imageUrl,
           prompt: "AI-generated image created with ROZO Banana",
           created_at: new Date().toISOString(),
         });
       } catch (fallbackError) {
-        console.error('Fallback failed:', fallbackError);
-        setError('Failed to load image');
+        console.error("Fallback failed:", fallbackError);
+        setError("Failed to load image");
       } finally {
         setLoading(false);
       }
@@ -64,7 +80,7 @@ export default function SharePage() {
     if (params.id) {
       fetchImage();
     } else {
-      setError('Invalid image ID');
+      setError("Invalid image ID");
       setLoading(false);
     }
   }, [params.id]);
@@ -85,10 +101,14 @@ export default function SharePage() {
       <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-orange-50 flex items-center justify-center">
         <div className="text-center">
           <span className="text-6xl mb-4 block">🍌</span>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Image Not Found</h1>
-          <p className="text-gray-600 mb-4">This image may have been removed or doesn't exist.</p>
-          <a 
-            href="/" 
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            Image Not Found
+          </h1>
+          <p className="text-gray-600 mb-4">
+            This image may have been removed or doesn't exist.
+          </p>
+          <a
+            href="/"
             className="px-6 py-3 bg-yellow-500 text-white rounded-lg font-semibold hover:bg-yellow-600 transition-colors"
           >
             Go to Banana
@@ -108,7 +128,7 @@ export default function SharePage() {
               <span className="text-3xl">🍌</span>
               <span className="font-bold text-xl text-black">Banana</span>
             </div>
-            <a 
+            <a
               href="/"
               className="px-4 py-2 bg-yellow-500 text-white rounded-lg font-semibold hover:bg-yellow-600 transition-colors"
             >
@@ -139,9 +159,7 @@ export default function SharePage() {
                   AI-Generated Image
                 </h1>
                 {image.prompt && (
-                  <p className="text-gray-600 mb-4">
-                    "{image.prompt}"
-                  </p>
+                  <p className="text-gray-600 mb-4">"{image.prompt}"</p>
                 )}
                 <div className="flex items-center gap-4 text-sm text-gray-500">
                   <span>Created with ROZO Banana</span>
@@ -160,7 +178,7 @@ export default function SharePage() {
               >
                 Share on X
               </TwitterShareButton>
-              
+
               <button
                 onClick={() => {
                   const a = document.createElement("a");
@@ -180,9 +198,10 @@ export default function SharePage() {
                 Create Your Own AI Images
               </h3>
               <p className="text-yellow-700 text-sm mb-3">
-                Transform your ideas into stunning visuals with ROZO Banana's AI image generator.
+                Transform your ideas into stunning visuals with ROZO Banana's AI
+                image generator.
               </p>
-              <a 
+              <a
                 href="/generate"
                 className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-medium"
               >

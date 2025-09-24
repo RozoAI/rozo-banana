@@ -6,7 +6,7 @@ import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
 import { useAccount, useConnect, useDisconnect, useSignMessage } from "wagmi";
 import { injected } from "wagmi/connectors";
-import { imageAPI, pointsAPI } from "../lib/api";
+import { imageAPI } from "../lib/api";
 import { TwitterShareButton } from "./TwitterShareButton";
 
 interface GeneratedResult {
@@ -427,9 +427,9 @@ export default function NanoBananaGenerator() {
         setUserCredits(data.data.credits_remaining);
       }
 
-      if (data.metadata?.wasFreeTrial) {
-        setIsFirstGeneration(false);
-      }
+      // if (data.metadata?.wasFreeTrial) {
+      //   setIsFirstGeneration(false);
+      // }
     } catch (err: any) {
       console.error("❌ [Generate] Error:", err);
 

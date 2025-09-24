@@ -3,52 +3,68 @@
 import { MobileDashboard } from "@/components/MobileDashboard";
 import NanoBananaGenerator from "@/components/NanoBananaGenerator";
 import { Toast } from "@/components/Toast";
-import { WalletButton } from "@/components/WalletButton";
 import { TwitterShareButton } from "@/components/TwitterShareButton";
+import { WalletButton } from "@/components/WalletButton";
 import Image from "next/image";
-import { useEffect, useState } from "react";
-import { useAccount } from "wagmi";
 import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useAccount } from "wagmi";
+
+// Component to handle referral code from URL params
+function ReferralHandler() {
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const referralCode = searchParams.get("ref");
+    if (referralCode) {
+      // Save referral code to localStorage and cookie
+      localStorage.setItem("referralCode", referralCode);
+      document.cookie = `referralCode=${referralCode}; path=/; max-age=${
+        60 * 60 * 24 * 30
+      }`; // 30 days
+      console.log("Referral code saved:", referralCode);
+    }
+  }, [searchParams]);
+
+  return null;
+}
 
 export default function Home() {
   const { address, isConnected } = useAccount();
-  const searchParams = useSearchParams();
   const [showGenerator, setShowGenerator] = useState(false);
   const [toastMessage, setToastMessage] = useState<{
     message: string;
     type: "success" | "error" | "info" | "warning";
   } | null>(null);
-  const [galleryImages, setGalleryImages] = useState<Array<{url: string, id: string}>>([]);
+  const [galleryImages, setGalleryImages] = useState<
+    Array<{ thumbnail?: string; url: string; id: string }>
+  >([]);
   const [galleryLoading, setGalleryLoading] = useState(false);
-
-  // Handle referral code from URL
-  useEffect(() => {
-    const referralCode = searchParams.get('ref');
-    if (referralCode) {
-      // Save referral code to localStorage and cookie
-      localStorage.setItem('referralCode', referralCode);
-      document.cookie = `referralCode=${referralCode}; path=/; max-age=${60 * 60 * 24 * 30}`; // 30 days
-      console.log('Referral code saved:', referralCode);
-    }
-  }, [searchParams]);
 
   // Fetch public gallery images
   useEffect(() => {
     const fetchGalleryImages = async () => {
       if (isConnected) return; // Skip if user is connected
-      
+
       setGalleryLoading(true);
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_BANANA_API_URL || "https://.supabase.co/functions/v1"}/banana-public-gallery?page=1&limit=18&sort=newest`
+          `${
+            process.env.NEXT_PUBLIC_BANANA_API_URL ||
+            "https://.supabase.co/functions/v1"
+          }/banana-public-gallery?page=1&limit=18&sort=newest`
         );
         const data = await response.json();
-        
+
         if (data.success && data.data?.images) {
-          setGalleryImages(data.data.images.map((img: any) => ({
-            url: img.url || img.image_url,
-            id: img.id
-          })).filter((img: any) => img.url));
+          setGalleryImages(
+            data.data.images
+              .map((img: any) => ({
+                url: img.thumbnail || img.url || img.image_url,
+                id: img.id,
+              }))
+              .filter((img: any) => img.url)
+          );
         }
       } catch (error) {
         console.error("Failed to fetch gallery images:", error);
@@ -71,7 +87,6 @@ export default function Home() {
         });
         localStorage.removeItem("auth_expired");
       }
-
     }
     console.warn("🔑 [Home] isConnected:", isConnected);
     console.warn("🔑 [Home] address:", address);
@@ -119,6 +134,9 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-orange-50">
+      <Suspense fallback={null}>
+        <ReferralHandler />
+      </Suspense>
       {toastMessage && (
         <Toast
           message={toastMessage.message}
@@ -170,28 +188,36 @@ export default function Home() {
               {/* Public Gallery Preview */}
               <div className="mt-6 bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-lg font-semibold text-gray-900">Gallery</h2>
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Gallery
+                  </h2>
                 </div>
                 {galleryLoading ? (
                   <div className="grid grid-cols-3 gap-3">
                     {Array.from({ length: 18 }).map((_, idx) => (
-                      <div key={idx} className="w-full aspect-square bg-gray-200 rounded-lg animate-pulse" />
+                      <div
+                        key={idx}
+                        className="w-full aspect-square bg-gray-200 rounded-lg animate-pulse"
+                      />
                     ))}
                   </div>
                 ) : galleryImages.length > 0 ? (
                   <div className="grid grid-cols-3 gap-3">
                     {galleryImages.slice(0, 6).map((img, idx) => (
-                      <div key={idx} className="relative w-full aspect-square overflow-hidden rounded-lg bg-gray-100 group">
-                        <Image 
-                          src={img.url} 
-                          alt={`Gallery ${idx + 1}`} 
-                          fill 
-                          className="object-cover" 
+                      <div
+                        key={idx}
+                        className="relative w-full aspect-square overflow-hidden rounded-lg bg-gray-100 group"
+                      >
+                        <Image
+                          src={img.thumbnail || img.url}
+                          alt={`Gallery ${idx + 1}`}
+                          fill
+                          className="object-cover"
                           unoptimized
                         />
                         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
-                          <TwitterShareButton 
-                            imageUrl={img.url}
+                          <TwitterShareButton
+                            imageUrl={img.thumbnail || img.url}
                             shareId={img.id}
                             className="text-xs px-2 py-1"
                           >

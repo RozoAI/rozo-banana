@@ -1,6 +1,6 @@
 "use client";
 
-import { TwitterShareButton } from "@/components/TwitterShareButton";
+import { ShareButton } from "@/components/ShareButton";
 import { WalletConnectButton } from "@/components/WalletConnectButton";
 import { useAuth } from "@/hooks/useAuth";
 import { imageAPI } from "@/lib/api";
@@ -149,7 +149,7 @@ export default function GalleryPage() {
                             {image.prompt}
                           </p>
                         )}
-                        <TwitterShareButton
+                        <ShareButton
                           imageUrl={
                             image.thumbnail || image.image_url || image.url
                           }
@@ -158,7 +158,7 @@ export default function GalleryPage() {
                           className="text-xs px-2 py-1"
                         >
                           Share
-                        </TwitterShareButton>
+                        </ShareButton>
                       </div>
                     </div>
                   </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { TwitterShareButton } from "@/components/TwitterShareButton";
+import { ShareButton } from "@/components/ShareButton";
 import Image from "next/image";
 import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -171,13 +171,13 @@ export default function SharePage() {
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3">
-              <TwitterShareButton
+              <ShareButton
                 imageUrl={image.image_url}
                 prompt={image.prompt}
                 className="flex-1"
               >
                 Share on X
-              </TwitterShareButton>
+              </ShareButton>
 
               <button
                 onClick={() => {

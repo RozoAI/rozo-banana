@@ -2,8 +2,8 @@
 
 import { MobileDashboard } from "@/components/MobileDashboard";
 import NanoBananaGenerator from "@/components/NanoBananaGenerator";
+import { ShareButton } from "@/components/ShareButton";
 import { Toast } from "@/components/Toast";
-import { TwitterShareButton } from "@/components/TwitterShareButton";
 import { WalletConnectButton } from "@/components/WalletConnectButton";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
@@ -207,14 +207,14 @@ export default function Home() {
                           className="object-cover"
                           unoptimized
                         />
-                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
-                          <TwitterShareButton
+                        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <ShareButton
                             imageUrl={img.thumbnail || img.url}
                             shareId={img.id}
                             className="text-xs px-2 py-1"
                           >
                             Share
-                          </TwitterShareButton>
+                          </ShareButton>
                         </div>
                       </div>
                     ))}

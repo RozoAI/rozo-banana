@@ -64,7 +64,7 @@ export default function RechargeContent() {
       // Generate unique external ID
       const timestamp = Date.now();
       const externalId = `banana_${selectedTier.id}_${timestamp}`;
-
+      const referralCode = localStorage.getItem("referralCode");
       const paymentParams = {
         appId: "rozoBananaMP", // Demo app ID for testing
         toUnits: selectedTier.usd.toString(),
@@ -79,6 +79,7 @@ export default function RechargeContent() {
           planName: selectedTier.name,
           credits: selectedTier.credits.toString(),
           images: selectedTier.images.toString(),
+          referralCode: referralCode || "",
         },
       };
 

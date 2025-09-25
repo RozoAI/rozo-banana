@@ -7,7 +7,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useAccount, useConnect, useDisconnect, useSignMessage } from "wagmi";
 import { injected } from "wagmi/connectors";
 import { imageAPI } from "../lib/api";
-import { TwitterShareButton } from "./TwitterShareButton";
+import { ShareButton } from "./ShareButton";
 
 interface GeneratedResult {
   imageUrl?: string;
@@ -1046,7 +1046,7 @@ export default function NanoBananaGenerator() {
                     >
                       Download Image
                     </button>
-                    <TwitterShareButton
+                    <ShareButton
                       imageUrl={generatedImage.imageUrl}
                       prompt={generatedImage.prompt}
                       shareId={
@@ -1055,7 +1055,7 @@ export default function NanoBananaGenerator() {
                       className="px-4 py-2"
                     >
                       Share
-                    </TwitterShareButton>
+                    </ShareButton>
                   </div>
                 </>
               ) : generatedImage.response ? (

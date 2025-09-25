@@ -1,13 +1,13 @@
 import { EthereumProvider } from "@walletconnect/ethereum-provider";
 import { createConfig, http } from "wagmi";
-import { mainnet, polygon, arbitrum, optimism, base, linea } from "wagmi/chains";
-import { walletConnect, injected } from "wagmi/connectors";
+import { arbitrum, base, bsc, linea, mainnet, optimism, polygon } from "wagmi/chains";
+import { injected, walletConnect } from "wagmi/connectors";
 
 // WalletConnect v2 Project ID - you should get your own from https://cloud.walletconnect.com
 const WALLETCONNECT_PROJECT_ID = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "ab8fa47f01e6a72c58bbb76577656051";
 
 // Chains configuration - includes all chains required by RozoPay
-export const chains = [mainnet, base, polygon, optimism, arbitrum, linea] as const;
+export const chains = [mainnet, base, polygon, optimism, arbitrum, linea, bsc] as const;
 
 // Create wagmi config with WalletConnect v2
 export const walletConnectConfig = createConfig({
@@ -37,6 +37,7 @@ export const walletConnectConfig = createConfig({
     [optimism.id]: http(),
     [arbitrum.id]: http(),
     [linea.id]: http(),
+    [bsc.id]: http(),
   },
 });
 

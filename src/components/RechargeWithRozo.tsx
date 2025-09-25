@@ -1,6 +1,7 @@
 "use client";
 
 import { baseUSDC } from "@rozoai/intent-common";
+import { RozoPayButtonProps, useRozoPayUI } from "@rozoai/intent-pay";
 import { Check, HelpCircle, Loader2, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getAddress } from "viem";
@@ -42,7 +43,9 @@ const DESTINATION_ADDRESS = getAddress(
 
 export default function RechargeContent() {
   // Default select the $20 plan (first tier)
-  const [selectedTier, setSelectedTier] = useState<PricingTier | null>(PRICING_TIERS[0]);
+  const [selectedTier, setSelectedTier] = useState<PricingTier | null>(
+    PRICING_TIERS[0]
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [RozoPayModule, setRozoPayModule] = useState<any>(null);
@@ -83,7 +86,9 @@ export default function RechargeContent() {
       }
     } catch (err) {
       console.error("Purchase error:", err);
-      setError(err instanceof Error ? err.message : "Failed to initiate purchase");
+      setError(
+        err instanceof Error ? err.message : "Failed to initiate purchase"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -193,7 +198,7 @@ export default function RechargeContent() {
                 Processing...
               </button>
             ) : RozoPayModule ? (
-              <RozoPayButton />
+              <RozoPayButton selectedTier={selectedTier} />
             ) : (
               <button
                 onClick={handlePurchase}
@@ -208,9 +213,7 @@ export default function RechargeContent() {
 
       {/* Info Section */}
       <div className="mt-8 text-center text-sm text-gray-500">
-        <p>
-          Payments are processed securely via Rozo Pay
-        </p>
+        <p>Payments are processed securely via Rozo Pay</p>
         <p className="mt-2">
           Need help?{" "}
           <a href="#" className="text-yellow-600 hover:text-yellow-700">
@@ -223,9 +226,10 @@ export default function RechargeContent() {
 }
 
 // Dynamic component for RozoPayButton
-function RozoPayButton() {
+function RozoPayButton({ selectedTier }: { selectedTier: PricingTier }) {
   const [Component, setComponent] = useState<any>(null);
-  const [payParams, setPayParams] = useState<any>(null);
+  const [payParams, setPayParams] = useState<RozoPayButtonProps | null>(null);
+  const { resetPayment } = useRozoPayUI();
 
   useEffect(() => {
     const loadComponent = async () => {
@@ -233,22 +237,23 @@ function RozoPayButton() {
         const module = await import("@rozoai/intent-pay");
         setComponent(() => module.RozoPayButton);
 
-        // Get selected tier from parent somehow
-        const selectedTier = PRICING_TIERS[0]; // Default to first tier
-        setPayParams({
-          allowance: {
-            token: baseUSDC,
-            amount: selectedTier.usd * 1e6,
-          },
-          recipient: DESTINATION_ADDRESS,
-          reference: `recharge-${selectedTier.id}-${Date.now()}`,
-        });
+        const params: RozoPayButtonProps = {
+          appId: "rozoBananaMP",
+          toAddress: DESTINATION_ADDRESS,
+          toToken: getAddress(baseUSDC.token),
+          toUnits: selectedTier.usd.toString(),
+          toChain: baseUSDC.chainId,
+          externalId: `recharge-${selectedTier.id}-${Date.now()}`,
+        };
+
+        setPayParams(params);
+        resetPayment(params);
       } catch (err) {
         console.error("Failed to load RozoPayButton:", err);
       }
     };
     loadComponent();
-  }, []);
+  }, [selectedTier]);
 
   if (!Component || !payParams) {
     return (

@@ -140,9 +140,19 @@ const handleAuthError = (error: any) => {
                                 errorMessage.toLowerCase().includes('credits') ||
                                 errorMessage.toLowerCase().includes('balance');
 
+  // Check if this is an auth endpoint - don't handle auth errors for auth endpoints
+  const isAuthEndpoint = error.config?.url?.includes('auth-wallet-verify') ||
+                         error.config?.url?.includes('auth/wallet');
+
   // Check if we're using a real user token or just the anon key
   const hasUserToken = typeof window !== 'undefined' &&
                        (localStorage.getItem("rozo_token") || localStorage.getItem("auth_token"));
+
+  // Don't handle errors for auth endpoints
+  if (isAuthEndpoint) {
+    console.log("🔐 [handleAuthError] Auth endpoint error, not handling redirect");
+    return Promise.reject(error);
+  }
 
   // Only logout if we have a real user token that's invalid
   // Don't logout for anon key failures (expected for some endpoints)

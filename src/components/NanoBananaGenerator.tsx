@@ -40,6 +40,48 @@ export default function NanoBananaGenerator() {
   >("popular");
   const [showPresets, setShowPresets] = useState(true);
   const hasFetched = useRef(false);
+  const [isTokenValid, setIsTokenValid] = useState(false);
+
+  // Helper function to check if JWT token is valid
+  const checkTokenValidity = (): boolean => {
+    // const token = localStorage.getItem("rozo_token") ||
+    //               localStorage.getItem("auth_token") ||
+    //               localStorage.getItem("authToken");
+    const token = localStorage.getItem("rozo_token");
+    if (!token) {
+      console.log("🔐 [Token Check] No token found");
+      return false;
+    }
+
+    // For now, just check if token exists
+    // The backend will validate if it's still valid
+    console.log("🔐 [Token Check] Token exists, assuming valid");
+    return true;
+
+    // Old JWT parsing code - keeping for reference
+    // Some tokens from auth-wallet-verify might not be standard JWT format
+    /*
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) {
+        console.log("🔐 [Token Check] Not a standard JWT, but still valid");
+        return true; // Accept non-JWT tokens from auth-wallet-verify
+      }
+
+      const payload = JSON.parse(atob(parts[1]));
+      if (payload.exp) {
+        const expiry = payload.exp * 1000;
+        const isValid = Date.now() < expiry;
+        console.log("🔐 [Token Check] Token valid:", isValid);
+        return isValid;
+      }
+      return true;
+    } catch (e) {
+      console.log("🔐 [Token Check] Can't parse token, assuming valid:", e);
+      return true; // Don't invalidate tokens we can't parse
+    }
+    */
+  };
 
   // Connect wallet
   const handleConnectWallet = async () => {
@@ -48,6 +90,27 @@ export default function NanoBananaGenerator() {
     } catch (err) {
       console.error("Failed to connect wallet:", err);
       setError("Failed to connect wallet");
+    }
+  };
+
+  // Handle disconnect and cleanup
+  const handleDisconnect = async () => {
+    try {
+      // Clean up auth tokens
+      localStorage.removeItem("rozo_token");
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("rozo_user");
+      localStorage.removeItem("userAddress");
+
+      setAuthToken(null);
+      setIsTokenValid(false);
+      setUserCredits(0);
+
+      // Disconnect wallet
+      await disconnect();
+    } catch (err) {
+      console.error("Failed to disconnect:", err);
     }
   };
 
@@ -60,14 +123,29 @@ export default function NanoBananaGenerator() {
       hasFetched.current = true;
     }
 
-    // Also check for existing token
-    const token =
-      localStorage.getItem("rozo_token") ||
-      localStorage.getItem("auth_token") ||
-      localStorage.getItem("authToken");
+    // Check for existing token and validate it
+    const rozoToken = localStorage.getItem("rozo_token");
+    const authToken = localStorage.getItem("auth_token");
+    const authTokenAlt = localStorage.getItem("authToken");
+
+    console.log("🔍 [NanoBanana] Checking tokens:", {
+      rozo_token: rozoToken ? "exists" : "missing",
+      auth_token: authToken ? "exists" : "missing",
+      authToken: authTokenAlt ? "exists" : "missing",
+    });
+
+    // const token = rozoToken || authToken || authTokenAlt;
+    const token = rozoToken;
+
     if (token) {
-      console.log("🔑 [NanoBanana] Found existing token");
+      console.log("🔑 [NanoBanana] Found existing token, treating as valid");
       setAuthToken(token);
+      setIsTokenValid(true); // Assume token is valid if it exists
+      // Don't clean up tokens - let the backend validate
+    } else {
+      console.log("🔐 [NanoBanana] No existing token found - need to authorize");
+      setAuthToken(null);
+      setIsTokenValid(false);
     }
   }, [isConnected, address]);
 
@@ -84,16 +162,19 @@ export default function NanoBananaGenerator() {
 
     try {
       // Check if we already have a valid token and don't need to force signature
-      if (!forceSignature) {
-        const existingToken = localStorage.getItem("rozo_token") ||
-                            localStorage.getItem("auth_token") ||
-                            localStorage.getItem("authToken");
+      if (!forceSignature && checkTokenValidity()) {
+        // const existingToken = localStorage.getItem("rozo_token") ||
+        //                     localStorage.getItem("auth_token") ||
+        //                     localStorage.getItem("authToken");
+        const existingToken = localStorage.getItem("rozo_token");                    
         const existingUser = localStorage.getItem("rozo_user");
 
         if (existingToken && existingUser) {
-          console.log("🎟️ [NanoBanana] Using existing token, skipping signature");
+          console.log("🎟️ [NanoBanana] Using existing valid token, skipping signature");
           setAuthToken(existingToken);
-          await fetchUserPoints(existingToken);
+          setIsTokenValid(true);
+          // Don't fetch credits - already have them from wallet connection
+          console.log("💰 [NanoBanana] Using existing credits balance:", userCredits);
           return true;
         }
       }
@@ -112,14 +193,19 @@ export default function NanoBananaGenerator() {
         signature.substring(0, 20) + "..."
       );
 
+      // Use direct fetch to avoid interceptor issues
       const response = await fetch(
         `${
           process.env.NEXT_PUBLIC_POINTS_API_URL ||
-          "http://localhost:3001/points/api"
+          "https://eslabobvkchgpokxszwv.supabase.co/functions/v1"
         }/auth-wallet-verify`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            // Add anon key directly since this endpoint expects it
+            "Authorization": `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0"}`
+          },
           body: JSON.stringify({
             address: address.toLowerCase(),
             signature, // Now using real signature
@@ -133,24 +219,68 @@ export default function NanoBananaGenerator() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log("🎫 [NanoBanana] Auth successful, token received");
-        setAuthToken(data.token);
+        console.log("🎫 [NanoBanana] Auth response:", data);
+
+        // Check different possible token locations in response
+        const token = data.token || data.data?.token || data.access_token;
+
+        if (!token) {
+          console.error("❌ [NanoBanana] No token in response:", data);
+          setIsTokenValid(false);
+          return false;
+        }
+
+        console.log("✅ [NanoBanana] Token received, saving to localStorage");
+
         // Save token in all formats for compatibility
-        localStorage.setItem("rozo_token", data.token);
-        localStorage.setItem("auth_token", data.token);
-        localStorage.setItem("authToken", data.token);
+        localStorage.setItem("rozo_token", token);
+        // localStorage.setItem("auth_token", token);
+        // localStorage.setItem("authToken", token);
         localStorage.setItem("userAddress", address.toLowerCase());
-        await fetchUserPoints(data.token);
+
+        // Verify token was saved
+        const savedToken = localStorage.getItem("rozo_token");
+        console.log("🔍 [NanoBanana] Token saved verification:", savedToken ? "SUCCESS" : "FAILED");
+
+        setAuthToken(token);
+        setIsTokenValid(true);
+
+        // Don't fetch credits again - we already have them from wallet connection
+        console.log("💰 [NanoBanana] Keeping existing credits balance:", userCredits);
         return true;
       } else {
         const errorData = await response.json();
         console.error("❌ [NanoBanana] Auth failed:", errorData);
+        setIsTokenValid(false);
         return false;
       }
     } catch (err) {
       console.error("❌ [NanoBanana] Authentication failed:", err);
       setError("Failed to authenticate. Please try again.");
+      setIsTokenValid(false);
       return false;
+    }
+  };
+
+  // Handle authorization button click
+  const handleAuthorize = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const authSuccess = await authenticateUser(true); // Force new signature
+      if (authSuccess) {
+        setError(null);
+        // Don't refresh credits - we already have them from wallet connection
+        console.log("✅ [Authorize] Authorization successful, keeping existing credits:", userCredits);
+      } else {
+        setError("Failed to authorize. Please try signing the message in your wallet.");
+      }
+    } catch (err) {
+      console.error("❌ [Authorize] Error:", err);
+      setError("Authorization failed. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -387,27 +517,11 @@ export default function NanoBananaGenerator() {
     setError(null);
 
     try {
-      // Check for existing token
-      let token = authToken ||
-                 localStorage.getItem("rozo_token") ||
-                 localStorage.getItem("auth_token") ||
-                 localStorage.getItem("authToken");
-
-      // If no token, we need to authenticate with wallet signature
-      if (!token) {
-        console.log("🔐 [Generate] No token found, need authentication");
-        const authSuccess = await authenticateUser(true); // Force signature
-
-        if (!authSuccess) {
-          setError("Authentication required to generate images. Please sign the message in your wallet.");
-          setIsLoading(false);
-          return;
-        }
-
-        // Get the token after successful authentication
-        token = localStorage.getItem("rozo_token") ||
-                localStorage.getItem("auth_token") ||
-                localStorage.getItem("authToken");
+      // Check if user has valid authorization
+      if (!isTokenValid) {
+        setError("Please click 'Authorize' first before generating images.");
+        setIsLoading(false);
+        return;
       }
 
       // Now check credits after authentication
@@ -623,10 +737,10 @@ export default function NanoBananaGenerator() {
               id="prompt-input"
               value={customPrompt}
               onChange={(e) => setCustomPrompt(e.target.value)}
-              placeholder="Describe what you want to create..."
-              className="w-full px-3 py-2.5 border-2 border-yellow-400 rounded-lg focus:outline-none focus:border-yellow-500 resize-none text-gray-700 placeholder-gray-400 text-sm"
+              placeholder={userCredits === 0 ? "Top up credits to start creating" : !isTokenValid ? "Authorize first to start creating" : "Describe what you want to create..."}
+              className="w-full px-3 py-2.5 border-2 border-yellow-400 rounded-lg focus:outline-none focus:border-yellow-500 resize-none text-gray-700 placeholder-gray-400 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               rows={2}
-              disabled={!isConnected}
+              disabled={!isConnected || userCredits === 0 || !isTokenValid}
             />
             {customPrompt && (
               <p className="text-xs text-gray-500 mt-1">
@@ -649,10 +763,20 @@ export default function NanoBananaGenerator() {
                 onChange={handleImageUpload}
                 className="hidden"
                 id="image-upload"
-                disabled={!isConnected}
+                disabled={!isConnected || userCredits === 0 || !isTokenValid}
               />
 
-              {uploadedImages.length > 0 ? (
+              {!isConnected || userCredits === 0 || !isTokenValid ? (
+                <div className="opacity-50">
+                  <ImageIcon className="w-10 h-10 text-gray-400 mx-auto mb-2" />
+                  <p className="text-gray-600 text-sm mb-1">
+                    {userCredits === 0 ? "Top up to upload images" : !isTokenValid ? "Authorize to upload images" : "Tap to upload images"}
+                  </p>
+                  <p className="text-gray-400 text-xs">
+                    Select 0-9 images (PNG, JPG up to 5MB each)
+                  </p>
+                </div>
+              ) : uploadedImages.length > 0 ? (
                 <div>
                   <div className="grid grid-cols-3 gap-2 mb-2">
                     {uploadedImages.map((img, idx) => (
@@ -752,6 +876,24 @@ export default function NanoBananaGenerator() {
               >
                 <Sparkles className="w-5 h-5" />
                 Top Up
+              </button>
+            ) : !isTokenValid ? (
+              <button
+                onClick={handleAuthorize}
+                disabled={isLoading}
+                className="px-5 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium rounded-lg hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 text-sm"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Authorizing...
+                  </>
+                ) : (
+                  <>
+                    <Wand2 className="w-5 h-5" />
+                    Authorize
+                  </>
+                )}
               </button>
             ) : (
               <button

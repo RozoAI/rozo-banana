@@ -41,13 +41,13 @@ export function RozoBalance() {
       setBalance({
         rozo: {
           balance: rozoData.balance || 0,
-          totalEarned: rozoData.total_earned || 0,
-          totalSpent: rozoData.total_spent || 0,
+          totalEarned: rozoData.lifetime_points || 0,
+          totalSpent: 0, // This field is not available in the current API
         },
         credits: {
-          available: creditsData.credits?.available || 0,
-          expiresAt: creditsData.credits?.expires_at || null,
-          planType: creditsData.credits?.plan_type || null,
+          available: creditsData.credits || creditsData.available || 0,
+          expiresAt: creditsData.expires_at || null,
+          planType: creditsData.plan_type || null,
         },
       });
     } catch (err) {

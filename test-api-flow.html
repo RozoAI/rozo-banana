@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Address Parameter Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            margin: 20px;
+            background: #1a1a1a;
+            color: #f0f0f0;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #444;
+            border-radius: 5px;
+            background: #2a2a2a;
+        }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .info { color: #60a5fa; }
+        .warning { color: #fbbf24; }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            background: #1f1f1f;
+            border-left: 3px solid #444;
+        }
+        .api-call {
+            background: #1e293b;
+            border-left: 3px solid #3b82f6;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 API Address Parameter Test</h1>
+
+    <div class="test-section">
+        <h2>Test Controls</h2>
+        <button onclick="simulateNoUser()">Simulate No User</button>
+        <button onclick="simulateLoggedInUser()">Simulate Logged In User (0x5772...)</button>
+        <button onclick="simulateAnotherUser()">Simulate Another User (0x1234...)</button>
+        <button onclick="clearAll()">Clear All Data</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Current State</h2>
+        <div id="currentState"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>API Calls Log</h2>
+        <div id="apiLog"></div>
+    </div>
+
+    <script type="module">
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0';
+        const SUPABASE_URL = 'https://eslabobvkchgpokxszwv.supabase.co/functions/v1';
+
+        // Helper function to get current user address (same as in api.ts)
+        function getCurrentAddress() {
+            // First check if we have a rozo_user in localStorage (from authentication)
+            const rozoUser = localStorage.getItem("rozo_user");
+            if (rozoUser) {
+                try {
+                    const user = JSON.parse(rozoUser);
+                    if (user.address) {
+                        log(`🏠 Found address from rozo_user: ${user.address}`, 'info');
+                        return user.address;
+                    }
+                } catch (e) {
+                    log(`❌ Failed to parse rozo_user: ${e.message}`, 'error');
+                }
+            }
+
+            // Fallback to userAddress
+            const userAddress = localStorage.getItem("userAddress");
+            if (userAddress) {
+                log(`🏠 Found address from userAddress: ${userAddress}`, 'info');
+                return userAddress;
+            }
+
+            // No user address found
+            log('🏠 No user address found, using 0x', 'warning');
+            return '0x';
+        }
+
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('apiLog');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logDiv.insertBefore(entry, logDiv.firstChild);
+        }
+
+        function updateState() {
+            const stateDiv = document.getElementById('currentState');
+            const address = getCurrentAddress();
+            const rozoUser = localStorage.getItem('rozo_user');
+            const userAddress = localStorage.getItem('userAddress');
+            const token = localStorage.getItem('rozo_token');
+
+            stateDiv.innerHTML = `
+                <div class="info">Current Address: <strong>${address}</strong></div>
+                <div>rozo_user: ${rozoUser ? '✓ Set' : '✗ Not set'}</div>
+                <div>userAddress: ${userAddress || 'Not set'}</div>
+                <div>rozo_token: ${token ? '✓ Set' : '✗ Not set'}</div>
+            `;
+        }
+
+        async function makeAPICall(endpoint) {
+            const address = getCurrentAddress();
+            const url = `${SUPABASE_URL}/${endpoint}?address=${address}`;
+
+            log(`📡 Calling ${endpoint} with address=${address}`, 'api-call');
+
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    log(`✅ ${endpoint} responded successfully`, 'success');
+                } else {
+                    log(`❌ ${endpoint} failed: ${data.error || data.message || 'Unknown error'}`, 'error');
+                }
+
+                return data;
+            } catch (error) {
+                log(`❌ ${endpoint} network error: ${error.message}`, 'error');
+                return null;
+            }
+        }
+
+        window.simulateNoUser = function() {
+            localStorage.clear();
+            log('🧹 Cleared all localStorage', 'info');
+            updateState();
+
+            // Make API calls
+            makeAPICall('banana-credits-balance');
+            makeAPICall('points-balance');
+            makeAPICall('user-profile');
+        };
+
+        window.simulateLoggedInUser = function() {
+            const user = {
+                id: 'test-id-1',
+                address: '0x5772c7b6e91d6b11de4c9e08e9acfc28dd7e4321',
+                current_points: 1000,
+                lifetime_points: 5000
+            };
+
+            localStorage.setItem('rozo_user', JSON.stringify(user));
+            localStorage.setItem('rozo_token', 'fake-jwt-token-for-testing');
+
+            log(`👤 Simulated logged in user: ${user.address}`, 'success');
+            updateState();
+
+            // Make API calls
+            makeAPICall('banana-credits-balance');
+            makeAPICall('points-balance');
+            makeAPICall('user-profile');
+        };
+
+        window.simulateAnotherUser = function() {
+            const user = {
+                id: 'test-id-2',
+                address: '0x1234567890123456789012345678901234567890',
+                current_points: 500,
+                lifetime_points: 2500
+            };
+
+            localStorage.setItem('rozo_user', JSON.stringify(user));
+            localStorage.setItem('rozo_token', 'another-fake-jwt-token');
+
+            log(`👤 Simulated another user: ${user.address}`, 'success');
+            updateState();
+
+            // Make API calls
+            makeAPICall('banana-credits-balance');
+            makeAPICall('points-balance');
+            makeAPICall('user-profile');
+        };
+
+        window.clearAll = function() {
+            localStorage.clear();
+            log('🧹 Cleared all data', 'info');
+            updateState();
+        };
+
+        // Initialize on load
+        updateState();
+        log('🚀 Test interface ready', 'success');
+        log('Click buttons above to simulate different user states', 'info');
+    </script>
+</body>
+</html>

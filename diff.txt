@@ -1,0 +1,122 @@
+diff --git a/src/components/BananaImageGenerator.tsx b/src/components/BananaImageGenerator.tsx
+index 06e0187..a6253a5 100644
+--- a/src/components/BananaImageGenerator.tsx
++++ b/src/components/BananaImageGenerator.tsx
+@@ -68,7 +68,7 @@ export default function BananaImageGenerator() {
+       
+       // In a real implementation, you would sign the message with the wallet
+       // For now, we'll simulate authentication
+-      const response = await fetch(`${process.env.NEXT_PUBLIC_BANANA_API_URL || 'http://localhost:3000'}/api/auth/login`, {
++      const response = await fetch(`${process.env.NEXT_PUBLIC_BANANA_API_URL || 'https://LOCALHOST'}/api/auth/login`, {
+         method: 'POST',
+         headers: {
+           'Content-Type': 'application/json',
+diff --git a/src/components/NanoBananaGenerator.tsx b/src/components/NanoBananaGenerator.tsx
+index 4fc55d5..7ff98be 100644
+--- a/src/components/NanoBananaGenerator.tsx
++++ b/src/components/NanoBananaGenerator.tsx
+@@ -85,7 +85,7 @@ export default function NanoBananaGenerator() {
+       
+       console.log('✅ [NanoBanana] Signature obtained:', signature.substring(0, 20) + '...');
+       
+-      const response = await fetch(`${process.env.NEXT_PUBLIC_POINTS_API_URL || 'http://localhost:3001/points/api'}/auth-wallet-verify`, {
++      const response = await fetch(`${process.env.NEXT_PUBLIC_POINTS_API_URL}/auth-wallet-verify`, {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify({
+@@ -349,14 +349,14 @@ export default function NanoBananaGenerator() {
+       }
+       
+       // Check for response content - handle different response formats
+-      if (!data.response && !data.imageUrl && !data.data?.response && !data.data?.imageUrl) {
++      if (!data.response && !data.imageUrl && !data.data?.response && !data.data?.imageUrl && !data.image?.dataUrl) {
+         console.error('❌ [Generate] No content in response:', data);
+         throw new Error('No response generated from AI. The backend may be experiencing issues.');
+       }
+ 
+       // Handle different response formats from backend
+-      const imageUrl = data.imageUrl || data.data?.imageUrl || null;
+-      const response = data.response || data.data?.response || null;
++      const imageUrl = data.imageUrl || data.data?.imageUrl || data.image?.dataUrl || null;
++      const response = data.response || data.data?.response || data.image?.prompt || null;
+       
+       setGeneratedImage({
+         imageUrl: imageUrl,
+diff --git a/src/components/Recharge.tsx b/src/components/Recharge.tsx
+index ae9cf7e..64c43d4 100644
+--- a/src/components/Recharge.tsx
++++ b/src/components/Recharge.tsx
+@@ -62,7 +62,7 @@ export default function Recharge() {
+       }
+ 
+       // Create payment order in backend  
+-      const apiUrl = process.env.NEXT_PUBLIC_BANANA_API_URL || 'https://eslabobvkchgpokxszwv.supabase.co/functions/v1';
++      const apiUrl = process.env.NEXT_PUBLIC_BANANA_API_URL || 'https://LOCALHOST';
+       const orderResponse = await fetch(`${apiUrl}/banana-payment-create-order`, {
+         method: 'POST',
+         headers: {
+@@ -202,7 +202,7 @@ export default function Recharge() {
+     const checkStatus = async () => {
+       try {
+         const authToken = localStorage.getItem('authToken');
+-        const apiUrl = process.env.NEXT_PUBLIC_BANANA_API_URL || 'https://eslabobvkchgpokxszwv.supabase.co/functions/v1';
++        const apiUrl = process.env.NEXT_PUBLIC_BANANA_API_URL || 'https://LOCALHOST';
+         const response = await fetch(`${apiUrl}/banana-payment-history?payment_id=${paymentId}`, {
+           headers: {
+             'Authorization': `Bearer ${authToken}`
+diff --git a/src/components/RozoCheckout.tsx b/src/components/RozoCheckout.tsx
+index 90fe2f6..9204e41 100644
+--- a/src/components/RozoCheckout.tsx
++++ b/src/components/RozoCheckout.tsx
+@@ -59,7 +59,7 @@ export default function RozoCheckout() {
+       }
+ 
+       // Create payment order
+-      const apiUrl = process.env.NEXT_PUBLIC_BANANA_API_URL || 'https://eslabobvkchgpokxszwv.supabase.co/functions/v1';
++      const apiUrl = process.env.NEXT_PUBLIC_BANANA_API_URL || 'https://LOCALHOST';
+       const orderResponse = await fetch(`${apiUrl}/banana-payment-create-order`, {
+         method: 'POST',
+         headers: {
+diff --git a/src/components/RozoPayment.tsx b/src/components/RozoPayment.tsx
+index 5b07233..b91e7b1 100644
+--- a/src/components/RozoPayment.tsx
++++ b/src/components/RozoPayment.tsx
+@@ -63,7 +63,7 @@ export default function RozoPayment() {
+ 
+       console.log("HELLO", process.env.NEXT_PUBLIC_BANANA_API_URL)
+       // Create payment order
+-      const apiUrl = process.env.NEXT_PUBLIC_BANANA_API_URL || 'https://eslabobvkchgpokxszwv.supabase.co/functions/v1';
++      const apiUrl = process.env.NEXT_PUBLIC_BANANA_API_URL || 'https://LOCALHOST';
+       const orderResponse = await fetch(`${apiUrl}/banana-payment-create-order`, {
+         method: 'POST',
+         headers: {
+diff --git a/src/lib/api.ts b/src/lib/api.ts
+index c1e8fae..b20a000 100644
+--- a/src/lib/api.ts
++++ b/src/lib/api.ts
+@@ -1,9 +1,9 @@
+ import axios from 'axios';
+ 
+ // Service URLs configuration
+-const BANANA_API_URL = process.env.NEXT_PUBLIC_BANANA_API_URL || 'https://eslabobvkchgpokxszwv.supabase.co/functions/v1';
+-const POINTS_API_URL = process.env.NEXT_PUBLIC_POINTS_API_URL || 'https://eslabobvkchgpokxszwv.supabase.co/functions/v1';
+-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://eslabobvkchgpokxszwv.supabase.co';
++const BANANA_API_URL = process.env.NEXT_PUBLIC_BANANA_API_URL || 'https://LOCALHOST';
++const POINTS_API_URL = process.env.NEXT_PUBLIC_POINTS_API_URL || 'https://LOCALHOST';
++const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://LOCALHOST';
+ const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0';
+ 
+ // Banana Backend API client (Supabase Edge Functions)
+diff --git a/src/lib/supabaseApi.ts b/src/lib/supabaseApi.ts
+index 2df2160..a616fc6 100644
+--- a/src/lib/supabaseApi.ts
++++ b/src/lib/supabaseApi.ts
+@@ -1,7 +1,7 @@
+ import axios from 'axios';
+ import { supabase } from './supabaseClient';
+ 
+-const API_BASE_URL = process.env.NEXT_PUBLIC_BANANA_API_URL || 'http://localhost:3000';
++const API_BASE_URL = process.env.NEXT_PUBLIC_BANANA_API_URL || 'https://LOCALHOST';
+ 
+ const api = axios.create({
+   baseURL: API_BASE_URL,

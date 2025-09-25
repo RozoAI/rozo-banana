@@ -86,7 +86,7 @@ export default function BananaImageGenerator() {
   const fetchUserPoints = async (token: string) => {
     try {
       const data = await pointsAPI.getBalance();
-      setUserPoints(data.available_points || 0);
+      setUserPoints(data.balance || data.points || 0);
       
       // Check if user has generated images before
       const historyData = await pointsAPI.getHistory();

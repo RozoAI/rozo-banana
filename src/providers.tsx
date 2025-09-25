@@ -56,50 +56,19 @@ class ProviderErrorBoundary extends React.Component<
   }
 }
 
-function ProvidersContent({ children }: { children: React.ReactNode }) {
-  const [RozoPayProvider, setRozoPayProvider] = React.useState<React.ComponentType<any> | null>(null);
-
-  React.useEffect(() => {
-    // Dynamically import RozoPayProvider only on client side
-    import("@rozoai/intent-pay")
-      .then((module) => {
-        setRozoPayProvider(() => module.RozoPayProvider);
-      })
-      .catch((error) => {
-        console.warn("RozoPayProvider not available:", error);
-      });
-  }, []);
-
-  // Always use walletConnectConfig which works on both client and server
+export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <WagmiProvider config={walletConnectConfig}>
-      <QueryClientProvider client={queryClient}>
-        {RozoPayProvider ? (
-          <RozoPayProvider debugMode={false}>
-            <RainbowKitProvider
-              showRecentTransactions={false}
-              modalSize="compact"
-            >
-              {children}
-            </RainbowKitProvider>
-          </RozoPayProvider>
-        ) : (
+    <ProviderErrorBoundary>
+      <WagmiProvider config={walletConnectConfig}>
+        <QueryClientProvider client={queryClient}>
           <RainbowKitProvider
             showRecentTransactions={false}
             modalSize="compact"
           >
             {children}
           </RainbowKitProvider>
-        )}
-      </QueryClientProvider>
-    </WagmiProvider>
-  );
-}
-
-export function Providers({ children }: { children: React.ReactNode }) {
-  return (
-    <ProviderErrorBoundary>
-      <ProvidersContent>{children}</ProvidersContent>
+        </QueryClientProvider>
+      </WagmiProvider>
     </ProviderErrorBoundary>
   );
 }

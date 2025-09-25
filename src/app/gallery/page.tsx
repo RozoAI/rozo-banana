@@ -23,26 +23,29 @@ export default function GalleryPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Fetch gallery when wallet is connected (no auth required)
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isConnected && address) {
+      console.log("🖼️ [Gallery] Fetching gallery for address:", address);
       fetchGallery();
     }
-  }, [isAuthenticated]);
+  }, [isConnected, address]);
 
-  useEffect(() => {
-    // Auto sign-in when address is available and not authenticated
-    if (address && !isAuthenticated && !isLoading) {
-      signIn();
-    }
-  }, [address, isAuthenticated, isLoading, signIn]);
+  // Removed auto sign-in - authentication will happen when needed
+  // useEffect(() => {
+  //   if (address && !isAuthenticated && !isLoading) {
+  //     signIn();
+  //   }
+  // }, [address, isAuthenticated, isLoading, signIn]);
 
   const fetchGallery = async () => {
     setLoading(true);
     setError(null);
 
     try {
+      // API will automatically use the current address from localStorage
       const response = await imageAPI.getHistory(1, 100); // Fetch up to 100 images
-      console.log("Gallery response:", response);
+      console.log("🌌 [Gallery] API response:", response);
 
       // Handle the response structure
       if (response.images) {
@@ -90,36 +93,8 @@ export default function GalleryPage() {
     );
   }
 
-  if (!isAuthenticated && !isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-orange-50">
-        <header className="sticky top-0 w-full bg-white/90 backdrop-blur-md border-b border-gray-100 z-50">
-          <div className="max-w-lg mx-auto px-4 py-4">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center space-x-2">
-                <span className="text-3xl">🍌</span>
-                <span className="font-bold text-xl text-black">Banana</span>
-              </div>
-              <WalletConnectButton />
-            </div>
-          </div>
-        </header>
-        <div className="flex flex-col justify-center items-center min-h-[calc(100vh-5rem)] space-y-4">
-          <div className="text-center">
-            <p className="text-lg text-gray-600 mb-4">
-              Please sign in to access your gallery
-            </p>
-            <button
-              onClick={() => signIn()}
-              className="px-6 py-3 bg-yellow-500 text-white rounded-lg font-semibold hover:bg-yellow-600 transition-colors"
-            >
-              Sign In with Wallet
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Remove authentication requirement - gallery can be viewed with just wallet connection
+  // Authentication will only be required when generating images
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-orange-50">

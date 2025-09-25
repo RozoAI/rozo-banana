@@ -27,6 +27,26 @@ export function WalletConnectButton() {
     }
   }, []);
 
+  // Save address when wallet connects
+  useEffect(() => {
+    if (isConnected && address) {
+      console.log("🔗 [WalletConnectButton] Wallet connected, saving address:", address);
+      // Save address in localStorage for API calls
+      localStorage.setItem("userAddress", address.toLowerCase());
+
+      // Also create a minimal user object if it doesn't exist
+      const existingUser = localStorage.getItem("rozo_user");
+      if (!existingUser) {
+        const user = {
+          address: address.toLowerCase(),
+          is_connected: true
+        };
+        localStorage.setItem("rozo_user", JSON.stringify(user));
+        console.log("👤 [WalletConnectButton] Created user object with address");
+      }
+    }
+  }, [isConnected, address]);
+
   const formatAddress = (addr: string) => {
     return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
   };

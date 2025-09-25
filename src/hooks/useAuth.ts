@@ -59,7 +59,7 @@ export function useAuth() {
     }
   }, [isConnected, address]);
 
-  const signIn = async (referralCode?: string) => {
+  const signIn = async (referralCode?: string, requireSignature: boolean = false) => {
     if (!address || isAuthenticated || isLoading || globalSignInInProgress) {
       return;
     }
@@ -83,17 +83,38 @@ export function useAuth() {
       let is_new_user = false;
       let user = null;
 
+      // Check if we already have a valid token and don't require a new signature
+      if (!requireSignature) {
+        const existingToken = localStorage.getItem("rozo_token") || localStorage.getItem("auth_token");
+        const existingUser = localStorage.getItem("rozo_user");
+
+        if (existingToken && existingUser) {
+          // We have a token and user data, consider authenticated
+          console.log("🎟️ [useAuth] Found existing token, skipping signature");
+          setIsAuthenticated(true);
+          globalAuthState[address] = true;
+          globalSignInInProgress = false;
+          setIsLoading(false);
+          return true;
+        }
+      }
+
       const itemSigned = localStorage.getItem("rozo_signed_addresses");
-      if (itemSigned) {
-        const signedAddresses = JSON.parse(itemSigned);
-        if (signedAddresses.address === address) {
-          signature = signedAddresses.signature;
-          token =
-            localStorage.getItem("rozo_token") ||
-            localStorage.getItem("auth_token") ||
-            "";
-          is_new_user = localStorage.getItem("is_new_user") === "true" || false;
-          user = localStorage.getItem("rozo_user");
+      if (itemSigned && !requireSignature) {
+        try {
+          const signedAddresses = JSON.parse(itemSigned);
+          // Check if the signed address matches current address (case insensitive)
+          if (signedAddresses.address?.toLowerCase() === address?.toLowerCase()) {
+            signature = signedAddresses.signature;
+            token =
+              localStorage.getItem("rozo_token") ||
+              localStorage.getItem("auth_token") ||
+              "";
+            is_new_user = localStorage.getItem("is_new_user") === "true" || false;
+            user = localStorage.getItem("rozo_user");
+          }
+        } catch (e) {
+          console.log("⚠️ [useAuth] Failed to parse signed addresses", e);
         }
       } else {
         // Sign message
@@ -154,6 +175,9 @@ export function useAuth() {
         setIsAuthenticated(true);
         globalAuthState[address] = true;
         setIsNewUser(is_new_user || false);
+        globalSignInInProgress = false;
+        setIsLoading(false);
+        return true;
 
         // Store user data
         if (user) {

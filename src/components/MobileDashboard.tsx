@@ -13,6 +13,7 @@ export function MobileDashboard({ address }: MobileDashboardProps) {
   const { isAuthenticated, signIn, isLoading } = useAuth();
   const [activeTab, setActiveTab] = useState("home");
   const [points, setPoints] = useState<number | null>(null);
+  const [credits, setCredits] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [affiliateName, setAffiliateName] = useState("");
@@ -22,35 +23,66 @@ export function MobileDashboard({ address }: MobileDashboardProps) {
   const [isTierDetailsExpanded, setIsTierDetailsExpanded] = useState(false);
   const hasFetched = useRef(false);
 
+  // Fetch user data when wallet is connected (address is available)
   useEffect(() => {
-    if (isAuthenticated) {
-      if (!hasFetched.current) {
-        fetchUserData();
-        hasFetched.current = true;
-      }
+    if (address && !hasFetched.current) {
+      console.log("📊 [MobileDashboard] Wallet connected, fetching user data for:", address);
+      fetchUserData();
+      hasFetched.current = true;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated]);
+  }, [address]);
 
-  useEffect(() => {
-    // Auto sign-in when address is available and not authenticated
-    if (address && !isAuthenticated && !isLoading) {
-      console.log("🔄 [MobileDashboard] Auto signing in...");
-      signIn();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [address, isAuthenticated]);
+  // Removed auto sign-in - authentication will happen when needed for image generation
+  // useEffect(() => {
+  //   if (address && !isAuthenticated && !isLoading) {
+  //     signIn();
+  //   }
+  // }, [address, isAuthenticated]);
 
 
   const fetchUserData = async () => {
-    console.log("📊 [MobileDashboard] Fetching user data...");
+    console.log("📊 [MobileDashboard] Fetching user data for address:", address);
     // Don't block UI - load data in background
     try {
-      // Fetch points balance
+      // Fetch points balance - API will use address parameter automatically
       console.log("💰 [MobileDashboard] Fetching points balance...");
-      const balance = await pointsAPI.getBalance();
-      console.log("✅ [MobileDashboard] Points balance response:", balance);
-      setPoints(balance.balance ?? balance.points ?? 0);
+
+      // Try to fetch points balance
+      try {
+        const balance = await pointsAPI.getBalance();
+        console.log("✅ [MobileDashboard] Points balance response:", balance);
+        setPoints(balance.balance ?? balance.points ?? 0);
+      } catch (pointsError: any) {
+        if (pointsError.response?.status === 401) {
+          console.log("🔔 [MobileDashboard] Points API requires authentication, showing default");
+          setPoints(0);
+        } else {
+          console.error("❌ [MobileDashboard] Points fetch error:", pointsError);
+          setPoints(0);
+        }
+      }
+
+      // Try to fetch credits balance
+      console.log("💳 [MobileDashboard] About to fetch credits...");
+      try {
+        const creditsData = await creditsAPI.getBalance();
+        console.log("✅ [MobileDashboard] Credits balance response:", creditsData);
+        setCredits(creditsData.credits ?? creditsData.available ?? 0);
+      } catch (creditsError: any) {
+        console.log("❌ [MobileDashboard] Credits fetch error details:", {
+          status: creditsError.response?.status,
+          data: creditsError.response?.data,
+          message: creditsError.message
+        });
+        if (creditsError.response?.status === 401) {
+          console.log("🔔 [MobileDashboard] Credits API requires authentication, showing default");
+          setCredits(0);
+        } else {
+          console.error("❌ [MobileDashboard] Credits fetch error:", creditsError);
+          setCredits(0);
+        }
+      }
 
 
       // Load saved affiliate name from localStorage
@@ -100,19 +132,15 @@ export function MobileDashboard({ address }: MobileDashboardProps) {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  if (!isAuthenticated && !isLoading) {
+  // Show dashboard if wallet is connected (address prop is passed)
+  // Don't require authentication just to view dashboard
+  if (!address) {
     return (
       <div className="flex flex-col justify-center items-center h-screen space-y-4">
         <div className="text-center">
           <p className="text-lg text-gray-600 mb-4">
-            Please sign in to access your dashboard
+            Please connect your wallet to access the dashboard
           </p>
-          <button
-            onClick={() => signIn()}
-            className="px-6 py-3 bg-yellow-500 text-white rounded-lg font-semibold hover:bg-yellow-600 transition-colors"
-          >
-            Sign In with Wallet
-          </button>
         </div>
       </div>
     );

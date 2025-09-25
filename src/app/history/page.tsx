@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { imageAPI } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
+import { useAccount } from 'wagmi';
 import Image from 'next/image';
 import Link from 'next/link';
 import { 
@@ -36,6 +37,7 @@ interface Pagination {
 
 export default function ImageHistoryPage() {
   const { isAuthenticated } = useAuth();
+  const { address, isConnected } = useAccount();
   const [images, setImages] = useState<GeneratedImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,18 +48,22 @@ export default function ImageHistoryPage() {
     total: 0
   });
 
+  // Fetch history when wallet is connected (no auth required)
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isConnected && address) {
+      console.log("📜 [History] Fetching history for address:", address);
       fetchHistory();
     }
-  }, [isAuthenticated, pagination.page]);
+  }, [isConnected, address, pagination.page]);
 
   const fetchHistory = async () => {
     setLoading(true);
     setError(null);
     
     try {
+      // API will automatically use the current address from localStorage
       const data = await imageAPI.getHistory(pagination.page, pagination.limit);
+      console.log("📦 [History] API response:", data);
       setImages(data.images || []);
       setPagination(data.pagination || {
         page: pagination.page,

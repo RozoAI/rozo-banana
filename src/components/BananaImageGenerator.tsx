@@ -52,44 +52,34 @@ export default function BananaImageGenerator() {
     }
   };
 
-  // Authenticate and get user info
-  useEffect(() => {
-    if (isConnected && address) {
-      authenticateUser();
-    }
-  }, [isConnected, address]);
+  // Don't auto-authenticate - will authenticate when needed for image generation
+  // Authentication happens only when user tries to generate an image
 
   const authenticateUser = async () => {
-    if (!address) return;
+    if (!address) return false;
 
     try {
-      // Sign message for authentication
-      const message = `Sign this message to authenticate with Banana Image Generator\nAddress: ${address}\nTimestamp: ${Date.now()}`;
-      
-      // In a real implementation, you would sign the message with the wallet
-      // For now, we'll simulate authentication
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BANANA_API_URL || 'http://localhost:3000'}/api/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          address: address.toLowerCase(),
-          signature: 'simulated-signature', // In production, use actual signature
-          message
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setAuthToken(data.token);
-        localStorage.setItem('authToken', data.token);
-        
-        // Get user points
-        await fetchUserPoints(data.token);
+      // Check if we already have a valid token
+      const existingToken = localStorage.getItem('rozo_token');
+      if (existingToken) {
+        setAuthToken(existingToken);
+        await fetchUserPoints(existingToken);
+        return true;
       }
+
+      // Need to sign message for authentication
+      const nonce = Date.now().toString();
+      const message = `Welcome to ROZO Points!\n\nPlease sign this message to verify your wallet.\n\nNonce: ${nonce}`;
+
+      // Import signMessage from wagmi if not already imported
+      // This would need to be done through the parent component or useSignMessage hook
+      // For now, return false to indicate auth is needed
+      console.log('[authenticateUser] Need to sign message for authentication');
+      setError('Please sign the message in your wallet to generate images');
+      return false;
     } catch (err) {
       console.error('Authentication failed:', err);
+      return false;
     }
   };
 
@@ -127,11 +117,6 @@ export default function BananaImageGenerator() {
   };
 
   const handleGenerate = async () => {
-    if (!isConnected) {
-      setError('Please connect your wallet first');
-      return;
-    }
-
     if (!prompt.trim()) {
       setError('Please enter a prompt describing what you want to generate');
       return;
@@ -142,52 +127,97 @@ export default function BananaImageGenerator() {
       return;
     }
 
-    // Check if user has enough points (skip for first generation)
-    if (!isFirstGeneration && userPoints < POINTS_PER_GENERATION) {
-      setError(`Insufficient points. You need ${POINTS_PER_GENERATION} points to generate an image. You have ${userPoints} points.`);
-      return;
-    }
-
     setIsLoading(true);
     setError(null);
 
     try {
-      const token = authToken || localStorage.getItem('authToken');
-      
-      if (!token) {
-        throw new Error('Please authenticate first');
-      }
-
+      // Try to generate image - API will check for user auth
       const data = await imageAPI.generate({
         prompt: prompt,
         images: [uploadedImage],
         style: imageStyle,
         aspect_ratio: imageSize,
       });
-      
+
       if (!data || data.error) {
         throw new Error(data?.error || 'Failed to generate image');
       }
 
       setGeneratedImage({
-        url: data.imageUrl,
+        url: data.imageUrl || data.image?.url || data.url,
         prompt: data.prompt,
         timestamp: data.metadata?.timestamp || new Date().toISOString(),
-        pointsDeducted: data.metadata?.pointsDeducted || 0,
+        pointsDeducted: data.metadata?.pointsDeducted || data.credits_used || 0,
         wasFreeTrial: data.metadata?.wasFreeTrial || false
       });
 
       // Update user points
       if (data.metadata?.pointsRemaining !== undefined) {
         setUserPoints(data.metadata.pointsRemaining);
+      } else if (data.credits_remaining !== undefined) {
+        setUserPoints(data.credits_remaining);
       }
 
       // Update first generation flag
       if (data.metadata?.wasFreeTrial) {
         setIsFirstGeneration(false);
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+    } catch (err: any) {
+      // Check if authentication is required
+      if (err.message === 'AUTH_REQUIRED' || err.response?.status === 401) {
+        // User needs to connect wallet and authenticate
+        if (!isConnected) {
+          setError('Please connect your wallet to generate images');
+          setIsLoading(false);
+          return;
+        }
+
+        // Wallet is connected, need to authenticate
+        const authSuccess = await authenticateUser();
+
+        if (!authSuccess) {
+          // Authentication failed or user rejected signing
+          setIsLoading(false);
+          return;
+        }
+
+        // Retry the generation after successful authentication
+        try {
+          const data = await imageAPI.generate({
+            prompt: prompt,
+            images: [uploadedImage],
+            style: imageStyle,
+            aspect_ratio: imageSize,
+          });
+
+          if (!data || data.error) {
+            throw new Error(data?.error || 'Failed to generate image');
+          }
+
+          setGeneratedImage({
+            url: data.imageUrl || data.image?.url || data.url,
+            prompt: data.prompt,
+            timestamp: data.metadata?.timestamp || new Date().toISOString(),
+            pointsDeducted: data.metadata?.pointsDeducted || data.credits_used || 0,
+            wasFreeTrial: data.metadata?.wasFreeTrial || false
+          });
+
+          // Update user points
+          if (data.metadata?.pointsRemaining !== undefined) {
+            setUserPoints(data.metadata.pointsRemaining);
+          } else if (data.credits_remaining !== undefined) {
+            setUserPoints(data.credits_remaining);
+          }
+        } catch (retryErr) {
+          setError(retryErr instanceof Error ? retryErr.message : 'Failed to generate image after authentication');
+        }
+      } else if (err.response?.data?.error?.toLowerCase().includes('insufficient') ||
+                 err.response?.data?.error?.toLowerCase().includes('credits')) {
+        // Insufficient credits error
+        setError('Insufficient credits. Please top up to continue generating images.');
+      } else {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -351,7 +381,7 @@ export default function BananaImageGenerator() {
 
               <button
                 onClick={handleGenerate}
-                disabled={isLoading || !prompt.trim() || !uploadedImage || !isConnected}
+                disabled={isLoading || !prompt.trim() || !uploadedImage}
                 className="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-white font-semibold py-3 rounded-lg hover:from-yellow-500 hover:to-yellow-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
                 {isLoading ? (
@@ -362,7 +392,7 @@ export default function BananaImageGenerator() {
                 ) : (
                   <>
                     <Sparkles className="w-5 h-5 mr-2" />
-                    {isFirstGeneration ? 'Generate (Free Trial)' : `Generate (${POINTS_PER_GENERATION} Points)`}
+                    {!isConnected ? 'Generate Image' : isFirstGeneration ? 'Generate (Free Trial)' : `Generate (${POINTS_PER_GENERATION} Points)`}
                   </>
                 )}
               </button>

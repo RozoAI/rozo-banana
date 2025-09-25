@@ -88,40 +88,32 @@ export default function Home() {
         localStorage.removeItem("auth_expired");
       }
     }
+    // Commented out problematic signed address checking that causes logout loops
+    // This was clearing localStorage when addresses didn't match, but we don't
+    // require signing for basic wallet connection anymore
+    /*
     console.warn("🔑 [Home] isConnected:", isConnected);
     console.warn("🔑 [Home] address:", address);
     if (!isConnected || !address) {
       const signedAddresses = localStorage.getItem("rozo_signed_addresses");
-      console.warn("🔑 [Home] signedAddresses:", signedAddresses);
       if (signedAddresses) {
         const signedAddressesObj = JSON.parse(signedAddresses);
-        console.warn("🔑 [Home] signedAddressesObj:", signedAddressesObj);
         if (signedAddressesObj.address !== address) {
-          console.warn("🔑 [Home] signedAddressesObj.address !== address");
-          // authAPI.logout();
+          // This was causing issues
         }
       }
     }
 
     if (isConnected && address) {
       const signedAddresses = localStorage.getItem("rozo_signed_addresses");
-      console.warn("🔑 [Home] signedAddresses:", signedAddresses);
       if (signedAddresses) {
         const signedAddressesObj = JSON.parse(signedAddresses);
         if (signedAddressesObj.address !== address) {
-          console.warn("🔑 [Home] signedAddressesObj.address === address");
-          localStorage.removeItem("rozo_signed_addresses");
-          localStorage.removeItem("rozo_token");
-          localStorage.removeItem("auth_token");
-          localStorage.removeItem("rozo_user");
-          localStorage.removeItem("userAddress");
-          localStorage.removeItem("auth_expired");
-          localStorage.removeItem("welcome_new_user");
-          localStorage.removeItem("welcome_back_user");
-          localStorage.removeItem("authToken");
+          // This was clearing localStorage incorrectly
         }
       }
     }
+    */
   }, [isConnected, address]);
 
   // Check if coming from /generate route

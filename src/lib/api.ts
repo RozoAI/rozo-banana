@@ -37,22 +37,32 @@ const api = bananaApi;
 bananaApi.interceptors.request.use((config) => {
   // Check if we're in browser environment
   let token = null;
-  
+  let tokenType = "anon";
+
   if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+    // Check for user JWT token first
     token = localStorage.getItem("rozo_token");
+    if (token) {
+      tokenType = "user";
+    }
   }
-  
+
+  // Use Supabase anon key as default if no user token
+  if (!token) {
+    token = SUPABASE_ANON_KEY;
+    tokenType = "anon";
+  }
+
   console.log("🚀 [BananaAPI] Request interceptor:", {
     url: config.url,
     method: config.method,
-    hasToken: !!token,
+    tokenType,
     tokenPreview: token ? `${token.substring(0, 20)}...` : null,
   });
 
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-    console.log("🔑 [BananaAPI] Adding Bearer token to request");
-  }
+  config.headers.Authorization = `Bearer ${token}`;
+  console.log(`🔑 [BananaAPI] Adding ${tokenType} Bearer token to request`);
+
   return config;
 });
 
@@ -60,24 +70,32 @@ bananaApi.interceptors.request.use((config) => {
 pointsApi.interceptors.request.use((config) => {
   // Check if we're in browser environment
   let token = null;
-  
+  let tokenType = "anon";
+
   if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+    // Check for user JWT token first
     token = localStorage.getItem("rozo_token");
+    if (token) {
+      tokenType = "user";
+    }
   }
-  
+
+  // Use Supabase anon key as default if no user token
+  if (!token) {
+    token = SUPABASE_ANON_KEY;
+    tokenType = "anon";
+  }
+
   console.log("🎯 [PointsAPI] Request interceptor:", {
     url: config.url,
     method: config.method,
-    hasToken: !!token,
+    tokenType,
     tokenPreview: token ? `${token.substring(0, 20)}...` : null,
   });
 
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-    console.log("🔑 [PointsAPI] Adding Bearer token to request");
-  } else {
-    console.log("⚠️ [PointsAPI] No token found for request");
-  }
+  config.headers.Authorization = `Bearer ${token}`;
+  console.log(`🔑 [PointsAPI] Adding ${tokenType} Bearer token to request`);
+
   return config;
 });
 
@@ -85,42 +103,53 @@ pointsApi.interceptors.request.use((config) => {
 api.interceptors.request.use((config) => {
   // Check if we're in browser environment
   let token = null;
-  let tokenSource = "none";
-  
+  let tokenSource = "anon";
+
   if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
     token = localStorage.getItem("rozo_token") || localStorage.getItem("auth_token");
-    tokenSource = localStorage.getItem("rozo_token")
-      ? "rozo_token"
-      : localStorage.getItem("auth_token")
-      ? "auth_token"
-      : "none";
+    if (token) {
+      tokenSource = localStorage.getItem("rozo_token")
+        ? "rozo_token"
+        : "auth_token";
+    }
   }
-  
+
+  // Use Supabase anon key as default if no user token
+  if (!token) {
+    token = SUPABASE_ANON_KEY;
+    tokenSource = "anon";
+  }
+
   console.log("📦 [LegacyAPI] Request interceptor:", {
     url: config.url,
     method: config.method,
-    hasToken: !!token,
-    tokenSource: tokenSource,
+    tokenSource,
   });
 
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
+  config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
 // Handle JWT expiration for both API clients
 const handleAuthError = (error: any) => {
   console.log("🔐 [handleAuthError] Error:", error);
-  
+
   // Check if it's an insufficient credits error - don't logout for this
   const errorMessage = error.response?.data?.error || error.response?.data?.message || '';
-  const isInsufficientCredits = errorMessage.toLowerCase().includes('insufficient') || 
+  const isInsufficientCredits = errorMessage.toLowerCase().includes('insufficient') ||
                                 errorMessage.toLowerCase().includes('credits') ||
                                 errorMessage.toLowerCase().includes('balance');
-  
-  if ((error.response?.status === 401 || error.response?.status === 403) && !isInsufficientCredits) {
-    console.log("❌ [handleAuthError] Token invalid/expired, logging out...");
+
+  // Check if we're using a real user token or just the anon key
+  const hasUserToken = typeof window !== 'undefined' &&
+                       (localStorage.getItem("rozo_token") || localStorage.getItem("auth_token"));
+
+  // Only logout if we have a real user token that's invalid
+  // Don't logout for anon key failures (expected for some endpoints)
+  if ((error.response?.status === 401 || error.response?.status === 403) &&
+      !isInsufficientCredits &&
+      hasUserToken) {
+    console.log("❌ [handleAuthError] User token invalid/expired, logging out...");
     if (typeof window !== 'undefined') {
       localStorage.removeItem("rozo_token");
       localStorage.removeItem("auth_token");
@@ -130,6 +159,9 @@ const handleAuthError = (error: any) => {
       localStorage.setItem('auth_expired', 'true');
       window.location.href = '/';
     }
+  } else if ((error.response?.status === 401 || error.response?.status === 403) && !hasUserToken) {
+    console.log("🔔 [handleAuthError] Anon key rejected by endpoint (expected for some APIs)");
+    // Don't logout or redirect, just let the error propagate
   }
   return Promise.reject(error);
 };
@@ -156,11 +188,11 @@ export const authAPI = {
     });
 
     try {
-      // Use Supabase auth-wallet-verify endpoint
+      // Use Supabase auth-wallet-verify endpoint (with lowercase address)
       const { data } = await pointsApi.post("/auth-wallet-verify", {
         message,
         signature,
-        address,
+        address: address.toLowerCase(),
         app_id: "banana",
         referral_code: referralCode,
       });
@@ -186,8 +218,13 @@ export const authAPI = {
         }
 
         if (user && typeof window !== 'undefined') {
-          localStorage.setItem("rozo_user", JSON.stringify(user));
-          console.log("💾 [authAPI.verify] User data saved to localStorage");
+          // Ensure address is lowercase in stored user data
+          const userWithLowerAddress = {
+            ...user,
+            address: user.address?.toLowerCase()
+          };
+          localStorage.setItem("rozo_user", JSON.stringify(userWithLowerAddress));
+          console.log("💾 [authAPI.verify] User data saved to localStorage with lowercase address");
         }
 
         return {
@@ -267,9 +304,42 @@ export const authAPI = {
   },
 };
 
+// Helper function to get current user address (always lowercase)
+const getCurrentAddress = () => {
+  if (typeof window === 'undefined') return '0x';
+
+  // First check if we have a rozo_user in localStorage (from authentication)
+  const rozoUser = localStorage.getItem("rozo_user");
+  if (rozoUser) {
+    try {
+      const user = JSON.parse(rozoUser);
+      if (user.address) {
+        const lowerAddress = user.address.toLowerCase();
+        console.log("🏠 [getCurrentAddress] Found address from rozo_user:", lowerAddress);
+        return lowerAddress;
+      }
+    } catch (e) {
+      console.error("❌ [getCurrentAddress] Failed to parse rozo_user:", e);
+    }
+  }
+
+  // Fallback to userAddress (some components may set this directly)
+  const userAddress = localStorage.getItem("userAddress");
+  if (userAddress) {
+    const lowerAddress = userAddress.toLowerCase();
+    console.log("🏠 [getCurrentAddress] Found address from userAddress:", lowerAddress);
+    return lowerAddress;
+  }
+
+  // No user address found, return default
+  console.log("🏠 [getCurrentAddress] No user address found, using 0x");
+  return '0x';
+};
+
 export const userAPI = {
-  getProfile: async () => {
-    const { data } = await pointsApi.get("/user-profile");
+  getProfile: async (address?: string) => {
+    const queryAddress = address || getCurrentAddress();
+    const { data } = await pointsApi.get(`/user-profile?address=${queryAddress}`);
     // Handle new response format
     if (data.success && data.data) {
       return data.data;
@@ -277,11 +347,13 @@ export const userAPI = {
     throw new Error(data.error || "Failed to fetch profile");
   },
 
-  getStats: async () => {
-    // Parallel fetch from both services
+  getStats: async (address?: string) => {
+    const queryAddress = address || getCurrentAddress();
+
+    // Parallel fetch from both services with address parameter
     const [rozoData, creditsData] = await Promise.all([
-      pointsApi.get("/points-balance"),
-      bananaApi.get("/banana-credits-balance"),
+      pointsApi.get(`/points-balance?address=${queryAddress}`),
+      bananaApi.get(`/banana-credits-balance?address=${queryAddress}`),
     ]);
 
     // Handle new response format
@@ -304,18 +376,40 @@ export const userAPI = {
 
 // ROZO Points API (Supabase Edge Functions)
 export const rozoAPI = {
-  getBalance: async () => {
-    const { data } = await pointsApi.get("/points-balance");
-    // Handle new response format
-    if (data.success && data.data) {
+  getBalance: async (address?: string) => {
+    const queryAddress = address || getCurrentAddress();
+    const { data } = await pointsApi.get(`/points-balance?address=${queryAddress}`);
+    console.log("📊 [rozoAPI.getBalance] Raw response:", data);
+
+    // Handle different response formats
+    // Format 1: { balance: 14000, ... }
+    // Format 2: { success: true, data: { current_points: 14000, ... } }
+
+    if (data.balance !== undefined) {
+      // Direct format from API
       return {
-        balance: data.data.current_points || 0,
-        points: data.data.current_points || 0,
+        balance: data.balance || 0,
+        points: data.balance || 0,
+        lifetime_points: data.lifetime_points || data.total_earned || 0,
+        level: data.level || 1,
+      };
+    } else if (data.success && data.data) {
+      // Wrapped format
+      return {
+        balance: data.data.current_points || data.data.balance || 0,
+        points: data.data.current_points || data.data.balance || 0,
         lifetime_points: data.data.lifetime_points || 0,
         level: data.data.level || 1,
       };
     }
-    return data;
+
+    // Fallback: return as is
+    return {
+      balance: 0,
+      points: 0,
+      lifetime_points: 0,
+      level: 1
+    };
   },
 
   getTransactions: async (page = 1, limit = 20) => {
@@ -334,13 +428,56 @@ export const rozoAPI = {
 
 // Credits API (Banana Backend - Supabase Edge Functions)
 export const creditsAPI = {
-  getBalance: async () => {
-    const { data } = await bananaApi.get("/banana-credits-balance");
-    // Handle new response format
-    if (data.success && data.data) {
-      return data.data;
+  getBalance: async (address?: string) => {
+    const queryAddress = address || getCurrentAddress();
+    console.log("💳 [creditsAPI.getBalance] Fetching credits for address:", queryAddress);
+    const { data } = await bananaApi.get(`/banana-credits-balance?address=${queryAddress}`);
+    console.log("💳 [creditsAPI.getBalance] Raw response:", JSON.stringify(data, null, 2));
+
+    // Handle different response formats
+    // Format 1: { credits: 100, available: 100, ... }
+    // Format 2: { success: true, data: { credits: { available: 7000, ... } } }
+    // Format 3: { success: true, data: { credits: 100, ... } }
+
+    if (data.credits !== undefined || data.available !== undefined) {
+      // Direct format
+      return {
+        credits: data.credits || data.available || 0,
+        available: data.available || data.credits || 0,
+        expires_at: data.expires_at || null,
+        plan_type: data.plan_type || null
+      };
+    } else if (data.success && data.data) {
+      // Wrapped format - check if credits is an object with 'available' property
+      if (data.data.credits && typeof data.data.credits === 'object' && 'available' in data.data.credits) {
+        // New format: { success: true, data: { credits: { available: 7000, ... } } }
+        return {
+          credits: data.data.credits.available || 0,
+          available: data.data.credits.available || 0,
+          expires_at: data.data.credits.expires_at || null,
+          plan_type: data.data.credits.plan_type || null,
+          used_this_month: data.data.credits.used_this_month || 0,
+          total_monthly: data.data.credits.total_monthly || 0,
+          next_refresh: data.data.credits.next_refresh || null
+        };
+      } else if (data.data.credits !== undefined || data.data.available !== undefined) {
+        // Old wrapped format: { success: true, data: { credits: 100, ... } }
+        return {
+          credits: data.data.credits || data.data.available || 0,
+          available: data.data.available || data.data.credits || 0,
+          expires_at: data.data.expires_at || null,
+          plan_type: data.data.plan_type || null
+        };
+      }
     }
-    return data;
+
+    // Fallback
+    return {
+      credits: 0,
+      available: 0,
+      expires_at: null,
+      plan_type: null
+    };
   },
 };
 
@@ -358,6 +495,15 @@ export const imageAPI = {
     aspect_ratio?: string;
     images?: string[]; // Base64 encoded images for multi-upload
   }) => {
+    // Image generation requires user authentication
+    // Check if user has a valid token (not anon key)
+    const userToken = typeof window !== 'undefined' ? localStorage.getItem("rozo_token") : null;
+
+    if (!userToken) {
+      // Throw error that will trigger authentication flow
+      throw new Error("AUTH_REQUIRED");
+    }
+
     const { data } = await bananaApi.post("/banana-generate-image", params);
     // Handle new response format
     if (data.success && data.data) {
@@ -366,10 +512,11 @@ export const imageAPI = {
     return data;
   },
 
-  getHistory: async (page = 1, limit = 20) => {
+  getHistory: async (page = 1, limit = 20, address?: string) => {
+    const queryAddress = address || getCurrentAddress();
     const offset = (page - 1) * limit;
     const { data } = await bananaApi.get(
-      `/banana-image-history?limit=${limit}&offset=${offset}`
+      `/banana-image-history?limit=${limit}&offset=${offset}&address=${queryAddress}`
     );
     // Handle new response format
     if (data.success && data.data) {
@@ -437,8 +584,9 @@ export const leaderboardAPI = {
 
 // Payment API (Banana Backend - Supabase Edge Functions)
 export const paymentAPI = {
-  getHistory: async () => {
-    const { data } = await bananaApi.get("/banana-payment-history");
+  getHistory: async (address?: string) => {
+    const queryAddress = address || getCurrentAddress();
+    const { data } = await bananaApi.get(`/banana-payment-history?address=${queryAddress}`);
     // Handle new response format
     if (data.success && data.data) {
       return data.data;
@@ -446,8 +594,9 @@ export const paymentAPI = {
     return data;
   },
 
-  getPlans: async () => {
-    const { data } = await bananaApi.get("/banana-payment-plans");
+  getPlans: async (address?: string) => {
+    const queryAddress = address || getCurrentAddress();
+    const { data } = await bananaApi.get(`/banana-payment-plans?address=${queryAddress}`);
     // Handle new response format
     if (data.success && data.data) {
       return data.data;

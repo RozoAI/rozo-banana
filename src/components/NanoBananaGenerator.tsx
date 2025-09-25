@@ -51,40 +51,53 @@ export default function NanoBananaGenerator() {
     }
   };
 
-  // Load auth token and user data on mount
+  // Load credits when component mounts or wallet connects
   useEffect(() => {
-    // Try to get token from multiple sources
+    // Always try to fetch credits if wallet is connected
+    if (isConnected && address && !hasFetched.current) {
+      console.log("💳 [NanoBanana] Wallet connected, fetching credits for:", address);
+      fetchUserCredits();
+      hasFetched.current = true;
+    }
+
+    // Also check for existing token
     const token =
       localStorage.getItem("rozo_token") ||
       localStorage.getItem("auth_token") ||
       localStorage.getItem("authToken");
-    const savedAddress = localStorage.getItem("userAddress");
     if (token) {
       console.log("🔑 [NanoBanana] Found existing token");
       setAuthToken(token);
-      if (!hasFetched.current) {
-        fetchUserPoints(token);
-        hasFetched.current = true;
-      }
-      // If we have a saved address but wallet isn't connected, still show as authenticated
-      if (!isConnected && savedAddress) {
-        // User is authenticated but wallet not connected - this is ok
-        console.log("User authenticated with saved token");
-      }
     }
-  }, []);
+  }, [isConnected, address]);
 
-  // Authenticate when wallet connects
-  useEffect(() => {
-    if (isConnected && address && !authToken) {
-      authenticateUser();
-    }
-  }, [isConnected, address, authToken]);
+  // Don't auto-authenticate when wallet connects
+  // Authentication will happen when user tries to generate an image
+  // useEffect(() => {
+  //   if (isConnected && address && !authToken) {
+  //     authenticateUser();
+  //   }
+  // }, [isConnected, address, authToken]);
 
-  const authenticateUser = async () => {
-    if (!address) return;
+  const authenticateUser = async (forceSignature: boolean = false) => {
+    if (!address) return false;
 
     try {
+      // Check if we already have a valid token and don't need to force signature
+      if (!forceSignature) {
+        const existingToken = localStorage.getItem("rozo_token") ||
+                            localStorage.getItem("auth_token") ||
+                            localStorage.getItem("authToken");
+        const existingUser = localStorage.getItem("rozo_user");
+
+        if (existingToken && existingUser) {
+          console.log("🎟️ [NanoBanana] Using existing token, skipping signature");
+          setAuthToken(existingToken);
+          await fetchUserPoints(existingToken);
+          return true;
+        }
+      }
+
       const message = `Sign to authenticate with Nano Banana\nAddress: ${address}\nTimestamp: ${Date.now()}`;
 
       console.log("🔏 [NanoBanana] Requesting wallet signature...");
@@ -128,12 +141,43 @@ export default function NanoBananaGenerator() {
         localStorage.setItem("authToken", data.token);
         localStorage.setItem("userAddress", address.toLowerCase());
         await fetchUserPoints(data.token);
+        return true;
       } else {
         const errorData = await response.json();
         console.error("❌ [NanoBanana] Auth failed:", errorData);
+        return false;
       }
     } catch (err) {
       console.error("❌ [NanoBanana] Authentication failed:", err);
+      setError("Failed to authenticate. Please try again.");
+      return false;
+    }
+  };
+
+  // Fetch credits without requiring authentication token
+  const fetchUserCredits = async () => {
+    try {
+      // Get credits balance from the Banana Backend (will use address param)
+      const { creditsAPI } = await import("../lib/api");
+      const data = await creditsAPI.getBalance();
+      console.log("💳 [NanoBanana] Credits response:", data);
+
+      // Extract credits value from various possible response formats
+      let creditsValue = 0;
+      if (typeof data === "object" && data !== null) {
+        if (typeof (data as any).available === "number") {
+          creditsValue = (data as any).available;
+        } else if (typeof (data as any).credits === "number") {
+          creditsValue = (data as any).credits;
+        }
+      }
+
+      console.log("💰 [NanoBanana] Setting credits to:", creditsValue);
+      setUserCredits(creditsValue);
+    } catch (error: any) {
+      console.error("❌ [NanoBanana] Failed to fetch credits:", error);
+      // Set default value on error
+      setUserCredits(0);
     }
   };
 
@@ -323,12 +367,6 @@ export default function NanoBananaGenerator() {
   );
 
   const handleGenerate = async () => {
-    // Check if user is authenticated (either via wallet or saved token)
-    if (!authToken && !isConnected) {
-      setError("Please connect your wallet first");
-      return;
-    }
-
     if (!customPrompt.trim()) {
       setError("Please enter a prompt");
       return;
@@ -339,17 +377,9 @@ export default function NanoBananaGenerator() {
       return;
     }
 
-    // Check credits
-    if (userCredits < CREDITS_PER_GENERATION) {
-      if (userCredits === 0) {
-        setError(
-          "You need credits to generate images. Please top up first to continue creating amazing content!"
-        );
-      } else {
-        setError(
-          `Insufficient credits. You need ${CREDITS_PER_GENERATION} credits.`
-        );
-      }
+    // Check if wallet is connected
+    if (!isConnected) {
+      setError("Please connect your wallet first");
       return;
     }
 
@@ -357,15 +387,42 @@ export default function NanoBananaGenerator() {
     setError(null);
 
     try {
-      // Try multiple token sources
-      const token =
-        authToken ||
-        localStorage.getItem("rozo_token") ||
-        localStorage.getItem("auth_token") ||
-        localStorage.getItem("authToken");
+      // Check for existing token
+      let token = authToken ||
+                 localStorage.getItem("rozo_token") ||
+                 localStorage.getItem("auth_token") ||
+                 localStorage.getItem("authToken");
 
+      // If no token, we need to authenticate with wallet signature
       if (!token) {
-        throw new Error("Please authenticate first");
+        console.log("🔐 [Generate] No token found, need authentication");
+        const authSuccess = await authenticateUser(true); // Force signature
+
+        if (!authSuccess) {
+          setError("Authentication required to generate images. Please sign the message in your wallet.");
+          setIsLoading(false);
+          return;
+        }
+
+        // Get the token after successful authentication
+        token = localStorage.getItem("rozo_token") ||
+                localStorage.getItem("auth_token") ||
+                localStorage.getItem("authToken");
+      }
+
+      // Now check credits after authentication
+      if (userCredits < CREDITS_PER_GENERATION) {
+        if (userCredits === 0) {
+          setError(
+            "You need credits to generate images. Please top up first to continue creating amazing content!"
+          );
+        } else {
+          setError(
+            `Insufficient credits. You need ${CREDITS_PER_GENERATION} credits.`
+          );
+        }
+        setIsLoading(false);
+        return;
       }
 
       // Use the imageAPI to generate image - pass prompt and images
@@ -702,8 +759,7 @@ export default function NanoBananaGenerator() {
                 disabled={
                   isLoading ||
                   !customPrompt.trim() ||
-                  uploadedImages.length === 0 ||
-                  !isConnected
+                  uploadedImages.length === 0
                 }
                 className="px-5 py-2.5 bg-gradient-to-r from-yellow-400 to-orange-400 text-white font-medium rounded-lg hover:from-yellow-500 hover:to-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 text-sm"
               >

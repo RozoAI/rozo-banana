@@ -66,7 +66,7 @@ export default function RechargeContent() {
       const externalId = `banana_${selectedTier.id}_${timestamp}`;
 
       const paymentParams = {
-        appId: "rozoDemo", // Demo app ID for testing
+        appId: "rozoBananaMP", // Demo app ID for testing
         toUnits: selectedTier.usd.toString(),
         currency: "USD" as const,
         intent: `Banana ${selectedTier.name} - ${selectedTier.credits} credits`,
@@ -290,6 +290,7 @@ export default function RechargeContent() {
         {!showPayWithButton && payParams && (
           <RozoPayButton.Custom
             defaultOpen
+            resetOnSuccess
             appId="rozoBananaMP"
             toChain={baseUSDC.chainId}
             toAddress={getAddress(DESTINATION_ADDRESS)}

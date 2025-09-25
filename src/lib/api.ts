@@ -39,7 +39,7 @@ bananaApi.interceptors.request.use((config) => {
   let token = null;
   let tokenType = "anon";
 
-  if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+  if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
     // Check for user JWT token first
     token = localStorage.getItem("rozo_token");
     if (token) {
@@ -72,7 +72,7 @@ pointsApi.interceptors.request.use((config) => {
   let token = null;
   let tokenType = "anon";
 
-  if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+  if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
     // Check for user JWT token first
     token = localStorage.getItem("rozo_token");
     if (token) {
@@ -105,8 +105,9 @@ api.interceptors.request.use((config) => {
   let token = null;
   let tokenSource = "anon";
 
-  if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
-    token = localStorage.getItem("rozo_token") || localStorage.getItem("auth_token");
+  if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
+    token =
+      localStorage.getItem("rozo_token") || localStorage.getItem("auth_token");
     if (token) {
       tokenSource = localStorage.getItem("rozo_token")
         ? "rozo_token"
@@ -135,42 +136,57 @@ const handleAuthError = (error: any) => {
   console.log("🔐 [handleAuthError] Error:", error);
 
   // Check if it's an insufficient credits error - don't logout for this
-  const errorMessage = error.response?.data?.error || error.response?.data?.message || '';
-  const isInsufficientCredits = errorMessage.toLowerCase().includes('insufficient') ||
-                                errorMessage.toLowerCase().includes('credits') ||
-                                errorMessage.toLowerCase().includes('balance');
+  const errorMessage =
+    error.response?.data?.error || error.response?.data?.message || "";
+  const isInsufficientCredits =
+    errorMessage.toLowerCase().includes("insufficient") ||
+    errorMessage.toLowerCase().includes("credits") ||
+    errorMessage.toLowerCase().includes("balance");
 
   // Check if this is an auth endpoint - don't handle auth errors for auth endpoints
-  const isAuthEndpoint = error.config?.url?.includes('auth-wallet-verify') ||
-                         error.config?.url?.includes('auth/wallet');
+  const isAuthEndpoint =
+    error.config?.url?.includes("auth-wallet-verify") ||
+    error.config?.url?.includes("auth/wallet");
 
   // Check if we're using a real user token or just the anon key
-  const hasUserToken = typeof window !== 'undefined' &&
-                       (localStorage.getItem("rozo_token") || localStorage.getItem("auth_token"));
+  const hasUserToken =
+    typeof window !== "undefined" &&
+    (localStorage.getItem("rozo_token") || localStorage.getItem("auth_token"));
 
   // Don't handle errors for auth endpoints
   if (isAuthEndpoint) {
-    console.log("🔐 [handleAuthError] Auth endpoint error, not handling redirect");
+    console.log(
+      "🔐 [handleAuthError] Auth endpoint error, not handling redirect"
+    );
     return Promise.reject(error);
   }
 
   // Only logout if we have a real user token that's invalid
   // Don't logout for anon key failures (expected for some endpoints)
-  if ((error.response?.status === 401 || error.response?.status === 403) &&
-      !isInsufficientCredits &&
-      hasUserToken) {
-    console.log("❌ [handleAuthError] User token invalid/expired, logging out...");
-    if (typeof window !== 'undefined') {
+  if (
+    (error.response?.status === 401 || error.response?.status === 403) &&
+    !isInsufficientCredits &&
+    hasUserToken
+  ) {
+    console.log(
+      "❌ [handleAuthError] User token invalid/expired, logging out..."
+    );
+    if (typeof window !== "undefined") {
       localStorage.removeItem("rozo_token");
       localStorage.removeItem("auth_token");
       localStorage.removeItem("rozo_user");
       localStorage.removeItem("userAddress");
       localStorage.removeItem("rozo_signed_addresses");
-      localStorage.setItem('auth_expired', 'true');
-      window.location.href = '/';
+      localStorage.setItem("auth_expired", "true");
+      window.location.href = "/";
     }
-  } else if ((error.response?.status === 401 || error.response?.status === 403) && !hasUserToken) {
-    console.log("🔔 [handleAuthError] Anon key rejected by endpoint (expected for some APIs)");
+  } else if (
+    (error.response?.status === 401 || error.response?.status === 403) &&
+    !hasUserToken
+  ) {
+    console.log(
+      "🔔 [handleAuthError] Anon key rejected by endpoint (expected for some APIs)"
+    );
     // Don't logout or redirect, just let the error propagate
   }
   return Promise.reject(error);
@@ -220,21 +236,26 @@ export const authAPI = {
       if (data.success && data.data) {
         const { token, user } = data.data;
 
-        if (token && typeof window !== 'undefined') {
+        if (token && typeof window !== "undefined") {
           localStorage.setItem("rozo_token", token);
           // Keep auth_token for backward compatibility
           localStorage.setItem("auth_token", token);
           console.log("💾 [authAPI.verify] Token saved to localStorage");
         }
 
-        if (user && typeof window !== 'undefined') {
+        if (user && typeof window !== "undefined") {
           // Ensure address is lowercase in stored user data
           const userWithLowerAddress = {
             ...user,
-            address: user.address?.toLowerCase()
+            address: user.address?.toLowerCase(),
           };
-          localStorage.setItem("rozo_user", JSON.stringify(userWithLowerAddress));
-          console.log("💾 [authAPI.verify] User data saved to localStorage with lowercase address");
+          localStorage.setItem(
+            "rozo_user",
+            JSON.stringify(userWithLowerAddress)
+          );
+          console.log(
+            "💾 [authAPI.verify] User data saved to localStorage with lowercase address"
+          );
         }
 
         return {
@@ -257,7 +278,7 @@ export const authAPI = {
 
   logout: () => {
     console.log("🚪 [authAPI.logout] Logging out, clearing all auth data");
-    if (typeof window === 'undefined') {
+    if (typeof window === "undefined") {
       return;
     }
     // Clear all authentication tokens
@@ -291,7 +312,10 @@ export const authAPI = {
 
   validateToken: async () => {
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem("rozo_token") : null;
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("rozo_token")
+          : null;
       console.log("🔍 [authAPI.validateToken] Validating token:", {
         hasToken: !!token,
         tokenPreview: token ? `${token.substring(0, 20)}...` : null,
@@ -316,7 +340,7 @@ export const authAPI = {
 
 // Helper function to get current user address (always lowercase)
 const getCurrentAddress = () => {
-  if (typeof window === 'undefined') return '0x';
+  if (typeof window === "undefined") return "0x";
 
   // First check if we have a rozo_user in localStorage (from authentication)
   const rozoUser = localStorage.getItem("rozo_user");
@@ -325,7 +349,10 @@ const getCurrentAddress = () => {
       const user = JSON.parse(rozoUser);
       if (user.address) {
         const lowerAddress = user.address.toLowerCase();
-        console.log("🏠 [getCurrentAddress] Found address from rozo_user:", lowerAddress);
+        console.log(
+          "🏠 [getCurrentAddress] Found address from rozo_user:",
+          lowerAddress
+        );
         return lowerAddress;
       }
     } catch (e) {
@@ -337,19 +364,24 @@ const getCurrentAddress = () => {
   const userAddress = localStorage.getItem("userAddress");
   if (userAddress) {
     const lowerAddress = userAddress.toLowerCase();
-    console.log("🏠 [getCurrentAddress] Found address from userAddress:", lowerAddress);
+    console.log(
+      "🏠 [getCurrentAddress] Found address from userAddress:",
+      lowerAddress
+    );
     return lowerAddress;
   }
 
   // No user address found, return default
   console.log("🏠 [getCurrentAddress] No user address found, using 0x");
-  return '0x';
+  return "0x";
 };
 
 export const userAPI = {
   getProfile: async (address?: string) => {
     const queryAddress = address || getCurrentAddress();
-    const { data } = await pointsApi.get(`/user-profile?address=${queryAddress}`);
+    const { data } = await pointsApi.get(
+      `/user-profile?address=${queryAddress}`
+    );
     // Handle new response format
     if (data.success && data.data) {
       return data.data;
@@ -388,7 +420,9 @@ export const userAPI = {
 export const rozoAPI = {
   getBalance: async (address?: string) => {
     const queryAddress = address || getCurrentAddress();
-    const { data } = await pointsApi.get(`/points-balance?address=${queryAddress}`);
+    const { data } = await pointsApi.get(
+      `/points-balance?address=${queryAddress}`
+    );
     console.log("📊 [rozoAPI.getBalance] Raw response:", data);
 
     // Handle different response formats
@@ -418,7 +452,7 @@ export const rozoAPI = {
       balance: 0,
       points: 0,
       lifetime_points: 0,
-      level: 1
+      level: 1,
     };
   },
 
@@ -440,9 +474,17 @@ export const rozoAPI = {
 export const creditsAPI = {
   getBalance: async (address?: string) => {
     const queryAddress = address || getCurrentAddress();
-    console.log("💳 [creditsAPI.getBalance] Fetching credits for address:", queryAddress);
-    const { data } = await bananaApi.get(`/banana-credits-balance?address=${queryAddress}`);
-    console.log("💳 [creditsAPI.getBalance] Raw response:", JSON.stringify(data, null, 2));
+    console.log(
+      "💳 [creditsAPI.getBalance] Fetching credits for address:",
+      queryAddress
+    );
+    const { data } = await bananaApi.get(
+      `/banana-credits-balance?address=${queryAddress}`
+    );
+    console.log(
+      "💳 [creditsAPI.getBalance] Raw response:",
+      JSON.stringify(data, null, 2)
+    );
 
     // Handle different response formats
     // Format 1: { credits: 100, available: 100, ... }
@@ -455,11 +497,15 @@ export const creditsAPI = {
         credits: data.credits || data.available || 0,
         available: data.available || data.credits || 0,
         expires_at: data.expires_at || null,
-        plan_type: data.plan_type || null
+        plan_type: data.plan_type || null,
       };
     } else if (data.success && data.data) {
       // Wrapped format - check if credits is an object with 'available' property
-      if (data.data.credits && typeof data.data.credits === 'object' && 'available' in data.data.credits) {
+      if (
+        data.data.credits &&
+        typeof data.data.credits === "object" &&
+        "available" in data.data.credits
+      ) {
         // New format: { success: true, data: { credits: { available: 7000, ... } } }
         return {
           credits: data.data.credits.available || 0,
@@ -468,15 +514,18 @@ export const creditsAPI = {
           plan_type: data.data.credits.plan_type || null,
           used_this_month: data.data.credits.used_this_month || 0,
           total_monthly: data.data.credits.total_monthly || 0,
-          next_refresh: data.data.credits.next_refresh || null
+          next_refresh: data.data.credits.next_refresh || null,
         };
-      } else if (data.data.credits !== undefined || data.data.available !== undefined) {
+      } else if (
+        data.data.credits !== undefined ||
+        data.data.available !== undefined
+      ) {
         // Old wrapped format: { success: true, data: { credits: 100, ... } }
         return {
           credits: data.data.credits || data.data.available || 0,
           available: data.data.available || data.data.credits || 0,
           expires_at: data.data.expires_at || null,
-          plan_type: data.data.plan_type || null
+          plan_type: data.data.plan_type || null,
         };
       }
     }
@@ -486,7 +535,7 @@ export const creditsAPI = {
       credits: 0,
       available: 0,
       expires_at: null,
-      plan_type: null
+      plan_type: null,
     };
   },
 };
@@ -507,7 +556,8 @@ export const imageAPI = {
   }) => {
     // Image generation requires user authentication
     // Check if user has a valid token (not anon key)
-    const userToken = typeof window !== 'undefined' ? localStorage.getItem("rozo_token") : null;
+    const userToken =
+      typeof window !== "undefined" ? localStorage.getItem("rozo_token") : null;
 
     if (!userToken) {
       // Throw error that will trigger authentication flow
@@ -515,6 +565,10 @@ export const imageAPI = {
     }
 
     const { data } = await bananaApi.post("/banana-generate-image", params);
+    console.log(
+      "🎨 [imageAPI.generate] Raw response:",
+      JSON.stringify(data, null, 2)
+    );
     // Handle new response format
     if (data.success && data.data) {
       return data.data;
@@ -596,7 +650,9 @@ export const leaderboardAPI = {
 export const paymentAPI = {
   getHistory: async (address?: string) => {
     const queryAddress = address || getCurrentAddress();
-    const { data } = await bananaApi.get(`/banana-payment-history?address=${queryAddress}`);
+    const { data } = await bananaApi.get(
+      `/banana-payment-history?address=${queryAddress}`
+    );
     // Handle new response format
     if (data.success && data.data) {
       return data.data;
@@ -606,7 +662,9 @@ export const paymentAPI = {
 
   getPlans: async (address?: string) => {
     const queryAddress = address || getCurrentAddress();
-    const { data } = await bananaApi.get(`/banana-payment-plans?address=${queryAddress}`);
+    const { data } = await bananaApi.get(
+      `/banana-payment-plans?address=${queryAddress}`
+    );
     // Handle new response format
     if (data.success && data.data) {
       return data.data;

@@ -1,6 +1,8 @@
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
 import { base, bsc, mainnet, polygon } from "@reown/appkit/networks";
 import { createAppKit } from "@reown/appkit/react";
+import { http } from "viem";
+import { injected } from "wagmi/connectors";
 
 // WalletConnect v2 Project ID - you should get your own from https://cloud.walletconnect.com
 const WALLETCONNECT_PROJECT_ID =
@@ -44,10 +46,13 @@ const WALLETCONNECT_PROJECT_ID =
 
 // 2. Create a metadata object - optional
 const metadata = {
-  name: "AppKit",
-  description: "AppKit Example",
-  url: "https://example.com", // origin must match your domain & subdomain
-  icons: ["https://avatars.githubusercontent.com/u/179229932"],
+  name: "Banana DApp",
+  description: "Banana DApp - Generate and manage your digital bananas",
+  url:
+    typeof window !== "undefined"
+      ? window.location.origin
+      : "https://b.rozo.ai",
+  icons: ["https://avatars.githubusercontent.com/u/37784886"],
 };
 
 // 3. Set the networks
@@ -58,12 +63,25 @@ export const wagmiAdapter = new WagmiAdapter({
   networks,
   projectId: WALLETCONNECT_PROJECT_ID,
   ssr: true,
+  chains: [mainnet, base, polygon, bsc],
+  transports: {
+    [mainnet.id]: http(),
+    [base.id]: http(),
+    [polygon.id]: http(),
+    [bsc.id]: http(),
+  },
+  connectors: [
+    injected({
+      shimDisconnect: true,
+    }),
+  ],
 });
 
 // 5. Create modal
 createAppKit({
   adapters: [wagmiAdapter],
-  networks: networks as [typeof mainnet, ...typeof networks],
+  // @ts-ignore
+  networks: networks,
   projectId: WALLETCONNECT_PROJECT_ID,
   metadata,
   features: {
@@ -74,6 +92,7 @@ createAppKit({
   allWallets: "SHOW", // default to SHOW
   coinbasePreference: "all",
   enableCoinbase: true,
+  themeMode: "light",
 });
 
 // // Create standalone WalletConnect provider for direct integration

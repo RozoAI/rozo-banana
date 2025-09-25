@@ -148,7 +148,7 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="max-w-lg mx-auto px-4">
+      <main className="max-w-lg mx-auto px-4 mt-4">
         {!isConnected ? (
           <div className="flex flex-col items-center justify-start min-h-[calc(100vh-5rem)] py-8">
             <div className="text-center space-y-8 w-full">

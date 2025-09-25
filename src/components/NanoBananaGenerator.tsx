@@ -17,6 +17,31 @@ interface GeneratedResult {
   wasFreeTrial: boolean;
 }
 
+// Interface for the new image generation API response
+interface ImageGenerationResponse {
+  success: boolean;
+  image: {
+    id: string;
+    data: string; // base64 image data
+    url: string;
+    thumbnailUrl: string;
+    prompt: string;
+    model: string;
+  };
+  usage: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+    prompt_tokens_details: {
+      cached_tokens: number;
+    };
+    completion_tokens_details: {
+      reasoning_tokens: number;
+      image_tokens: number;
+    };
+  };
+}
+
 const CREDITS_PER_GENERATION = 5; // 5 credits per generation
 
 export default function NanoBananaGenerator() {
@@ -118,7 +143,10 @@ export default function NanoBananaGenerator() {
   useEffect(() => {
     // Always try to fetch credits if wallet is connected
     if (isConnected && address && !hasFetched.current) {
-      console.log("💳 [NanoBanana] Wallet connected, fetching credits for:", address);
+      console.log(
+        "💳 [NanoBanana] Wallet connected, fetching credits for:",
+        address
+      );
       fetchUserCredits();
       hasFetched.current = true;
     }
@@ -143,7 +171,9 @@ export default function NanoBananaGenerator() {
       setIsTokenValid(true); // Assume token is valid if it exists
       // Don't clean up tokens - let the backend validate
     } else {
-      console.log("🔐 [NanoBanana] No existing token found - need to authorize");
+      console.log(
+        "🔐 [NanoBanana] No existing token found - need to authorize"
+      );
       setAuthToken(null);
       setIsTokenValid(false);
     }
@@ -166,15 +196,20 @@ export default function NanoBananaGenerator() {
         // const existingToken = localStorage.getItem("rozo_token") ||
         //                     localStorage.getItem("auth_token") ||
         //                     localStorage.getItem("authToken");
-        const existingToken = localStorage.getItem("rozo_token");                    
+        const existingToken = localStorage.getItem("rozo_token");
         const existingUser = localStorage.getItem("rozo_user");
 
         if (existingToken && existingUser) {
-          console.log("🎟️ [NanoBanana] Using existing valid token, skipping signature");
+          console.log(
+            "🎟️ [NanoBanana] Using existing valid token, skipping signature"
+          );
           setAuthToken(existingToken);
           setIsTokenValid(true);
           // Don't fetch credits - already have them from wallet connection
-          console.log("💰 [NanoBanana] Using existing credits balance:", userCredits);
+          console.log(
+            "💰 [NanoBanana] Using existing credits balance:",
+            userCredits
+          );
           return true;
         }
       }
@@ -204,7 +239,10 @@ export default function NanoBananaGenerator() {
           headers: {
             "Content-Type": "application/json",
             // Add anon key directly since this endpoint expects it
-            "Authorization": `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0"}`
+            Authorization: `Bearer ${
+              process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+              "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0"
+            }`,
           },
           body: JSON.stringify({
             address: address.toLowerCase(),
@@ -240,13 +278,19 @@ export default function NanoBananaGenerator() {
 
         // Verify token was saved
         const savedToken = localStorage.getItem("rozo_token");
-        console.log("🔍 [NanoBanana] Token saved verification:", savedToken ? "SUCCESS" : "FAILED");
+        console.log(
+          "🔍 [NanoBanana] Token saved verification:",
+          savedToken ? "SUCCESS" : "FAILED"
+        );
 
         setAuthToken(token);
         setIsTokenValid(true);
 
         // Don't fetch credits again - we already have them from wallet connection
-        console.log("💰 [NanoBanana] Keeping existing credits balance:", userCredits);
+        console.log(
+          "💰 [NanoBanana] Keeping existing credits balance:",
+          userCredits
+        );
         return true;
       } else {
         const errorData = await response.json();
@@ -272,9 +316,14 @@ export default function NanoBananaGenerator() {
       if (authSuccess) {
         setError(null);
         // Don't refresh credits - we already have them from wallet connection
-        console.log("✅ [Authorize] Authorization successful, keeping existing credits:", userCredits);
+        console.log(
+          "✅ [Authorize] Authorization successful, keeping existing credits:",
+          userCredits
+        );
       } else {
-        setError("Failed to authorize. Please try signing the message in your wallet.");
+        setError(
+          "Failed to authorize. Please try signing the message in your wallet."
+        );
       }
     } catch (err) {
       console.error("❌ [Authorize] Error:", err);
@@ -331,19 +380,17 @@ export default function NanoBananaGenerator() {
           creditsValue = (data as any).available;
         } else if (typeof (data as any).credits === "number") {
           creditsValue = (data as any).credits;
-        // 2) Top-level object with nested available: { credits: { available: N } }
+          // 2) Top-level object with nested available: { credits: { available: N } }
         } else if (
           (data as any).credits &&
           typeof (data as any).credits.available === "number"
         ) {
           creditsValue = (data as any).credits.available;
-        // 3) Nested under data: { data: { credits: number | { available: number } } }
+          // 3) Nested under data: { data: { credits: number | { available: number } } }
         } else if ((data as any).data?.credits) {
           if (typeof (data as any).data.credits === "number") {
             creditsValue = (data as any).data.credits;
-          } else if (
-            typeof (data as any).data.credits.available === "number"
-          ) {
+          } else if (typeof (data as any).data.credits.available === "number") {
             creditsValue = (data as any).data.credits.available;
           }
         } else if (typeof (data as any).balance === "number") {
@@ -353,7 +400,6 @@ export default function NanoBananaGenerator() {
 
       setUserCredits(creditsValue);
       console.log("💰 [NanoBanana] Set credits to:", creditsValue);
-
     } catch (err) {
       console.error("Failed to fetch user points:", err);
     }
@@ -552,34 +598,59 @@ export default function NanoBananaGenerator() {
 
       console.log("📦 [Generate] Response received:", data);
 
-      if (!data || data.error) {
+      if (!data || !data.success) {
         throw new Error(
           data?.error || data?.message || "Failed to generate response"
         );
       }
 
-      // The generate endpoint returns either text response or image URL
-      if (!data.success && !data.response && !data.imageUrl && !data.data) {
-        throw new Error(data.error || data.message || "Generation failed");
-      }
+      // Cast the response to the new interface for type safety
+      const responseData = data as ImageGenerationResponse;
 
-      // Check for response content - handle different response formats
-      if (
-        !data.response &&
-        !data.imageUrl &&
-        !data.data?.response &&
-        !data.data?.imageUrl &&
-        !data.image?.dataUrl
-      ) {
-        console.error("❌ [Generate] No content in response:", data);
-        throw new Error(
-          "No response generated from AI. The backend may be experiencing issues."
-        );
+      // Check if the response follows the new format
+      if (responseData.success && responseData.image) {
+        // New response format - use the 'url' field for imageUrl
+        const imageUrl = responseData.image.url;
+        const response = responseData.image.prompt;
+
+        if (!imageUrl) {
+          console.error(
+            "❌ [Generate] No image URL in new response format:",
+            responseData
+          );
+          throw new Error("No image URL received from the generation service.");
+        }
+      } else {
+        // Fallback to old response format handling
+        if (!data.success && !data.response && !data.imageUrl && !data.data) {
+          throw new Error(data.error || data.message || "Generation failed");
+        }
+
+        // Check for response content - handle different response formats
+        if (
+          !data.response &&
+          !data.imageUrl &&
+          !data.data?.response &&
+          !data.data?.imageUrl &&
+          !data.image?.dataUrl
+        ) {
+          console.error("❌ [Generate] No content in response:", data);
+          throw new Error(
+            "No response generated from AI. The backend may be experiencing issues."
+          );
+        }
       }
 
       // Handle different response formats from backend
-      const imageUrl = data.imageUrl || data.data?.imageUrl || data.image?.dataUrl || null;
-      const response = data.response || data.data?.response || data.image?.prompt || null;
+      const imageUrl =
+        responseData.success && responseData.image
+          ? responseData.image.url
+          : data.imageUrl || data.data?.imageUrl || data.image?.dataUrl || null;
+
+      const response =
+        responseData.success && responseData.image
+          ? responseData.image.prompt
+          : data.response || data.data?.response || data.image?.prompt || null;
 
       setGeneratedImage({
         imageUrl: imageUrl,
@@ -615,9 +686,11 @@ export default function NanoBananaGenerator() {
       }
 
       // Clean up error message for insufficient credits
-      if (errorMessage.toLowerCase().includes('insufficient') || 
-          errorMessage.toLowerCase().includes('credits') ||
-          errorMessage.toLowerCase().includes('balance')) {
+      if (
+        errorMessage.toLowerCase().includes("insufficient") ||
+        errorMessage.toLowerCase().includes("credits") ||
+        errorMessage.toLowerCase().includes("balance")
+      ) {
         errorMessage = "Insufficient credits";
       } else if (err.response?.status) {
         errorMessage = `Request failed with status code ${err.response.status}: ${errorMessage}`;
@@ -737,7 +810,13 @@ export default function NanoBananaGenerator() {
               id="prompt-input"
               value={customPrompt}
               onChange={(e) => setCustomPrompt(e.target.value)}
-              placeholder={userCredits === 0 ? "Top up credits to start creating" : !isTokenValid ? "Authorize first to start creating" : "Describe what you want to create..."}
+              placeholder={
+                userCredits === 0
+                  ? "Top up credits to start creating"
+                  : !isTokenValid
+                  ? "Authorize first to start creating"
+                  : "Describe what you want to create..."
+              }
               className="w-full px-3 py-2.5 border-2 border-yellow-400 rounded-lg focus:outline-none focus:border-yellow-500 resize-none text-gray-700 placeholder-gray-400 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               rows={2}
               disabled={!isConnected || userCredits === 0 || !isTokenValid}
@@ -770,7 +849,11 @@ export default function NanoBananaGenerator() {
                 <div className="opacity-50">
                   <ImageIcon className="w-10 h-10 text-gray-400 mx-auto mb-2" />
                   <p className="text-gray-600 text-sm mb-1">
-                    {userCredits === 0 ? "Top up to upload images" : !isTokenValid ? "Authorize to upload images" : "Tap to upload images"}
+                    {userCredits === 0
+                      ? "Top up to upload images"
+                      : !isTokenValid
+                      ? "Authorize to upload images"
+                      : "Tap to upload images"}
                   </p>
                   <p className="text-gray-400 text-xs">
                     Select 0-9 images (PNG, JPG up to 5MB each)
@@ -966,7 +1049,9 @@ export default function NanoBananaGenerator() {
                     <TwitterShareButton
                       imageUrl={generatedImage.imageUrl}
                       prompt={generatedImage.prompt}
-                      shareId={generatedImage.imageUrl?.split('/').pop()?.split('.')[0]} // Extract ID from URL
+                      shareId={
+                        generatedImage.imageUrl?.split("/").pop()?.split(".")[0]
+                      } // Extract ID from URL
                       className="px-4 py-2"
                     >
                       Share
@@ -984,7 +1069,7 @@ export default function NanoBananaGenerator() {
                   </div>
                 </div>
               ) : null}
-{/* 
+              {/* 
               {generatedImage.pointsDeducted >= 0 && (
                 <p className="text-gray-600 text-sm text-center mt-2">
                   {generatedImage.pointsDeducted} credits used
@@ -994,7 +1079,6 @@ export default function NanoBananaGenerator() {
           )}
         </div>
       </div>
-
     </div>
   );
 }

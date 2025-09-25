@@ -4,7 +4,7 @@ import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import * as React from "react";
 import { WagmiProvider } from "wagmi";
-import { walletConnectConfig } from "./lib/walletConnect";
+import { wagmiAdapter } from "./lib/walletConnect";
 
 // Create QueryClient outside component to prevent re-initialization
 const queryClient = new QueryClient({
@@ -59,7 +59,7 @@ class ProviderErrorBoundary extends React.Component<
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ProviderErrorBoundary>
-      <WagmiProvider config={walletConnectConfig}>
+      <WagmiProvider config={wagmiAdapter.wagmiConfig}>
         <QueryClientProvider client={queryClient}>
           <RainbowKitProvider
             showRecentTransactions={false}

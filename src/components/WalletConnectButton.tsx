@@ -1,21 +1,27 @@
 "use client";
 
+import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { useAppKit } from "@reown/appkit/react";
+import { Loader2, LogOut, Smartphone, Wallet } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
-import { useState, useEffect } from "react";
-import { Wallet, LogOut, Loader2, Smartphone } from "lucide-react";
 
 export function WalletConnectButton() {
+  const { openConnectModal } = useConnectModal();
   const { address, isConnected, isConnecting } = useAccount();
   const { connect, connectors, isPending } = useConnect();
   const { disconnect } = useDisconnect();
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
-
+  const { open } = useAppKit();
   useEffect(() => {
     // Detect if running on mobile - only on client side
     if (typeof window !== "undefined") {
       const checkMobile = () => {
-        const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
-        return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
+        const userAgent =
+          navigator.userAgent || navigator.vendor || (window as any).opera;
+        return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
+          userAgent.toLowerCase()
+        );
       };
       setIsMobile(checkMobile());
     }
@@ -27,26 +33,49 @@ export function WalletConnectButton() {
 
   const handleConnect = () => {
     // Find WalletConnect connector for mobile, injected for desktop
-    const walletConnectConnector = connectors.find(c => c.id === "walletConnect");
-    const injectedConnector = connectors.find(c => c.id === "injected");
-    
-    // If we haven't detected mobile status yet, prefer WalletConnect as it works everywhere
-    if (isMobile === null) {
-      if (walletConnectConnector) {
-        connect({ connector: walletConnectConnector });
-      } else if (injectedConnector) {
-        connect({ connector: injectedConnector });
-      }
-    } else if (isMobile && walletConnectConnector) {
-      // Use WalletConnect for mobile
-      connect({ connector: walletConnectConnector });
-    } else if (!isMobile && injectedConnector) {
-      // Use injected (MetaMask, etc.) for desktop
-      connect({ connector: injectedConnector });
-    } else if (walletConnectConnector) {
-      // Fallback to WalletConnect if no injected wallet
-      connect({ connector: walletConnectConnector });
-    }
+    const walletConnectConnector = connectors.find(
+      (c) => c.id === "walletConnect"
+    );
+    const injectedConnector = connectors.find((c) => c.id === "injected");
+    open({ view: "Connect" });
+    // // If we haven't detected mobile status yet, prefer WalletConnect as it works everywhere
+    // if (isMobile === null) {
+    //   if (walletConnectConnector) {
+    //     console.log(
+    //       "[WalletConnectButton] isMobile is null, connecting with WalletConnect"
+    //     );
+    //     connect({ connector: walletConnectConnector });
+    //   } else if (injectedConnector) {
+    //     console.log(
+    //       "[WalletConnectButton] isMobile is null, WalletConnect not found, connecting with injected"
+    //     );
+    //     connect({ connector: injectedConnector });
+    //   } else {
+    //     console.warn(
+    //       "[WalletConnectButton] No suitable connector found (isMobile null)"
+    //     );
+    //   }
+    // } else if (isMobile && walletConnectConnector) {
+    //   // Use WalletConnect for mobile
+    //   console.log(
+    //     "[WalletConnectButton] Mobile detected, connecting with WalletConnect"
+    //   );
+    //   connect({ connector: walletConnectConnector });
+    // } else if (!isMobile && injectedConnector) {
+    //   // Use injected (MetaMask, etc.) for desktop
+    //   console.log(
+    //     "[WalletConnectButton] Desktop detected, connecting with injected"
+    //   );
+    //   connect({ connector: injectedConnector });
+    // } else if (walletConnectConnector) {
+    //   // Fallback to WalletConnect if no injected wallet
+    //   console.log(
+    //     "[WalletConnectButton] Fallback: connecting with WalletConnect"
+    //   );
+    //   connect({ connector: walletConnectConnector });
+    // } else {
+    //   console.warn("[WalletConnectButton] No suitable connector found");
+    // }
   };
 
   if (isConnecting || isPending) {

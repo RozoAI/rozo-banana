@@ -1,7 +1,7 @@
 "use client";
 
 import { TwitterShareButton } from "@/components/TwitterShareButton";
-import { WalletButton } from "@/components/WalletButton";
+import { WalletConnectButton } from "@/components/WalletConnectButton";
 import { useAuth } from "@/hooks/useAuth";
 import { imageAPI } from "@/lib/api";
 import { useEffect, useState } from "react";
@@ -70,7 +70,7 @@ export default function GalleryPage() {
                 <span className="text-3xl">🍌</span>
                 <span className="font-bold text-xl text-black">Banana</span>
               </div>
-              <WalletButton />
+              <WalletConnectButton />
             </div>
           </div>
         </header>
@@ -82,7 +82,7 @@ export default function GalleryPage() {
               Connect your wallet to view your generated images
             </p>
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-              <WalletButton />
+              <WalletConnectButton />
             </div>
           </div>
         </div>
@@ -100,7 +100,7 @@ export default function GalleryPage() {
                 <span className="text-3xl">🍌</span>
                 <span className="font-bold text-xl text-black">Banana</span>
               </div>
-              <WalletButton />
+              <WalletConnectButton />
             </div>
           </div>
         </header>
@@ -130,7 +130,7 @@ export default function GalleryPage() {
               <span className="text-3xl">🍌</span>
               <span className="font-bold text-xl text-black">Banana</span>
             </div>
-            <WalletButton />
+            <WalletConnectButton />
           </div>
         </div>
       </header>

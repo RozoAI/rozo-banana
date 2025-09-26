@@ -723,19 +723,19 @@ export default function NanoBananaGenerator() {
       </header>
 
       <div className="max-w-lg mx-auto px-4 py-6">
-        {/* Style Presets Section - Mobile Optimized */}
+        {/* Style Presets Section - Gallery Style */}
         {showPresets && (
-          <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-base font-semibold text-gray-800">
+          <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-lg p-4 mb-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-gray-900">
                 ✨ Choose a Style
               </h2>
               <button
                 onClick={() => setShowPresets(!showPresets)}
-                className="w-6 h-6 flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full transition-colors"
+                className="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full transition-all hover:rotate-90"
               >
                 <svg
-                  className="w-3 h-3"
+                  className="w-4 h-4"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -750,44 +750,72 @@ export default function NanoBananaGenerator() {
               </button>
             </div>
 
-            {/* Preset Grid - 2 columns on mobile, no categories for simplicity */}
-            <div className="grid grid-cols-2 gap-2">
+            {/* Gallery Grid - 2 columns with preview images */}
+            <div className="grid grid-cols-2 gap-3">
               {STYLE_PRESETS.map((preset) => (
                 <button
                   key={preset.id}
                   onClick={() => handlePresetSelect(preset)}
-                  className="group p-3 bg-gray-50 active:bg-yellow-100 hover:bg-yellow-50 border-2 border-transparent hover:border-yellow-400 rounded-lg transition-all text-left"
+                  className="group relative bg-white border-2 border-gray-200 hover:border-yellow-400 active:border-yellow-500 rounded-xl overflow-hidden transition-all transform hover:scale-[1.02] active:scale-[0.98]"
                   disabled={!isConnected}
                 >
-                  <div className="text-2xl mb-1">{preset.emoji}</div>
-                  <div className="font-medium text-sm text-gray-800 group-hover:text-yellow-600">
-                    {preset.title}
+                  {/* Preview Image Background */}
+                  <div className="relative aspect-square bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+                    {preset.previewImage ? (
+                      <Image
+                        src={preset.previewImage}
+                        alt={preset.title}
+                        width={200}
+                        height={200}
+                        className="w-full h-full object-cover transition-all group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-4xl drop-shadow-lg transform group-hover:scale-110 transition-transform">
+                          {preset.emoji}
+                        </span>
+                      </div>
+                    )}
                   </div>
-                  <div className="text-xs text-gray-500 mt-0.5 line-clamp-1">
-                    {preset.description}
+
+                  {/* Text Content */}
+                  <div className="p-2.5 bg-white">
+                    <div className="font-semibold text-sm text-gray-900 group-hover:text-yellow-600 transition-colors">
+                      {preset.title}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-0.5">
+                      {preset.description}
+                    </div>
                   </div>
                 </button>
               ))}
-            </div>
 
-            {/* Custom Option */}
-            <button
-              onClick={() => {
-                setCustomPrompt("");
-                setShowPresets(false);
-                const promptElement = document.getElementById("prompt-input");
-                if (promptElement) {
-                  promptElement.focus();
-                }
-              }}
-              className="mt-3 w-full p-2.5 bg-gradient-to-r from-purple-50 to-blue-50 active:from-purple-100 active:to-blue-100 border border-purple-200 rounded-lg transition-all flex items-center justify-center gap-2"
-              disabled={!isConnected}
-            >
-              <Wand2 className="w-4 h-4 text-purple-600" />
-              <span className="text-sm font-medium text-purple-600">
-                Custom Prompt
-              </span>
-            </button>
+              {/* Custom Prompt Option with matching style */}
+              <button
+                onClick={() => {
+                  setCustomPrompt("");
+                  setShowPresets(false);
+                  const promptElement = document.getElementById("prompt-input");
+                  if (promptElement) {
+                    promptElement.focus();
+                  }
+                }}
+                className="group relative bg-gradient-to-br from-purple-500 to-blue-500 border-2 border-transparent hover:border-purple-400 active:border-purple-500 rounded-xl overflow-hidden transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+                disabled={!isConnected}
+              >
+                <div className="relative aspect-square flex items-center justify-center">
+                  <Wand2 className="w-12 h-12 text-white drop-shadow-lg transform group-hover:scale-110 group-hover:rotate-12 transition-all" />
+                </div>
+                <div className="p-2.5 bg-white">
+                  <div className="font-semibold text-sm text-purple-700 group-hover:text-purple-600 transition-colors">
+                    Custom Prompt
+                  </div>
+                  <div className="text-xs text-gray-500 mt-0.5">
+                    Create your own
+                  </div>
+                </div>
+              </button>
+            </div>
           </div>
         )}
 

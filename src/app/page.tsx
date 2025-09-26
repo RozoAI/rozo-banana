@@ -190,7 +190,7 @@ export default function Home() {
                 </div>
                 {galleryLoading ? (
                   <div className="grid grid-cols-3 gap-3">
-                    {Array.from({ length: 18 }).map((_, idx) => (
+                    {Array.from({ length: 12 }).map((_, idx) => (
                       <div
                         key={idx}
                         className="w-full aspect-square bg-gray-200 rounded-lg animate-pulse"
@@ -199,7 +199,7 @@ export default function Home() {
                   </div>
                 ) : galleryImages.length > 0 ? (
                   <div className="grid grid-cols-3 gap-3">
-                    {galleryImages.slice(0, 6).map((img, idx) => (
+                    {galleryImages.slice(0, 12).map((img, idx) => (
                       <div
                         key={idx}
                         className="relative w-full aspect-square overflow-hidden rounded-lg bg-gray-100 group"

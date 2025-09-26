@@ -1,9 +1,13 @@
 "use client";
 
 import { ShareButton } from "@/components/ShareButton";
+import { TwitterShareButton } from "@/components/TwitterShareButton";
 import { WalletConnectButton } from "@/components/WalletConnectButton";
 import { useAuth } from "@/hooks/useAuth";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { imageAPI } from "@/lib/api";
+import { Eye } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 
@@ -12,6 +16,7 @@ interface GeneratedImage {
   image_url?: string;
   url?: string;
   thumbnail?: string;
+  file_name?: string;
   prompt: string;
   created_at: string;
 }
@@ -22,6 +27,8 @@ export default function GalleryPage() {
   const [images, setImages] = useState<GeneratedImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const isMobile = useIsMobile();
+  const router = useRouter();
 
   // Fetch gallery when wallet is connected (no auth required)
   useEffect(() => {
@@ -49,7 +56,17 @@ export default function GalleryPage() {
 
       // Handle the response structure
       if (response.images) {
-        setImages(response.images);
+        setImages(
+          response.images.map((image: GeneratedImage) => ({
+            ...image,
+            file_name: image.url
+              ? image.url.replace(
+                  "https://eslabobvkchgpokxszwv.supabase.co/storage/v1/object/public/generated-images/rozobanana/",
+                  ""
+                )
+              : undefined,
+          }))
+        );
       } else if (Array.isArray(response)) {
         setImages(response);
       } else {
@@ -134,31 +151,62 @@ export default function GalleryPage() {
                 {images.map((image, index) => (
                   <div
                     key={image.id || index}
-                    className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 group"
+                    className="relative aspect-square rounded-lg overflow-hidden bg-gray-100"
                   >
                     <img
                       src={image.thumbnail || image.image_url || image.url}
                       alt={image.prompt || `Generated image ${index + 1}`}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                      className="w-full h-full object-cover"
                       loading="lazy"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+
+                    {/* Always visible overlay for mobile-friendly experience */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent">
+                      {/* Top action buttons */}
+                      <div className="absolute top-2 right-2 flex gap-2">
+                        <button
+                          onClick={() =>
+                            router.push(`/share/${image.file_name}`)
+                          }
+                          className="bg-white/90 hover:bg-white text-gray-700 rounded-full p-1.5 shadow-sm transition-colors"
+                          title="View details"
+                        >
+                          <Eye className="size-4" />
+                        </button>
+                      </div>
+
+                      {/* Bottom content */}
                       <div className="absolute bottom-0 left-0 right-0 p-2">
-                        {image.prompt && (
+                        {/* {image.prompt && (
                           <p className="text-white text-xs line-clamp-2 mb-2">
                             {image.prompt}
                           </p>
-                        )}
-                        <ShareButton
-                          imageUrl={
-                            image.thumbnail || image.image_url || image.url
-                          }
-                          prompt={image.prompt}
-                          shareId={image.id}
-                          className="text-xs px-2 py-1"
-                        >
-                          Share
-                        </ShareButton>
+                        )} */}
+                        <div className="flex gap-2">
+                          {isMobile ? (
+                            <ShareButton
+                              imageUrl={
+                                image.thumbnail || image.image_url || image.url
+                              }
+                              prompt={image.prompt}
+                              shareId={image.id}
+                              className="text-xs px-3 py-1.5 bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 flex-1"
+                            >
+                              Share
+                            </ShareButton>
+                          ) : (
+                            <TwitterShareButton
+                              imageUrl={
+                                image.thumbnail || image.image_url || image.url
+                              }
+                              prompt={image.prompt}
+                              shareId={image.id}
+                              className="text-xs px-3 py-1.5 bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 flex-1"
+                            >
+                              Share
+                            </TwitterShareButton>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>

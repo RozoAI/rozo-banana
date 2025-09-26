@@ -4,7 +4,9 @@ import { MobileDashboard } from "@/components/MobileDashboard";
 import NanoBananaGenerator from "@/components/NanoBananaGenerator";
 import { ShareButton } from "@/components/ShareButton";
 import { Toast } from "@/components/Toast";
+import { TwitterShareButton } from "@/components/TwitterShareButton";
 import { WalletConnectButton } from "@/components/WalletConnectButton";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
@@ -40,6 +42,8 @@ export default function Home() {
     Array<{ thumbnail?: string; url: string; id: string }>
   >([]);
   const [galleryLoading, setGalleryLoading] = useState(false);
+
+  const isMobile = useIsMobile();
 
   // Fetch public gallery images
   useEffect(() => {
@@ -208,13 +212,23 @@ export default function Home() {
                           unoptimized
                         />
                         <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <ShareButton
-                            imageUrl={img.thumbnail || img.url}
-                            shareId={img.id}
-                            className="text-xs px-2 py-1"
-                          >
-                            Share
-                          </ShareButton>
+                          {isMobile ? (
+                            <ShareButton
+                              imageUrl={img.thumbnail || img.url}
+                              shareId={img.id}
+                              className="text-xs px-2 py-1"
+                            >
+                              Share
+                            </ShareButton>
+                          ) : (
+                            <TwitterShareButton
+                              imageUrl={img.thumbnail || img.url}
+                              shareId={img.id}
+                              className="text-xs px-2 py-1"
+                            >
+                              Share
+                            </TwitterShareButton>
+                          )}
                         </div>
                       </div>
                     ))}

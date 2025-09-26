@@ -1,6 +1,8 @@
 "use client";
 
 import { ShareButton } from "@/components/ShareButton";
+import { TwitterShareButton } from "@/components/TwitterShareButton";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import Image from "next/image";
 import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -19,6 +21,7 @@ export default function SharePage() {
   const [image, setImage] = useState<ShareImage | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const isMobile = useIsMobile();
 
   // Handle referral code from URL
   useEffect(() => {
@@ -171,13 +174,23 @@ export default function SharePage() {
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3">
-              <ShareButton
-                imageUrl={image.image_url}
-                prompt={image.prompt}
-                className="flex-1"
-              >
-                Share on X
-              </ShareButton>
+              {isMobile ? (
+                <ShareButton
+                  imageUrl={image.image_url}
+                  prompt={image.prompt}
+                  className="flex-1"
+                >
+                  Share
+                </ShareButton>
+              ) : (
+                <TwitterShareButton
+                  imageUrl={image.image_url}
+                  prompt={image.prompt}
+                  className="flex-1"
+                >
+                  Share on X
+                </TwitterShareButton>
+              )}
 
               <button
                 onClick={() => {

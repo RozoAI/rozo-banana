@@ -1,6 +1,7 @@
 "use client";
 
 import { STYLE_PRESETS, StylePreset } from "@/constants/stylePresets";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { ImageIcon, Loader2, Sparkles, Wand2 } from "lucide-react";
 import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
@@ -8,6 +9,7 @@ import { useAccount, useConnect, useDisconnect, useSignMessage } from "wagmi";
 import { injected } from "wagmi/connectors";
 import { imageAPI } from "../lib/api";
 import { ShareButton } from "./ShareButton";
+import { TwitterShareButton } from "./TwitterShareButton";
 
 interface GeneratedResult {
   imageUrl?: string;
@@ -66,6 +68,7 @@ export default function NanoBananaGenerator() {
   const [showPresets, setShowPresets] = useState(true);
   const hasFetched = useRef(false);
   const [isTokenValid, setIsTokenValid] = useState(false);
+  const isMobile = useIsMobile();
 
   // Helper function to check if JWT token is valid
   const checkTokenValidity = (): boolean => {
@@ -1046,16 +1049,29 @@ export default function NanoBananaGenerator() {
                     >
                       Download Image
                     </button>
-                    <ShareButton
-                      imageUrl={generatedImage.imageUrl}
-                      prompt={generatedImage.prompt}
-                      shareId={
-                        generatedImage.imageUrl?.split("/").pop()?.split(".")[0]
-                      } // Extract ID from URL
-                      className="px-4 py-2"
-                    >
-                      Share
-                    </ShareButton>
+                    {isMobile ? (
+                      <ShareButton
+                        imageUrl={generatedImage.imageUrl}
+                        prompt={generatedImage.prompt}
+                        shareId={
+                          generatedImage.imageUrl
+                            ?.split("/")
+                            .pop()
+                            ?.split(".")[0]
+                        }
+                        className="px-4 py-2"
+                      >
+                        Share
+                      </ShareButton>
+                    ) : (
+                      <TwitterShareButton
+                        imageUrl={generatedImage.imageUrl}
+                        prompt={generatedImage.prompt}
+                        className="px-4 py-2"
+                      >
+                        Share
+                      </TwitterShareButton>
+                    )}
                   </div>
                 </>
               ) : generatedImage.response ? (

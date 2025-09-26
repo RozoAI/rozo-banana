@@ -1,9 +1,10 @@
 "use client";
 
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useAppKit } from "@reown/appkit/react";
 import { Loader2, LogOut, Smartphone, Wallet } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
 
 export function WalletConnectButton() {
@@ -11,26 +12,16 @@ export function WalletConnectButton() {
   const { address, isConnected, isConnecting } = useAccount();
   const { connect, connectors, isPending } = useConnect();
   const { disconnect } = useDisconnect();
-  const [isMobile, setIsMobile] = useState<boolean | null>(null);
   const { open } = useAppKit();
-  useEffect(() => {
-    // Detect if running on mobile - only on client side
-    if (typeof window !== "undefined") {
-      const checkMobile = () => {
-        const userAgent =
-          navigator.userAgent || navigator.vendor || (window as any).opera;
-        return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
-          userAgent.toLowerCase()
-        );
-      };
-      setIsMobile(checkMobile());
-    }
-  }, []);
+  const isMobile = useIsMobile();
 
   // Save address when wallet connects
   useEffect(() => {
     if (isConnected && address) {
-      console.log("🔗 [WalletConnectButton] Wallet connected, saving address:", address);
+      console.log(
+        "🔗 [WalletConnectButton] Wallet connected, saving address:",
+        address
+      );
       // Save address in localStorage for API calls
       localStorage.setItem("userAddress", address.toLowerCase());
 
@@ -39,7 +30,7 @@ export function WalletConnectButton() {
       if (!existingUser) {
         const user = {
           address: address.toLowerCase(),
-          is_connected: true
+          is_connected: true,
         };
         localStorage.setItem("rozo_user", JSON.stringify(user));
         console.log("👤 [WalletConnectButton] Created user object with address");

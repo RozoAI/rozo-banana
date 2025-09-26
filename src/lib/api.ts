@@ -244,17 +244,33 @@ export const authAPI = {
         }
 
         if (user && typeof window !== "undefined") {
+          // IMPORTANT: Validate that the user address matches the authenticated address
+          // The backend should return the authenticated address, not the referral address
+          const authenticatedAddress = address.toLowerCase();
+          const returnedAddress = user.address?.toLowerCase();
+
+          // Check if backend returned wrong address (e.g., referral instead of user)
+          if (returnedAddress && returnedAddress !== authenticatedAddress) {
+            console.warn(
+              "⚠️ [authAPI.verify] Backend returned different address than authenticated!",
+              { authenticated: authenticatedAddress, returned: returnedAddress }
+            );
+            // Override with the correct authenticated address
+            user.address = authenticatedAddress;
+          }
+
           // Ensure address is lowercase in stored user data
           const userWithLowerAddress = {
             ...user,
-            address: user.address?.toLowerCase(),
+            address: authenticatedAddress, // Always use the authenticated address
           };
           localStorage.setItem(
             "rozo_user",
             JSON.stringify(userWithLowerAddress)
           );
           console.log(
-            "💾 [authAPI.verify] User data saved to localStorage with lowercase address"
+            "💾 [authAPI.verify] User data saved with authenticated address:",
+            authenticatedAddress
           );
         }
 
@@ -282,14 +298,14 @@ export const authAPI = {
       return;
     }
     // Clear all authentication tokens
-    // localStorage.removeItem("rozo_token");
-    // localStorage.removeItem("auth_token");
+    localStorage.removeItem("rozo_token");
+    localStorage.removeItem("auth_token");
     localStorage.removeItem("authToken");
 
     // Clear user data
     localStorage.removeItem("rozo_user");
     localStorage.removeItem("userAddress");
-    // localStorage.removeItem("rozo_signed_addresses");
+    localStorage.removeItem("rozo_signed_addresses");
 
     // Clear welcome/status flags
     localStorage.removeItem("auth_expired");

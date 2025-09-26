@@ -43,6 +43,21 @@ export function WalletConnectButton() {
         };
         localStorage.setItem("rozo_user", JSON.stringify(user));
         console.log("👤 [WalletConnectButton] Created user object with address");
+      } else {
+        // If rozo_user exists, validate it has the correct address
+        try {
+          const user = JSON.parse(existingUser);
+          if (user.address && user.address.toLowerCase() !== address.toLowerCase()) {
+            console.warn("⚠️ [WalletConnectButton] Correcting mismatched address in rozo_user", {
+              stored: user.address,
+              actual: address
+            });
+            user.address = address.toLowerCase();
+            localStorage.setItem("rozo_user", JSON.stringify(user));
+          }
+        } catch (e) {
+          console.error("Failed to parse existing rozo_user", e);
+        }
       }
     }
   }, [isConnected, address]);

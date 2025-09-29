@@ -16,6 +16,17 @@ interface ShareImage {
   user_address?: string;
 }
 
+const getFilenameFromUrl = (url: string): string => {
+  try {
+    const urlObj = new URL(url);
+    const filename = urlObj.pathname.split("/").pop();
+    return filename || url;
+  } catch (error) {
+    console.warn("Invalid URL:", url);
+    return url;
+  }
+};
+
 export default function SharePage() {
   const params = useParams();
   const searchParams = useSearchParams();
@@ -62,7 +73,8 @@ export default function SharePage() {
       try {
         let imageUrl = "";
         if (params.id && params.id.includes("https")) {
-          imageUrl = decodeURIComponent(params.id as string);
+          const filename = getFilenameFromUrl(params.id as string);
+          imageUrl = decodeURIComponent(filename);
         } else {
           imageUrl = `https://eslabobvkchgpokxszwv.supabase.co/storage/v1/object/public/generated-images/rozobanana/${params.id}`;
         }
@@ -91,10 +103,10 @@ export default function SharePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-orange-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[rgb(17,17,17)] flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading image...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[rgb(245,210,60)] mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading image...</p>
         </div>
       </div>
     );
@@ -102,18 +114,18 @@ export default function SharePage() {
 
   if (error || !image) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-orange-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[rgb(17,17,17)] flex items-center justify-center">
         <div className="text-center">
           <span className="text-6xl mb-4 block">🍌</span>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl font-bold text-white mb-2">
             Image Not Found
           </h1>
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-400 mb-4">
             This image may have been removed or doesn't exist.
           </p>
           <Link
             href="/"
-            className="px-6 py-3 bg-yellow-500 text-white rounded-lg font-semibold hover:bg-yellow-600 transition-colors"
+            className="px-6 py-3 bg-[rgb(245,210,60)] text-black rounded-lg font-semibold hover:bg-[rgb(255,220,70)] transition-colors"
           >
             Go to Banana
           </Link>
@@ -123,18 +135,18 @@ export default function SharePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-orange-50">
+    <div className="min-h-screen bg-[rgb(17,17,17)]">
       {/* Header */}
-      <header className="sticky top-0 w-full bg-white/90 backdrop-blur-md border-b border-gray-100 z-50">
+      <header className="sticky top-0 w-full bg-[rgb(17,17,17)]/90 backdrop-blur-md border-b border-gray-800 z-50">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-2">
               <span className="text-3xl">🍌</span>
-              <span className="font-bold text-xl text-black">Banana</span>
+              <span className="font-bold text-xl text-white">Banana</span>
             </div>
             <Link
               href="/"
-              className="px-4 py-2 bg-yellow-500 text-white rounded-lg font-semibold hover:bg-yellow-600 transition-colors"
+              className="px-4 py-2 bg-[rgb(245,210,60)] text-black rounded-lg font-semibold hover:bg-[rgb(255,220,70)] transition-colors"
             >
               Create Your Own
             </Link>
@@ -143,7 +155,7 @@ export default function SharePage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+        <div className="bg-[rgb(17,17,17)] rounded-2xl shadow-lg border border-gray-800 overflow-hidden">
           {/* Image Display */}
           <div className="relative w-full h-96 md:h-[500px]">
             <Image
@@ -159,11 +171,12 @@ export default function SharePage() {
           <div className="p-6">
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                  AI-Generated Image
+                <h1 className="text-2xl font-bold text-white mb-2">
+                  AI-Generated Image <br />
+                  {getFilenameFromUrl(image.image_url)}
                 </h1>
                 {image.prompt && (
-                  <p className="text-gray-600 mb-4">"{image.prompt}"</p>
+                  <p className="text-gray-400 mb-4">"{image.prompt}"</p>
                 )}
                 <div className="flex items-center gap-4 text-sm text-gray-500">
                   <span>Created with ROZO Banana</span>
@@ -207,17 +220,17 @@ export default function SharePage() {
             </div>
 
             {/* Call to Action */}
-            <div className="mt-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-              <h3 className="font-semibold text-yellow-800 mb-2">
+            <div className="mt-6 p-4 bg-gray-800 rounded-lg border border-gray-700">
+              <h3 className="font-semibold text-white mb-2">
                 Create Your Own AI Images
               </h3>
-              <p className="text-yellow-700 text-sm mb-3">
+              <p className="text-gray-400 text-sm mb-3">
                 Transform your ideas into stunning visuals with ROZO Banana's AI
                 image generator.
               </p>
               <Link
                 href="/generate"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-medium"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-[rgb(245,210,60)] text-black rounded-lg hover:bg-[rgb(255,220,70)] transition-colors text-sm font-medium"
               >
                 <span>🎨</span>
                 Start Creating

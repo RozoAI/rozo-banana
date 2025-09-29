@@ -53,15 +53,22 @@ export default function GalleryPage() {
       // Handle the response structure for public gallery
       if (response.images) {
         setImages(
-          response.images.map((image: any) => ({
-            id: image.id,
-            image_url: image.thumbnail || image.url || image.image_url,
-            url: image.thumbnail || image.url || image.image_url,
-            thumbnail: image.thumbnail || image.url || image.image_url,
-            prompt: image.prompt || "Generated image",
-            created_at: image.created_at || new Date().toISOString(),
-            file_name: image.id, // Use ID as file_name for public images
-          }))
+          response.images.map((image: any) => {
+            const imageUrl = image.thumbnail || image.url || image.image_url;
+
+            return {
+              id: image.id,
+              image_url: imageUrl,
+              url: image.thumbnail || image.url || image.image_url,
+              thumbnail: image.thumbnail || image.url || image.image_url,
+              prompt: image.prompt || "Generated image",
+              created_at: image.created_at || new Date().toISOString(),
+              file_name: imageUrl.replace(
+                "https://eslabobvkchgpokxszwv.supabase.co/storage/v1/object/public/generated-images/rozobanana/",
+                ""
+              ),
+            };
+          })
         );
       } else if (Array.isArray(response)) {
         setImages(response);

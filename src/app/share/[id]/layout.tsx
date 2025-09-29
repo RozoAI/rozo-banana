@@ -5,6 +5,17 @@ interface Props {
   children: React.ReactNode;
 }
 
+const getFilenameFromUrl = (url: string): string => {
+  try {
+    const urlObj = new URL(url);
+    const filename = urlObj.pathname.split("/").pop();
+    return filename || url;
+  } catch (error) {
+    console.warn("Invalid URL:", url);
+    return url;
+  }
+};
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
 
@@ -15,11 +26,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     let imageUrl = "";
 
+    const filename = getFilenameFromUrl(id);
+
     if (id.includes("https")) {
       imageUrl = decodeURIComponent(id);
     } else {
       imageUrl = `https://eslabobvkchgpokxszwv.supabase.co/storage/v1/object/public/generated-images/rozobanana/${decodeURIComponent(
-        id
+        filename
       )}`;
     }
 

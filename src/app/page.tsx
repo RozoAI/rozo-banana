@@ -152,7 +152,7 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="max-w-lg mx-auto px-4 mt-4">
+      <main className="max-w-lg mx-auto px-4 mt-4 mb-20">
         {!isConnected ? (
           <div className="flex flex-col items-center justify-start min-h-[calc(100vh-5rem)] py-8">
             <div className="text-center space-y-8 w-full">
@@ -162,6 +162,23 @@ export default function Home() {
                   <h1 className="text-4xl font-bold text-gray-900 mb-3">
                     ROZO Banana
                   </h1>
+                </div>
+
+                {/* Autoplay Video */}
+                <div className="w-full mx-auto">
+                  <video
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    className="w-full h-auto rounded-2xl shadow-lg"
+                  >
+                    <source
+                      src="https://cdn.rozo.ai/rozoog0.mp4"
+                      type="video/mp4"
+                    />
+                    Your browser does not support the video tag.
+                  </video>
                 </div>
               </div>
 

@@ -2,9 +2,10 @@
 
 import { baseUSDC } from "@rozoai/intent-common";
 import { RozoPayButton, useRozoPayUI } from "@rozoai/intent-pay";
-import { Check, HelpCircle, Loader2, Zap } from "lucide-react";
+import { Check, HelpCircle, Loader2, X, Zap } from "lucide-react";
 import { useState } from "react";
 import { getAddress } from "viem";
+import { useAccount } from "wagmi";
 import { BottomNavigation } from "./BottomNavigation";
 
 interface PricingTier {
@@ -51,9 +52,16 @@ export default function RechargeContent() {
   const [error, setError] = useState<string | null>(null);
   const [payParams, setPayParams] = useState<any>(null);
   const [showPayWithButton, setShowPayWithButton] = useState(true);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const { resetPayment } = useRozoPayUI();
+  const { isConnected } = useAccount();
 
   const handlePayment = async () => {
+    if (!isConnected) {
+      setError("Please connect your wallet first");
+      return;
+    }
+
     if (!selectedTier) {
       setError("Please select a plan");
       return;
@@ -96,6 +104,11 @@ export default function RechargeContent() {
   };
 
   const handleSelectTier = (tier: PricingTier) => {
+    if (!isConnected) {
+      setError("Please connect your wallet first");
+      return;
+    }
+
     setSelectedTier(tier);
     setShowPayWithButton(true);
   };
@@ -308,6 +321,7 @@ export default function RechargeContent() {
             onPaymentCompleted={() => {
               console.log("Payment completed");
               setIsLoading(false);
+              setShowSuccessModal(true);
             }}
           >
             {({ show }) => (
@@ -368,6 +382,57 @@ export default function RechargeContent() {
       </div>
 
       <BottomNavigation />
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full relative overflow-hidden">
+            {/* Close Button */}
+            <button
+              onClick={() => setShowSuccessModal(false)}
+              className="absolute top-4 right-4 z-10 w-8 h-8 bg-black/20 hover:bg-black/30 rounded-full flex items-center justify-center transition-colors"
+            >
+              <X className="w-5 h-5 text-white" />
+            </button>
+
+            {/* Video */}
+            <div className="relative">
+              <video
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="w-full h-auto"
+                onEnded={() => setShowSuccessModal(false)}
+              >
+                <source
+                  src="https://cdn.rozo.ai/rozoog1.mp4"
+                  type="video/mp4"
+                />
+                Your browser does not support the video tag.
+              </video>
+            </div>
+
+            {/* Success Message */}
+            <div className="p-6 text-center">
+              <div className="text-4xl mb-3">🎉</div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                Payment Successful!
+              </h3>
+              <p className="text-gray-600 text-sm mb-4">
+                Welcome to ROZO Banana! Your credits have been added to your
+                account.
+              </p>
+              <button
+                onClick={() => setShowSuccessModal(false)}
+                className="w-full py-2 bg-gradient-to-r from-yellow-400 to-orange-400 text-white font-medium rounded-lg hover:from-yellow-500 hover:to-orange-500 transition-all"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

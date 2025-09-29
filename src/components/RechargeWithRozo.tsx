@@ -298,12 +298,6 @@ export default function RechargeContent() {
                       <p className="text-sm text-gray-400">
                         {tier.id === "monthly" ? "1000 Points" : "12000 Points"}
                       </p>
-
-                      <p className="text-xs text-gray-500">
-                        {tier.id === "monthly"
-                          ? "Limited to 100 Spots"
-                          : "Limited to 10 Spots"}
-                      </p>
                     </div>
                   </div>
 

@@ -289,7 +289,6 @@ export default function RechargeContent() {
         {payParams && (
           <RozoPayButton.Custom
             resetOnSuccess
-            defaultOpen
             appId="rozoBananaMP"
             toChain={baseUSDC.chainId}
             toAddress={getAddress(DESTINATION_ADDRESS)}

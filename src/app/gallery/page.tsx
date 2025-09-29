@@ -4,11 +4,9 @@ import { BottomNavigation } from "@/components/BottomNavigation";
 import { ShareButton } from "@/components/ShareButton";
 import { TwitterShareButton } from "@/components/TwitterShareButton";
 import { WalletConnectButton } from "@/components/WalletConnectButton";
-import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { imageAPI } from "@/lib/api";
 import { Eye } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
@@ -24,7 +22,6 @@ interface GeneratedImage {
 }
 
 export default function GalleryPage() {
-  const { isAuthenticated, signIn, isLoading } = useAuth();
   const { address, isConnected } = useAccount();
   const [images, setImages] = useState<GeneratedImage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,10 +29,10 @@ export default function GalleryPage() {
   const isMobile = useIsMobile();
   const router = useRouter();
 
-  // Fetch gallery based on connection status
+  // Fetch public gallery
   useEffect(() => {
     fetchGallery();
-  }, [isConnected, address]);
+  }, []);
 
   // Removed auto sign-in - authentication will happen when needed
   // useEffect(() => {
@@ -49,59 +46,27 @@ export default function GalleryPage() {
     setError(null);
 
     try {
-      let response;
+      // Always fetch public gallery
+      console.log("🌍 [Gallery] Fetching public gallery");
+      const response = await imageAPI.getPublicGallery(1, 100, "newest");
 
-      if (isConnected && address) {
-        // User is connected - fetch their personal gallery
-        console.log(
-          "🖼️ [Gallery] Fetching personal gallery for connected user:",
-          address
+      // Handle the response structure for public gallery
+      if (response.images) {
+        setImages(
+          response.images.map((image: any) => ({
+            id: image.id,
+            image_url: image.thumbnail || image.url || image.image_url,
+            url: image.thumbnail || image.url || image.image_url,
+            thumbnail: image.thumbnail || image.url || image.image_url,
+            prompt: image.prompt || "Generated image",
+            created_at: image.created_at || new Date().toISOString(),
+            file_name: image.id, // Use ID as file_name for public images
+          }))
         );
-        response = await imageAPI.getHistory(1, 100); // Fetch up to 100 images
-
-        // Handle the response structure for personal gallery
-        if (response.images) {
-          setImages(
-            response.images.map((image: GeneratedImage) => ({
-              ...image,
-              file_name: image.url
-                ? image.url.replace(
-                    "https://eslabobvkchgpokxszwv.supabase.co/storage/v1/object/public/generated-images/rozobanana/",
-                    ""
-                  )
-                : undefined,
-            }))
-          );
-        } else if (Array.isArray(response)) {
-          setImages(response);
-        } else {
-          setImages([]);
-        }
+      } else if (Array.isArray(response)) {
+        setImages(response);
       } else {
-        // User is not connected - fetch public gallery
-        console.log(
-          "🌍 [Gallery] Fetching public gallery for non-connected user"
-        );
-        response = await imageAPI.getPublicGallery(1, 100, "newest");
-
-        // Handle the response structure for public gallery
-        if (response.images) {
-          setImages(
-            response.images.map((image: any) => ({
-              id: image.id,
-              image_url: image.thumbnail || image.url || image.image_url,
-              url: image.thumbnail || image.url || image.image_url,
-              thumbnail: image.thumbnail || image.url || image.image_url,
-              prompt: image.prompt || "Generated image",
-              created_at: image.created_at || new Date().toISOString(),
-              file_name: image.id, // Use ID as file_name for public images
-            }))
-          );
-        } else if (Array.isArray(response)) {
-          setImages(response);
-        } else {
-          setImages([]);
-        }
+        setImages([]);
       }
 
       console.log("🌌 [Gallery] API response:", response);
@@ -159,7 +124,7 @@ export default function GalleryPage() {
         <div className="py-6">
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <h3 className="font-bold text-lg mb-4 text-gray-900">
-              {isConnected ? "My Gallery" : "Public Gallery"}
+              Public Gallery
             </h3>
             {loading ? (
               <div className="flex flex-col items-center justify-center py-12">
@@ -245,22 +210,10 @@ export default function GalleryPage() {
             ) : (
               <div className="flex flex-col items-center justify-center py-12">
                 <span className="text-4xl mb-3">🖼️</span>
-                <p className="text-gray-500">
-                  {isConnected ? "No images yet" : "No public images available"}
-                </p>
+                <p className="text-gray-500">No public images available</p>
                 <p className="text-sm text-gray-400 mt-1">
-                  {isConnected
-                    ? "Your generated images will appear here"
-                    : "Connect your wallet to see your personal gallery"}
+                  Public images will appear here
                 </p>
-                {isConnected && (
-                  <Link
-                    href="/generate"
-                    className="mt-4 px-6 py-2 bg-yellow-500 text-white rounded-lg font-semibold hover:bg-yellow-600 transition-colors"
-                  >
-                    Generate Images
-                  </Link>
-                )}
               </div>
             )}
           </div>

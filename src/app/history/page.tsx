@@ -1,23 +1,24 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { imageAPI } from '@/lib/api';
-import { useAuth } from '@/hooks/useAuth';
-import { useAccount } from 'wagmi';
-import Image from 'next/image';
-import Link from 'next/link';
-import { 
-  Clock, 
-  Download, 
-  Copy, 
-  Share2,
-  Loader2,
+import { BottomNavigation } from "@/components/BottomNavigation";
+import { useAuth } from "@/hooks/useAuth";
+import { imageAPI } from "@/lib/api";
+import {
   ArrowLeft,
+  Calendar,
+  Clock,
+  Copy,
+  Download,
   Grid3X3,
   List,
-  Calendar,
-  Sparkles
-} from 'lucide-react';
+  Loader2,
+  Share2,
+  Sparkles,
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useAccount } from "wagmi";
 
 interface GeneratedImage {
   id: string;
@@ -41,11 +42,11 @@ export default function ImageHistoryPage() {
   const [images, setImages] = useState<GeneratedImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
     limit: 20,
-    total: 0
+    total: 0,
   });
 
   // Fetch history when wallet is connected (no auth required)
@@ -59,20 +60,22 @@ export default function ImageHistoryPage() {
   const fetchHistory = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       // API will automatically use the current address from localStorage
       const data = await imageAPI.getHistory(pagination.page, pagination.limit);
       console.log("📦 [History] API response:", data);
       setImages(data.images || []);
-      setPagination(data.pagination || {
-        page: pagination.page,
-        limit: pagination.limit,
-        total: 0
-      });
+      setPagination(
+        data.pagination || {
+          page: pagination.page,
+          limit: pagination.limit,
+          total: 0,
+        }
+      );
     } catch (err) {
-      console.error('Failed to fetch history:', err);
-      setError('Failed to load image history');
+      console.error("Failed to fetch history:", err);
+      setError("Failed to load image history");
     } finally {
       setLoading(false);
     }
@@ -83,7 +86,7 @@ export default function ImageHistoryPage() {
       const response = await fetch(image.url);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `banana-${image.id}.png`;
       document.body.appendChild(a);
@@ -91,7 +94,7 @@ export default function ImageHistoryPage() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (err) {
-      console.error('Download failed:', err);
+      console.error("Download failed:", err);
     }
   };
 
@@ -103,16 +106,16 @@ export default function ImageHistoryPage() {
   const handleShare = (image: GeneratedImage) => {
     const shareUrl = `${window.location.origin}/image/${image.id}`;
     const shareText = `Check out this image I generated with Banana!\\n\\nPrompt: ${image.prompt}`;
-    
+
     if (navigator.share) {
       navigator.share({
-        title: 'Banana Generated Image',
+        title: "Banana Generated Image",
         text: shareText,
-        url: shareUrl
+        url: shareUrl,
       });
     } else {
       navigator.clipboard.writeText(shareUrl);
-      alert('Link copied to clipboard!');
+      alert("Link copied to clipboard!");
     }
   };
 
@@ -121,7 +124,7 @@ export default function ImageHistoryPage() {
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 0) {
       const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
       if (diffHours === 0) {
@@ -130,7 +133,7 @@ export default function ImageHistoryPage() {
       }
       return `${diffHours} hours ago`;
     } else if (diffDays === 1) {
-      return 'Yesterday';
+      return "Yesterday";
     } else if (diffDays < 7) {
       return `${diffDays} days ago`;
     } else {
@@ -143,8 +146,12 @@ export default function ImageHistoryPage() {
       <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-yellow-100 p-4">
         <div className="max-w-4xl mx-auto">
           <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Sign In Required</h1>
-            <p className="text-gray-600 mb-6">Please connect your wallet to view your image history</p>
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+              Sign In Required
+            </h1>
+            <p className="text-gray-600 mb-6">
+              Please connect your wallet to view your image history
+            </p>
             <Link
               href="/"
               className="inline-flex items-center gap-2 px-6 py-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
@@ -172,30 +179,32 @@ export default function ImageHistoryPage() {
                 <ArrowLeft className="w-5 h-5" />
               </Link>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Generation History</h1>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  Generation History
+                </h1>
                 <p className="text-gray-600">
                   {pagination.total} images generated
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setViewMode('grid')}
+                onClick={() => setViewMode("grid")}
                 className={`p-2 rounded-lg transition-colors ${
-                  viewMode === 'grid' 
-                    ? 'bg-yellow-100 text-yellow-600' 
-                    : 'hover:bg-gray-100 text-gray-600'
+                  viewMode === "grid"
+                    ? "bg-yellow-100 text-yellow-600"
+                    : "hover:bg-gray-100 text-gray-600"
                 }`}
               >
                 <Grid3X3 className="w-5 h-5" />
               </button>
               <button
-                onClick={() => setViewMode('list')}
+                onClick={() => setViewMode("list")}
                 className={`p-2 rounded-lg transition-colors ${
-                  viewMode === 'list' 
-                    ? 'bg-yellow-100 text-yellow-600' 
-                    : 'hover:bg-gray-100 text-gray-600'
+                  viewMode === "list"
+                    ? "bg-yellow-100 text-yellow-600"
+                    : "hover:bg-gray-100 text-gray-600"
                 }`}
               >
                 <List className="w-5 h-5" />
@@ -225,8 +234,12 @@ export default function ImageHistoryPage() {
           <div className="bg-white rounded-2xl shadow-xl p-16">
             <div className="text-center">
               <Sparkles className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">No Images Yet</h2>
-              <p className="text-gray-600 mb-6">Start generating amazing images with Banana!</p>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                No Images Yet
+              </h2>
+              <p className="text-gray-600 mb-6">
+                Start generating amazing images with Banana!
+              </p>
               <Link
                 href="/generate"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white rounded-lg hover:from-yellow-500 hover:to-yellow-600 transition-all"
@@ -236,7 +249,7 @@ export default function ImageHistoryPage() {
               </Link>
             </div>
           </div>
-        ) : viewMode === 'grid' ? (
+        ) : viewMode === "grid" ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {images.map((image) => (
               <div
@@ -276,7 +289,9 @@ export default function ImageHistoryPage() {
                   </div>
                 </div>
                 <div className="p-4">
-                  <p className="text-sm text-gray-700 line-clamp-2 mb-2">{image.prompt}</p>
+                  <p className="text-sm text-gray-700 line-clamp-2 mb-2">
+                    {image.prompt}
+                  </p>
                   <div className="flex items-center justify-between text-xs text-gray-500">
                     <span className="flex items-center gap-1">
                       <Clock className="w-3 h-3" />
@@ -359,18 +374,26 @@ export default function ImageHistoryPage() {
           <div className="bg-white rounded-xl shadow-md p-4 mt-6">
             <div className="flex items-center justify-between">
               <button
-                onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
+                onClick={() =>
+                  setPagination((prev) => ({ ...prev, page: prev.page - 1 }))
+                }
                 disabled={pagination.page === 1}
                 className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Previous
               </button>
               <span className="text-gray-600">
-                Page {pagination.page} of {Math.ceil(pagination.total / pagination.limit)}
+                Page {pagination.page} of{" "}
+                {Math.ceil(pagination.total / pagination.limit)}
               </span>
               <button
-                onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
-                disabled={pagination.page >= Math.ceil(pagination.total / pagination.limit)}
+                onClick={() =>
+                  setPagination((prev) => ({ ...prev, page: prev.page + 1 }))
+                }
+                disabled={
+                  pagination.page >=
+                  Math.ceil(pagination.total / pagination.limit)
+                }
                 className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Next
@@ -379,6 +402,8 @@ export default function ImageHistoryPage() {
           </div>
         )}
       </div>
+
+      <BottomNavigation />
     </div>
   );
 }

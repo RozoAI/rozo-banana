@@ -5,6 +5,7 @@ import { RozoPayButton, useRozoPayUI } from "@rozoai/intent-pay";
 import { Check, HelpCircle, Loader2, Zap } from "lucide-react";
 import { useState } from "react";
 import { getAddress } from "viem";
+import { BottomNavigation } from "./BottomNavigation";
 
 interface PricingTier {
   id: string;
@@ -366,41 +367,7 @@ export default function RechargeContent() {
         </div>
       </div>
 
-      {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100">
-        <div className="max-w-lg mx-auto">
-          <div className="grid grid-cols-4">
-            <button
-              onClick={() => (window.location.href = "/")}
-              className="py-3 text-center transition-colors text-gray-400 hover:text-yellow-600"
-            >
-              <div className="text-2xl mb-1">🏠</div>
-              <p className="text-xs font-medium">Home</p>
-            </button>
-            <button
-              onClick={() => (window.location.href = "/generate")}
-              className="py-3 text-center transition-colors text-gray-400 hover:text-yellow-600"
-            >
-              <div className="text-2xl mb-1">🎨</div>
-              <p className="text-xs font-medium">Generate</p>
-            </button>
-            <button className="py-3 text-center transition-colors text-yellow-600 relative">
-              <div className="absolute -top-1 right-1/4 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-                HOT
-              </div>
-              <div className="text-2xl mb-1">💎</div>
-              <p className="text-xs font-medium">Top Up</p>
-            </button>
-            <button
-              onClick={() => (window.location.href = "/")}
-              className="py-3 text-center transition-colors text-gray-400 hover:text-yellow-600"
-            >
-              <div className="text-2xl mb-1">🖼️</div>
-              <p className="text-xs font-medium">Gallery</p>
-            </button>
-          </div>
-        </div>
-      </div>
+      <BottomNavigation />
     </div>
   );
 }

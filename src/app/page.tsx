@@ -1,7 +1,7 @@
 "use client";
 
+import { BottomNavigation } from "@/components/BottomNavigation";
 import { MobileDashboard } from "@/components/MobileDashboard";
-import NanoBananaGenerator from "@/components/NanoBananaGenerator";
 import { ShareButton } from "@/components/ShareButton";
 import { Toast } from "@/components/Toast";
 import { TwitterShareButton } from "@/components/TwitterShareButton";
@@ -121,12 +121,12 @@ export default function Home() {
   }, [isConnected, address]);
 
   // Check if coming from /generate route
-  if (
-    typeof window !== "undefined" &&
-    window.location.pathname === "/generate"
-  ) {
-    return <NanoBananaGenerator />;
-  }
+  // if (
+  //   typeof window !== "undefined" &&
+  //   window.location.pathname === "/generate"
+  // ) {
+  //   return <NanoBananaGenerator />;
+  // }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-orange-50">
@@ -245,6 +245,8 @@ export default function Home() {
           <MobileDashboard address={address!} />
         )}
       </main>
+
+      <BottomNavigation />
     </div>
   );
 }

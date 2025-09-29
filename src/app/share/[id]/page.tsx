@@ -4,6 +4,7 @@ import { ShareButton } from "@/components/ShareButton";
 import { TwitterShareButton } from "@/components/TwitterShareButton";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import Image from "next/image";
+import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -110,12 +111,12 @@ export default function SharePage() {
           <p className="text-gray-600 mb-4">
             This image may have been removed or doesn't exist.
           </p>
-          <a
+          <Link
             href="/"
             className="px-6 py-3 bg-yellow-500 text-white rounded-lg font-semibold hover:bg-yellow-600 transition-colors"
           >
             Go to Banana
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -131,12 +132,12 @@ export default function SharePage() {
               <span className="text-3xl">🍌</span>
               <span className="font-bold text-xl text-black">Banana</span>
             </div>
-            <a
+            <Link
               href="/"
               className="px-4 py-2 bg-yellow-500 text-white rounded-lg font-semibold hover:bg-yellow-600 transition-colors"
             >
               Create Your Own
-            </a>
+            </Link>
           </div>
         </div>
       </header>
@@ -214,13 +215,13 @@ export default function SharePage() {
                 Transform your ideas into stunning visuals with ROZO Banana's AI
                 image generator.
               </p>
-              <a
+              <Link
                 href="/generate"
                 className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-medium"
               >
                 <span>🎨</span>
                 Start Creating
-              </a>
+              </Link>
             </div>
           </div>
         </div>

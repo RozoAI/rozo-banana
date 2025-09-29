@@ -4,10 +4,12 @@ import { STYLE_PRESETS, StylePreset } from "@/constants/stylePresets";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { ImageIcon, Loader2, Sparkles, Wand2 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
 import { useAccount, useConnect, useDisconnect, useSignMessage } from "wagmi";
 import { injected } from "wagmi/connectors";
 import { imageAPI } from "../lib/api";
+import { BottomNavigation } from "./BottomNavigation";
 import { ShareButton } from "./ShareButton";
 import { TwitterShareButton } from "./TwitterShareButton";
 
@@ -289,11 +291,11 @@ export default function NanoBananaGenerator() {
         setAuthToken(token);
         setIsTokenValid(true);
 
-        // Don't fetch credits again - we already have them from wallet connection
+        // Fetch fresh credits after successful authentication
         console.log(
-          "💰 [NanoBanana] Keeping existing credits balance:",
-          userCredits
+          "🔄 [NanoBanana] Authentication successful, fetching fresh credits..."
         );
+        await fetchUserCredits();
         return true;
       } else {
         const errorData = await response.json();
@@ -318,10 +320,9 @@ export default function NanoBananaGenerator() {
       const authSuccess = await authenticateUser(true); // Force new signature
       if (authSuccess) {
         setError(null);
-        // Don't refresh credits - we already have them from wallet connection
+        // Credits will be fetched automatically in authenticateUser function
         console.log(
-          "✅ [Authorize] Authorization successful, keeping existing credits:",
-          userCredits
+          "✅ [Authorize] Authorization successful, credits will be refreshed"
         );
       } else {
         setError(
@@ -336,9 +337,25 @@ export default function NanoBananaGenerator() {
     }
   };
 
-  // Fetch credits without requiring authentication token
+  // Fetch credits with proper authentication check
   const fetchUserCredits = async () => {
     try {
+      // Check if user is authenticated before making API call
+      const rozoToken = localStorage.getItem("rozo_token");
+      const authToken = localStorage.getItem("auth_token");
+
+      if (!rozoToken && !authToken) {
+        console.log(
+          "🔔 [NanoBanana] No authentication token found, skipping credits fetch"
+        );
+        setUserCredits(0);
+        return;
+      }
+
+      console.log(
+        "🔑 [NanoBanana] Authentication token found, fetching credits..."
+      );
+
       // Get credits balance from the Banana Backend (will use address param)
       const { creditsAPI } = await import("../lib/api");
       const data = await creditsAPI.getBalance();
@@ -358,7 +375,16 @@ export default function NanoBananaGenerator() {
       setUserCredits(creditsValue);
     } catch (error: any) {
       console.error("❌ [NanoBanana] Failed to fetch credits:", error);
-      // Set default value on error
+
+      // Handle 401 errors specifically
+      if (error.response?.status === 401) {
+        console.log("🔔 [NanoBanana] Authentication required for credits API");
+        setUserCredits(0);
+        // Don't set error state for 401 - this is expected when not authenticated
+        return;
+      }
+
+      // Set default value on other errors
       setUserCredits(0);
     }
   };
@@ -711,18 +737,18 @@ export default function NanoBananaGenerator() {
       <header className="sticky top-0 w-full bg-white/90 backdrop-blur-md border-b border-gray-100 z-50">
         <div className="max-w-lg mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
-            <a
+            <Link
               href="/"
               className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
             >
               <span className="text-3xl">🍌</span>
               <span className="font-bold text-xl text-black">Banana</span>
-            </a>
+            </Link>
           </div>
         </div>
       </header>
 
-      <div className="max-w-lg mx-auto px-4 py-6">
+      <div className="max-w-lg mx-auto px-4 py-6 mb-[5rem]">
         {/* Style Presets Section - Gallery Style */}
         {showPresets && (
           <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-lg p-4 mb-4">
@@ -1123,6 +1149,8 @@ export default function NanoBananaGenerator() {
           )}
         </div>
       </div>
+
+      <BottomNavigation />
     </div>
   );
 }

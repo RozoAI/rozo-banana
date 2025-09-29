@@ -1,5 +1,6 @@
 "use client";
 
+import { BottomNavigation } from "@/components/BottomNavigation";
 import { ShareButton } from "@/components/ShareButton";
 import { TwitterShareButton } from "@/components/TwitterShareButton";
 import { WalletConnectButton } from "@/components/WalletConnectButton";
@@ -7,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { imageAPI } from "@/lib/api";
 import { Eye } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
@@ -219,53 +221,19 @@ export default function GalleryPage() {
                 <p className="text-sm text-gray-400 mt-1">
                   Your generated images will appear here
                 </p>
-                <a
+                <Link
                   href="/generate"
                   className="mt-4 px-6 py-2 bg-yellow-500 text-white rounded-lg font-semibold hover:bg-yellow-600 transition-colors"
                 >
                   Generate Images
-                </a>
+                </Link>
               </div>
             )}
           </div>
         </div>
       </main>
 
-      {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100">
-        <div className="max-w-lg mx-auto">
-          <div className="grid grid-cols-4">
-            <button
-              onClick={() => (window.location.href = "/")}
-              className="py-3 text-center transition-colors text-gray-400 hover:text-yellow-600"
-            >
-              <div className="text-2xl mb-1">🏠</div>
-              <p className="text-xs font-medium">Home</p>
-            </button>
-            <button
-              onClick={() => (window.location.href = "/generate")}
-              className="py-3 text-center transition-colors text-gray-400 hover:text-yellow-600"
-            >
-              <div className="text-2xl mb-1">🎨</div>
-              <p className="text-xs font-medium">Generate</p>
-            </button>
-            <button
-              onClick={() => (window.location.href = "/recharge")}
-              className="py-3 text-center transition-colors text-gray-400 hover:text-yellow-600 relative"
-            >
-              <div className="absolute -top-1 right-1/4 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-                HOT
-              </div>
-              <div className="text-2xl mb-1">💎</div>
-              <p className="text-xs font-medium">Top Up</p>
-            </button>
-            <button className="py-3 text-center transition-colors text-yellow-600">
-              <div className="text-2xl mb-1">🖼️</div>
-              <p className="text-xs font-medium">Gallery</p>
-            </button>
-          </div>
-        </div>
-      </div>
+      <BottomNavigation />
     </div>
   );
 }

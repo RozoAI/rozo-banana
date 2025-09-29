@@ -1,22 +1,53 @@
 import "@rainbow-me/rainbowkit/styles.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { Providers } from "../providers";
 import "../lib/cryptoPolyfill";
+import { Providers } from "../providers";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
-export const metadata: Metadata = {
-  title: "Banana 🍌 - AI Image Generation",
-  description:
-    "Generate amazing AI images with points. Earn through referrals!",
-  icons: {
-    icon: "/banana-favicon.svg",
-    shortcut: "/banana-favicon.svg",
-    apple: "/banana.svg",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const URL = process.env.NEXT_PUBLIC_URL || "https://b.rozo.ai";
+
+  const embedConfig = {
+    version: "1",
+    imageUrl: "https://b.rozo.ai/banana.svg",
+    button: {
+      title: `Launch Rozo Banana 🍌`,
+      action: {
+        type: "launch_frame",
+        name: "Rozo Banana 🍌",
+        url: URL,
+        splashImageUrl: "https://b.rozo.ai/banana.svg",
+        splashBackgroundColor: "#ffffff",
+      },
+    },
+  };
+
+  const ogMetadata = {
+    title: "Rozo Banana 🍌 - AI Image Generation",
+    description:
+      "Generate amazing AI images with points. Earn through referrals!",
+    icons: {
+      icon: "https://b.rozo.ai/banana.svg",
+      shortcut: "https://b.rozo.ai/banana.svg",
+      apple: "https://b.rozo.ai/banana.svg",
+    },
+  };
+
+  return {
+    robots: {
+      index: false,
+      follow: false,
+    },
+    other: {
+      "fc:miniapp": JSON.stringify(embedConfig),
+      "fc:frame": JSON.stringify(embedConfig),
+    },
+    ...ogMetadata,
+  };
+}
 
 export default function RootLayout({
   children,

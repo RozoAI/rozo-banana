@@ -86,7 +86,7 @@ createAppKit({
   metadata,
   features: {
     email: false, // default to true
-    socials: [],
+    socials: ["farcaster"],
     emailShowWallets: true, // default to true
   },
   allWallets: "SHOW", // default to SHOW

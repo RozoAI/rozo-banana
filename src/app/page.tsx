@@ -15,7 +15,7 @@ export default function LandingPage() {
       <div className="text-center px-6 pb-16">
         <h2 className="text-4xl font-bold mb-6">Join ROZO OG</h2>
         <p className="text-lg mb-8 max-w-md mx-auto">
-          Become part of the first 1000 OGs. Pay $20 in stablecoins to unlock
+          Become part of the first 1000 ROZO OGs. Pay $20 to unlock
           Nano Banana premium features and get 1,000 ROZO Points.
         </p>
 
@@ -51,7 +51,7 @@ export default function LandingPage() {
       {/* Footer */}
       <div className="text-center pb-8">
         <p className="text-sm text-gray-500">
-          © 2025 ROZO Banana · Made for crypto-native users
+          © 2025 ROZO Banana
         </p>
       </div>
     </div>

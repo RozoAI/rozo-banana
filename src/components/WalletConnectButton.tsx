@@ -7,7 +7,11 @@ import { Loader2, LogOut, Smartphone, Wallet } from "lucide-react";
 import { useEffect } from "react";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
 
-export function WalletConnectButton() {
+export function WalletConnectButton({
+  className = "",
+}: {
+  className?: string;
+}) {
   const { openConnectModal } = useConnectModal();
   const { address, isConnected, isConnecting } = useAccount();
   const { connect, connectors, isPending } = useConnect();
@@ -147,7 +151,7 @@ export function WalletConnectButton() {
   return (
     <button
       onClick={handleConnect}
-      className="flex items-center gap-2 px-4 py-2 bg-[rgb(245,210,60)] text-black rounded-lg hover:bg-[rgb(255,220,70)] transition-all transform hover:scale-105 shadow-lg"
+      className={`flex items-center gap-2 px-4 py-2 bg-[rgb(245,210,60)] text-black rounded-lg hover:bg-[rgb(255,220,70)] transition-all transform hover:scale-105 shadow-lg ${className}`}
     >
       {isMobile === true ? (
         <Smartphone className="w-4 h-4" />

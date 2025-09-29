@@ -742,7 +742,7 @@ export default function NanoBananaGenerator() {
               className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
             >
               <span className="text-3xl">🍌</span>
-              <span className="font-bold text-xl text-white">Banana</span>
+              <span className="font-bold text-xl text-white">ROZO Banana</span>
             </Link>
           </div>
         </div>

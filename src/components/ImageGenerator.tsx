@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Upload, Loader2, Download, Copy, Sparkles } from 'lucide-react';
-import Image from 'next/image';
-import { imageAPI } from '../lib/api';
+import { Copy, Download, Loader2, Sparkles, Upload } from "lucide-react";
+import Image from "next/image";
+import React, { useState } from "react";
+import { imageAPI } from "../lib/api";
 
 interface GeneratedImage {
   url: string;
@@ -12,15 +12,17 @@ interface GeneratedImage {
 }
 
 export default function ImageGenerator() {
-  const [prompt, setPrompt] = useState('');
+  const [prompt, setPrompt] = useState("");
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  const [generatedImage, setGeneratedImage] = useState<GeneratedImage | null>(null);
+  const [generatedImage, setGeneratedImage] = useState<GeneratedImage | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedModel, setSelectedModel] = useState('openai/dall-e-3');
-  const [imageSize, setImageSize] = useState('1024x1024');
-  const [imageQuality, setImageQuality] = useState('standard');
-  const [imageStyle, setImageStyle] = useState('vivid');
+  const [selectedModel, setSelectedModel] = useState("openai/dall-e-3");
+  const [imageSize, setImageSize] = useState("1024x1024");
+  const [imageQuality, setImageQuality] = useState("standard");
+  const [imageStyle, setImageStyle] = useState("vivid");
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -35,7 +37,7 @@ export default function ImageGenerator() {
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
-      setError('Please enter a prompt');
+      setError("Please enter a prompt");
       return;
     }
 
@@ -43,13 +45,12 @@ export default function ImageGenerator() {
     setError(null);
 
     try {
-
       let images: string[] = [];
-      
+
       if (uploadedImage) {
         images = [uploadedImage];
       }
-   
+
       const data = await imageAPI.generate({
         prompt: prompt,
         style: imageStyle,
@@ -58,16 +59,16 @@ export default function ImageGenerator() {
       });
 
       if (!data || data.error) {
-        throw new Error(data?.error || 'Failed to generate image');
+        throw new Error(data?.error || "Failed to generate image");
       }
 
       setGeneratedImage({
         url: data.imageUrl,
         prompt: data.prompt,
-        timestamp: data.metadata?.timestamp || new Date().toISOString()
+        timestamp: data.metadata?.timestamp || new Date().toISOString(),
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -80,7 +81,7 @@ export default function ImageGenerator() {
       const response = await fetch(generatedImage.url);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `banana-${Date.now()}.png`;
       document.body.appendChild(a);
@@ -88,7 +89,7 @@ export default function ImageGenerator() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (err) {
-      console.error('Download failed:', err);
+      console.error("Download failed:", err);
     }
   };
 
@@ -104,7 +105,9 @@ export default function ImageGenerator() {
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="flex items-center mb-8">
             <Sparkles className="w-8 h-8 text-yellow-500 mr-3" />
-            <h1 className="text-3xl font-bold text-gray-800">Banana Image Generator</h1>
+            <h1 className="text-3xl font-bold text-gray-800">
+              ROZO Banana Image Generator
+            </h1>
           </div>
 
           <div className="grid md:grid-cols-2 gap-8">
@@ -135,7 +138,9 @@ export default function ImageGenerator() {
                     ) : (
                       <div className="flex flex-col items-center">
                         <Upload className="w-12 h-12 text-gray-400 mb-2" />
-                        <p className="text-sm text-gray-600">Click to upload image</p>
+                        <p className="text-sm text-gray-600">
+                          Click to upload image
+                        </p>
                       </div>
                     )}
                   </label>
@@ -167,7 +172,9 @@ export default function ImageGenerator() {
                   >
                     <option value="openai/dall-e-3">DALL-E 3</option>
                     <option value="openai/dall-e-2">DALL-E 2</option>
-                    <option value="stabilityai/stable-diffusion-xl-1024-v1-0">Stable Diffusion XL</option>
+                    <option value="stabilityai/stable-diffusion-xl-1024-v1-0">
+                      Stable Diffusion XL
+                    </option>
                   </select>
                 </div>
 
@@ -217,7 +224,9 @@ export default function ImageGenerator() {
 
               <button
                 onClick={handleGenerate}
-                disabled={isLoading || (!prompt.trim() && uploadedImage === null)}
+                disabled={
+                  isLoading || (!prompt.trim() && uploadedImage === null)
+                }
                 className="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-white font-semibold py-3 rounded-lg hover:from-yellow-500 hover:to-yellow-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
                 {isLoading ? (
@@ -273,7 +282,9 @@ export default function ImageGenerator() {
                 ) : (
                   <div className="text-center">
                     <Sparkles className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500">Your generated image will appear here</p>
+                    <p className="text-gray-500">
+                      Your generated image will appear here
+                    </p>
                   </div>
                 )}
               </div>

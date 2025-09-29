@@ -1,8 +1,6 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useMemo } from "react";
-import { useAccount } from "wagmi";
 
 interface BottomNavigationProps {
   className?: string;
@@ -11,43 +9,35 @@ interface BottomNavigationProps {
 export function BottomNavigation({ className = "" }: BottomNavigationProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { isConnected } = useAccount();
 
-  const navItems = useMemo(() => {
-    const items = [
-      {
-        href: "/topup",
-        icon: "💎",
-        label: "Rozo OG",
-        isActive: pathname === "/topup",
-        hasHotBadge: true,
-      },
-      {
-        href: "/generate",
-        icon: "🎨",
-        label: "Generate",
-        isActive: pathname === "/generate",
-      },
-      {
-        href: "/gallery",
-        icon: "🖼️",
-        label: "Gallery",
-        isActive: pathname === "/gallery",
-        hasHotBadge: false,
-      },
-    ];
-
-    if (isConnected) {
-      items.push({
-        href: "/profile",
-        icon: "👤",
-        label: "Profile",
-        isActive: pathname === "/profile",
-      });
-    }
-
-    return items;
-  }, [isConnected]);
+  const navItems = [
+    {
+      href: "/topup",
+      icon: "💎",
+      label: "Rozo OG",
+      isActive: pathname === "/topup",
+      hasHotBadge: true,
+    },
+    {
+      href: "/generate",
+      icon: "🎨",
+      label: "Generate",
+      isActive: pathname === "/generate",
+    },
+    {
+      href: "/gallery",
+      icon: "🖼️",
+      label: "Gallery",
+      isActive: pathname === "/gallery",
+      hasHotBadge: false,
+    },
+    {
+      href: "/profile",
+      icon: "👤",
+      label: "Profile",
+      isActive: pathname === "/profile",
+    },
+  ];
 
   const handleNavigation = (href: string) => {
     // Force navigation by using router.push with replace for home page

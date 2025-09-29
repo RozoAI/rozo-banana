@@ -33,7 +33,7 @@ function ReferralHandler() {
 }
 
 export default function Home() {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, status } = useAccount();
   const { isAuthenticated, signIn, isLoading } = useAuth();
   const [showGenerator, setShowGenerator] = useState(false);
   const [toastMessage, setToastMessage] = useState<{
@@ -313,7 +313,7 @@ export default function Home() {
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-2">
               <span className="text-3xl">🍌</span>
-              <span className="font-bold text-xl text-white">Banana</span>
+              <span className="font-bold text-xl text-white">ROZO Banana</span>
             </div>
             <WalletConnectButton />
           </div>
@@ -322,10 +322,15 @@ export default function Home() {
 
       <main className="max-w-lg mx-auto px-4 mt-4 mb-20">
         {!address ? (
-          <div className="flex flex-col justify-center items-center h-screen space-y-4">
+          <div className="flex flex-col justify-center items-center min-h-[calc(100vh-10rem)] space-y-4">
             <div className="text-center">
-              <p className="text-lg text-gray-400 mb-4">
-                Please connect your wallet to access the dashboard
+              <p className="text-3xl font-bold text-white mb-2">👤</p>
+              <p className="text-xl font-bold text-white mb-2">
+                Connect your wallet to access your profile
+              </p>
+              <p className="text-base text-gray-500">
+                View your points, gallery, and referral rewards by connecting
+                your wallet.
               </p>
             </div>
           </div>

@@ -252,7 +252,7 @@ export default function Recharge() {
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-2">
               <span className="text-3xl">🍌</span>
-              <span className="font-bold text-xl text-black">Banana</span>
+              <span className="font-bold text-xl text-black">ROZO Banana</span>
             </div>
             <button
               onClick={() => window.history.back()}

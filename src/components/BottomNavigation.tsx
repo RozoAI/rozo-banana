@@ -1,6 +1,8 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
+import { useMemo } from "react";
+import { useAccount } from "wagmi";
 
 interface BottomNavigationProps {
   className?: string;
@@ -9,34 +11,43 @@ interface BottomNavigationProps {
 export function BottomNavigation({ className = "" }: BottomNavigationProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { isConnected } = useAccount();
 
-  const navItems = [
-    {
-      href: "/",
-      icon: "🏠",
-      label: "Home",
-      isActive: pathname === "/",
-    },
-    {
-      href: "/generate",
-      icon: "🎨",
-      label: "Generate",
-      isActive: pathname === "/generate",
-    },
-    {
-      href: "/recharge",
-      icon: "💎",
-      label: "Top Up",
-      isActive: pathname === "/recharge",
-      hasHotBadge: true,
-    },
-    {
-      href: "/gallery",
-      icon: "🖼️",
-      label: "Gallery",
-      isActive: pathname === "/gallery",
-    },
-  ];
+  const navItems = useMemo(() => {
+    const items = [
+      {
+        href: "/",
+        icon: "💎",
+        label: "Rozo OG",
+        isActive: pathname === "/",
+        hasHotBadge: true,
+      },
+      {
+        href: "/generate",
+        icon: "🎨",
+        label: "Generate",
+        isActive: pathname === "/generate",
+      },
+      {
+        href: "/gallery",
+        icon: "🖼️",
+        label: "Gallery",
+        isActive: pathname === "/gallery",
+        hasHotBadge: false,
+      },
+    ];
+
+    if (isConnected) {
+      items.push({
+        href: "/profile",
+        icon: "👤",
+        label: "Profile",
+        isActive: pathname === "/profile",
+      });
+    }
+
+    return items;
+  }, [isConnected]);
 
   const handleNavigation = (href: string) => {
     // Force navigation by using router.push with replace for home page
@@ -52,7 +63,7 @@ export function BottomNavigation({ className = "" }: BottomNavigationProps) {
       className={`fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 ${className}`}
     >
       <div className="max-w-lg mx-auto">
-        <div className="grid grid-cols-4">
+        <div className={`grid grid-cols-${navItems.length}`}>
           {navItems.map((item) => (
             <button
               key={item.href}

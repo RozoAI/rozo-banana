@@ -32,12 +32,9 @@ export default function GalleryPage() {
   const isMobile = useIsMobile();
   const router = useRouter();
 
-  // Fetch gallery when wallet is connected (no auth required)
+  // Fetch gallery based on connection status
   useEffect(() => {
-    if (isConnected && address) {
-      console.log("🖼️ [Gallery] Fetching gallery for address:", address);
-      fetchGallery();
-    }
+    fetchGallery();
   }, [isConnected, address]);
 
   // Removed auto sign-in - authentication will happen when needed
@@ -52,28 +49,62 @@ export default function GalleryPage() {
     setError(null);
 
     try {
-      // API will automatically use the current address from localStorage
-      const response = await imageAPI.getHistory(1, 100); // Fetch up to 100 images
-      console.log("🌌 [Gallery] API response:", response);
+      let response;
 
-      // Handle the response structure
-      if (response.images) {
-        setImages(
-          response.images.map((image: GeneratedImage) => ({
-            ...image,
-            file_name: image.url
-              ? image.url.replace(
-                  "https://eslabobvkchgpokxszwv.supabase.co/storage/v1/object/public/generated-images/rozobanana/",
-                  ""
-                )
-              : undefined,
-          }))
+      if (isConnected && address) {
+        // User is connected - fetch their personal gallery
+        console.log(
+          "🖼️ [Gallery] Fetching personal gallery for connected user:",
+          address
         );
-      } else if (Array.isArray(response)) {
-        setImages(response);
+        response = await imageAPI.getHistory(1, 100); // Fetch up to 100 images
+
+        // Handle the response structure for personal gallery
+        if (response.images) {
+          setImages(
+            response.images.map((image: GeneratedImage) => ({
+              ...image,
+              file_name: image.url
+                ? image.url.replace(
+                    "https://eslabobvkchgpokxszwv.supabase.co/storage/v1/object/public/generated-images/rozobanana/",
+                    ""
+                  )
+                : undefined,
+            }))
+          );
+        } else if (Array.isArray(response)) {
+          setImages(response);
+        } else {
+          setImages([]);
+        }
       } else {
-        setImages([]);
+        // User is not connected - fetch public gallery
+        console.log(
+          "🌍 [Gallery] Fetching public gallery for non-connected user"
+        );
+        response = await imageAPI.getPublicGallery(1, 100, "newest");
+
+        // Handle the response structure for public gallery
+        if (response.images) {
+          setImages(
+            response.images.map((image: any) => ({
+              id: image.id,
+              image_url: image.thumbnail || image.url || image.image_url,
+              url: image.thumbnail || image.url || image.image_url,
+              thumbnail: image.thumbnail || image.url || image.image_url,
+              prompt: image.prompt || "Generated image",
+              created_at: image.created_at || new Date().toISOString(),
+              file_name: image.id, // Use ID as file_name for public images
+            }))
+          );
+        } else if (Array.isArray(response)) {
+          setImages(response);
+        } else {
+          setImages([]);
+        }
       }
+
+      console.log("🌌 [Gallery] API response:", response);
     } catch (err) {
       console.error("Failed to fetch gallery:", err);
       setError("Failed to load image gallery");
@@ -82,35 +113,30 @@ export default function GalleryPage() {
     }
   };
 
-  if (!isConnected) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-orange-50">
-        <header className="sticky top-0 w-full bg-white/90 backdrop-blur-md border-b border-gray-100 z-50">
-          <div className="max-w-lg mx-auto px-4 py-4">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center space-x-2">
-                <span className="text-3xl">🍌</span>
-                <span className="font-bold text-xl text-black">Banana</span>
-              </div>
-              <WalletConnectButton />
-            </div>
-          </div>
-        </header>
-        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-5rem)] py-8">
-          <div className="text-center space-y-8 w-full max-w-lg mx-auto px-4">
-            <span className="text-6xl block">🖼️</span>
-            <h1 className="text-3xl font-bold text-gray-900">Gallery</h1>
-            <p className="text-gray-600">
-              Connect your wallet to view your generated images
-            </p>
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-              <WalletConnectButton />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // if (!isConnected) {
+  //   return (
+  //     <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-orange-50">
+  //       <header className="sticky top-0 w-full bg-white/90 backdrop-blur-md border-b border-gray-100 z-50">
+  //         <div className="max-w-lg mx-auto px-4 py-4">
+  //           <div className="flex justify-between items-center">
+  //             <div className="flex items-center space-x-2">
+  //               <span className="text-3xl">🍌</span>
+  //               <span className="font-bold text-xl text-black">Banana</span>
+  //             </div>
+  //             <WalletConnectButton />
+  //           </div>
+  //         </div>
+  //       </header>
+  //       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-5rem)] py-8">
+  //         <div className="text-center space-y-8 w-full max-w-lg mx-auto px-4">
+  //           <span className="text-6xl block">🖼️</span>
+  //           <h1 className="text-3xl font-bold text-gray-900">Gallery</h1>
+  //           <p className="text-gray-600">List of images generated by Rozo OG</p>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   // Remove authentication requirement - gallery can be viewed with just wallet connection
   // Authentication will only be required when generating images
@@ -132,7 +158,9 @@ export default function GalleryPage() {
       <main className="max-w-lg mx-auto px-4 pb-20">
         <div className="py-6">
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h3 className="font-bold text-lg mb-4 text-gray-900">Gallery</h3>
+            <h3 className="font-bold text-lg mb-4 text-gray-900">
+              {isConnected ? "My Gallery" : "Public Gallery"}
+            </h3>
             {loading ? (
               <div className="flex flex-col items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500"></div>
@@ -217,16 +245,22 @@ export default function GalleryPage() {
             ) : (
               <div className="flex flex-col items-center justify-center py-12">
                 <span className="text-4xl mb-3">🖼️</span>
-                <p className="text-gray-500">No images yet</p>
-                <p className="text-sm text-gray-400 mt-1">
-                  Your generated images will appear here
+                <p className="text-gray-500">
+                  {isConnected ? "No images yet" : "No public images available"}
                 </p>
-                <Link
-                  href="/generate"
-                  className="mt-4 px-6 py-2 bg-yellow-500 text-white rounded-lg font-semibold hover:bg-yellow-600 transition-colors"
-                >
-                  Generate Images
-                </Link>
+                <p className="text-sm text-gray-400 mt-1">
+                  {isConnected
+                    ? "Your generated images will appear here"
+                    : "Connect your wallet to see your personal gallery"}
+                </p>
+                {isConnected && (
+                  <Link
+                    href="/generate"
+                    className="mt-4 px-6 py-2 bg-yellow-500 text-white rounded-lg font-semibold hover:bg-yellow-600 transition-colors"
+                  >
+                    Generate Images
+                  </Link>
+                )}
               </div>
             )}
           </div>

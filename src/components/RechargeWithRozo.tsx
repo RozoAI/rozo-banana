@@ -3,10 +3,11 @@
 import { baseUSDC } from "@rozoai/intent-common";
 import { RozoPayButton, useRozoPayUI } from "@rozoai/intent-pay";
 import { Check, HelpCircle, Loader2, X, Zap } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getAddress } from "viem";
 import { useAccount } from "wagmi";
 import { BottomNavigation } from "./BottomNavigation";
+import { WalletConnectButton } from "./WalletConnectButton";
 
 interface PricingTier {
   id: string;
@@ -56,13 +57,21 @@ export default function RechargeContent() {
   const { resetPayment } = useRozoPayUI();
   const { isConnected } = useAccount();
 
-  const handlePayment = async () => {
+  useEffect(() => {
+    if (isConnected) {
+      handlePayment();
+    }
+  }, []);
+
+  const handlePayment = async (tier?: PricingTier) => {
+    const currentTier = tier || selectedTier;
+
     if (!isConnected) {
       setError("Please connect your wallet first");
       return;
     }
 
-    if (!selectedTier) {
+    if (!currentTier) {
       setError("Please select a plan");
       return;
     }
@@ -72,22 +81,22 @@ export default function RechargeContent() {
     try {
       // Generate unique external ID
       const timestamp = Date.now();
-      const externalId = `banana_${selectedTier.id}_${timestamp}`;
+      const externalId = `banana_${currentTier.id}_${timestamp}`;
       const referralCode = localStorage.getItem("referralCode");
       const paymentParams = {
         appId: "rozoBananaMP", // Demo app ID for testing
-        toUnits: selectedTier.usd.toString(),
+        toUnits: currentTier.usd.toString(),
         currency: "USD" as const,
-        intent: `Banana ${selectedTier.name} - ${selectedTier.credits} credits`,
+        intent: `Banana ${currentTier.name} - ${currentTier.credits} credits`,
         toAddress: getAddress(DESTINATION_ADDRESS),
         toToken: getAddress(baseUSDC.token),
         toChainId: baseUSDC.chainId, // Base chain ID
         externalId: externalId,
         metadata: {
-          planId: selectedTier.id,
-          planName: selectedTier.name,
-          credits: selectedTier.credits.toString(),
-          images: selectedTier.images.toString(),
+          planId: currentTier.id,
+          planName: currentTier.name,
+          credits: currentTier.credits.toString(),
+          images: currentTier.images.toString(),
           referralCode: referralCode || "",
         },
       };
@@ -110,7 +119,10 @@ export default function RechargeContent() {
     }
 
     setSelectedTier(tier);
+    // Reset payment state when changing tiers
+    setPayParams(null);
     setShowPayWithButton(true);
+    setError(null);
   };
 
   return (
@@ -121,26 +133,9 @@ export default function RechargeContent() {
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-2">
               <span className="text-3xl">🍌</span>
-              <span className="font-bold text-xl text-gray-800">Banana</span>
+              <span className="font-bold text-xl text-black">Banana</span>
             </div>
-            <button
-              onClick={() => window.history.back()}
-              className="text-gray-600 hover:text-gray-800"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
+            <WalletConnectButton />
           </div>
         </div>
       </header>
@@ -272,21 +267,10 @@ export default function RechargeContent() {
         )}
 
         {/* Pay Button */}
-        {showPayWithButton && (
+        {showPayWithButton && selectedTier && (
           <div className="mt-6">
-            {/* Progress Bar */}
-            {/* <div className="mb-3">
-
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-gradient-to-r from-yellow-400 to-orange-400 h-2 rounded-full transition-all"
-                  style={{ width: '1%' }}
-                />
-              </div>
-            </div>
-             */}
             <button
-              onClick={handlePayment}
+              onClick={() => handlePayment(selectedTier)}
               disabled={!selectedTier || isLoading}
               className="w-full py-3 bg-gradient-to-r from-yellow-400 to-orange-400 text-white font-medium rounded-xl hover:from-yellow-500 hover:to-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
             >
@@ -296,21 +280,21 @@ export default function RechargeContent() {
                   Processing Payment...
                 </>
               ) : (
-                <>Join</>
+                <>Pay ${selectedTier.usd} with Crypto</>
               )}
             </button>
           </div>
         )}
 
-        {!showPayWithButton && payParams && (
+        {payParams && (
           <RozoPayButton.Custom
-            defaultOpen
             resetOnSuccess
+            defaultOpen
             appId="rozoBananaMP"
             toChain={baseUSDC.chainId}
             toAddress={getAddress(DESTINATION_ADDRESS)}
             toToken={getAddress(baseUSDC.token)}
-            toUnits={selectedTier?.usd.toString() ?? "0"}
+            toUnits={payParams.toUnits}
             externalId={payParams.externalId}
             metadata={payParams.metadata}
             intent={payParams.intent}

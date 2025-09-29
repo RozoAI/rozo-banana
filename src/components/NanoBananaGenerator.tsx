@@ -1011,7 +1011,7 @@ export default function NanoBananaGenerator() {
 
             {userCredits === 0 ? (
               <button
-                onClick={() => (window.location.href = "/recharge")}
+                onClick={() => (window.location.href = "/")}
                 className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all flex items-center gap-2 text-sm"
               >
                 <Sparkles className="w-5 h-5" />
@@ -1067,7 +1067,7 @@ export default function NanoBananaGenerator() {
                 <span>{error}</span>
                 {userCredits === 0 && error.includes("top up") && (
                   <button
-                    onClick={() => (window.location.href = "/recharge")}
+                    onClick={() => (window.location.href = "/")}
                     className="ml-3 px-3 py-1 bg-yellow-500 text-white text-xs rounded hover:bg-yellow-600 transition-colors"
                   >
                     Top Up

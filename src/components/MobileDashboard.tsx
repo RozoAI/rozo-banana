@@ -3,7 +3,6 @@
 import { useAuth } from "@/hooks/useAuth";
 import { creditsAPI, pointsAPI } from "@/lib/api";
 import { useEffect, useRef, useState } from "react";
-import { TwitterShareButton } from "./TwitterShareButton";
 
 interface MobileDashboardProps {
   address: string;
@@ -26,7 +25,10 @@ export function MobileDashboard({ address }: MobileDashboardProps) {
   // Fetch user data when wallet is connected (address is available)
   useEffect(() => {
     if (address && !hasFetched.current) {
-      console.log("📊 [MobileDashboard] Wallet connected, fetching user data for:", address);
+      console.log(
+        "📊 [MobileDashboard] Wallet connected, fetching user data for:",
+        address
+      );
       fetchUserData();
       hasFetched.current = true;
     }
@@ -40,9 +42,11 @@ export function MobileDashboard({ address }: MobileDashboardProps) {
   //   }
   // }, [address, isAuthenticated]);
 
-
   const fetchUserData = async () => {
-    console.log("📊 [MobileDashboard] Fetching user data for address:", address);
+    console.log(
+      "📊 [MobileDashboard] Fetching user data for address:",
+      address
+    );
     // Don't block UI - load data in background
     try {
       // Fetch points balance - API will use address parameter automatically
@@ -55,10 +59,15 @@ export function MobileDashboard({ address }: MobileDashboardProps) {
         setPoints(balance.balance ?? balance.points ?? 0);
       } catch (pointsError: any) {
         if (pointsError.response?.status === 401) {
-          console.log("🔔 [MobileDashboard] Points API requires authentication, showing default");
+          console.log(
+            "🔔 [MobileDashboard] Points API requires authentication, showing default"
+          );
           setPoints(0);
         } else {
-          console.error("❌ [MobileDashboard] Points fetch error:", pointsError);
+          console.error(
+            "❌ [MobileDashboard] Points fetch error:",
+            pointsError
+          );
           setPoints(0);
         }
       }
@@ -67,23 +76,30 @@ export function MobileDashboard({ address }: MobileDashboardProps) {
       console.log("💳 [MobileDashboard] About to fetch credits...");
       try {
         const creditsData = await creditsAPI.getBalance();
-        console.log("✅ [MobileDashboard] Credits balance response:", creditsData);
+        console.log(
+          "✅ [MobileDashboard] Credits balance response:",
+          creditsData
+        );
         setCredits(creditsData.credits ?? creditsData.available ?? 0);
       } catch (creditsError: any) {
         console.log("❌ [MobileDashboard] Credits fetch error details:", {
           status: creditsError.response?.status,
           data: creditsError.response?.data,
-          message: creditsError.message
+          message: creditsError.message,
         });
         if (creditsError.response?.status === 401) {
-          console.log("🔔 [MobileDashboard] Credits API requires authentication, showing default");
+          console.log(
+            "🔔 [MobileDashboard] Credits API requires authentication, showing default"
+          );
           setCredits(0);
         } else {
-          console.error("❌ [MobileDashboard] Credits fetch error:", creditsError);
+          console.error(
+            "❌ [MobileDashboard] Credits fetch error:",
+            creditsError
+          );
           setCredits(0);
         }
       }
-
 
       // Load saved affiliate name from localStorage
       const savedName = localStorage.getItem(`affiliateName_${address}`);
@@ -110,7 +126,6 @@ export function MobileDashboard({ address }: MobileDashboardProps) {
       if (points === null) setPoints(0);
     }
   };
-
 
   const saveAffiliateName = () => {
     if (affiliateName.trim()) {
@@ -150,13 +165,35 @@ export function MobileDashboard({ address }: MobileDashboardProps) {
 
   // Calculate user tier based on spending
   const getUserTier = () => {
-    if (userSpent >= 1000) return { name: "Gold", icon: "🏆", color: "text-yellow-500", nextTier: null, nextAmount: null };
-    if (userSpent >= 100) return { name: "Silver", icon: "🥈", color: "text-gray-400", nextTier: "Gold", nextAmount: 1000 };
-    return { name: "Bronze", icon: "🥉", color: "text-orange-600", nextTier: "Silver", nextAmount: 100 };
+    if (userSpent >= 1000)
+      return {
+        name: "Gold",
+        icon: "🏆",
+        color: "text-yellow-500",
+        nextTier: null,
+        nextAmount: null,
+      };
+    if (userSpent >= 100)
+      return {
+        name: "Silver",
+        icon: "🥈",
+        color: "text-gray-400",
+        nextTier: "Gold",
+        nextAmount: 1000,
+      };
+    return {
+      name: "Bronze",
+      icon: "🥉",
+      color: "text-orange-600",
+      nextTier: "Silver",
+      nextAmount: 100,
+    };
   };
 
   const currentTier = getUserTier();
-  const tierProgress = currentTier.nextAmount ? (userSpent / currentTier.nextAmount) * 100 : 100;
+  const tierProgress = currentTier.nextAmount
+    ? (userSpent / currentTier.nextAmount) * 100
+    : 100;
 
   return (
     <div className="pb-20 min-h-[calc(100vh-5rem)]">
@@ -172,17 +209,13 @@ export function MobileDashboard({ address }: MobileDashboardProps) {
         </div>
       </div>
 
-
-
       {/* Main Content */}
       <div className="py-6">
         {activeTab === "home" && (
           <div className="space-y-4">
             {/* Referral Card */}
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-              <h3 className="font-bold text-lg mb-4 text-gray-900">
-                Share
-              </h3>
+              <h3 className="font-bold text-lg mb-4 text-gray-900">Share</h3>
 
               {/* Affiliate Name Section */}
               <button
@@ -197,48 +230,6 @@ export function MobileDashboard({ address }: MobileDashboardProps) {
             </div>
           </div>
         )}
-
-      </div>
-
-      {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100">
-        <div className="max-w-lg mx-auto">
-          <div className="grid grid-cols-4">
-            <button
-              onClick={() => setActiveTab("home")}
-              className={`py-3 text-center transition-colors ${
-                activeTab === "home" ? "text-yellow-600" : "text-gray-400"
-              }`}
-            >
-              <div className="text-2xl mb-1">🏠</div>
-              <p className="text-xs font-medium">Home</p>
-            </button>
-            <button
-              onClick={() => (window.location.href = "/generate")}
-              className="py-3 text-center transition-colors text-gray-400 hover:text-yellow-600"
-            >
-              <div className="text-2xl mb-1">🎨</div>
-              <p className="text-xs font-medium">Generate</p>
-            </button>
-            <button
-              onClick={() => (window.location.href = "/recharge")}
-              className="py-3 text-center transition-colors text-gray-400 hover:text-yellow-600 relative"
-            >
-              <div className="absolute -top-1 right-1/4 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-                HOT
-              </div>
-              <div className="text-2xl mb-1">💎</div>
-              <p className="text-xs font-medium">Top Up</p>
-            </button>
-            <button
-              onClick={() => (window.location.href = "/gallery")}
-              className="py-3 text-center transition-colors text-gray-400 hover:text-yellow-600"
-            >
-              <div className="text-2xl mb-1">🖼️</div>
-              <p className="text-xs font-medium">Gallery</p>
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   );

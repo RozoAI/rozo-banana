@@ -604,6 +604,17 @@ export const imageAPI = {
     }
     return data;
   },
+
+  getPublicGallery: async (page = 1, limit = 100, sort = "newest") => {
+    const { data } = await bananaApi.get(
+      `/banana-public-gallery?page=${page}&limit=${limit}&sort=${sort}`
+    );
+    // Handle new response format
+    if (data.success && data.data) {
+      return data.data;
+    }
+    return data;
+  },
 };
 
 // Referral API (Supabase Edge Functions)

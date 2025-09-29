@@ -316,7 +316,7 @@ export default function RechargeContent() {
                       }`}
                     >
                       {selectedTier?.id === tier.id && (
-                        <Check className="w-4 h-4 text-white" />
+                        <Check className="w-4 h-4 text-black" />
                       )}
                     </div>
                   </div>

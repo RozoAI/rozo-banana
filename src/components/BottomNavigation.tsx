@@ -16,10 +16,10 @@ export function BottomNavigation({ className = "" }: BottomNavigationProps) {
   const navItems = useMemo(() => {
     const items = [
       {
-        href: "/",
+        href: "/topup",
         icon: "💎",
         label: "Rozo OG",
-        isActive: pathname === "/",
+        isActive: pathname === "/topup",
         hasHotBadge: true,
       },
       {

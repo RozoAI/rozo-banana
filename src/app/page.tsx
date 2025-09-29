@@ -1,27 +1,59 @@
-"use client";
+import Link from "next/link";
 
-import { RozoPayProvider } from "@rozoai/intent-pay";
-import dynamic from "next/dynamic";
-import { Suspense } from "react";
+export default function LandingPage() {
+  return (
+    <div className="min-h-screen text-white font-sans">
+      {/* Header */}
+      <div className="text-center pt-8 pb-12">
+        <div className="flex items-center justify-center gap-2">
+          <span className="text-3xl">🍌</span>
+          <h1 className="text-2xl font-bold">ROZO Banana</h1>
+        </div>
+      </div>
 
-const RechargeContent = dynamic(() => import("@/components/RechargeWithRozo"), {
-  ssr: false,
-  loading: () => (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500 mx-auto mb-4"></div>
-        <p className="text-gray-600">Loading payment options...</p>
+      {/* Main CTA Section */}
+      <div className="text-center px-6 pb-16">
+        <h2 className="text-4xl font-bold mb-6">Join ROZO OG</h2>
+        <p className="text-lg mb-8 max-w-md mx-auto">
+          Become part of the first 1000 OGs. Pay $20 in stablecoins to unlock
+          Nano Banana premium features and get 1,000 ROZO Points.
+        </p>
+
+        {/* Progress Bar */}
+        <div className="max-w-md mx-auto mb-8">
+          <div className="flex justify-between text-sm mb-2">
+            <span>420 joined</span>
+            <span>580 left</span>
+          </div>
+          <div className="w-full bg-gray-700 h-4 rounded-full overflow-hidden">
+            <div className="h-full bg-yellow-400 w-[42%]"></div>
+          </div>
+        </div>
+
+        {/* CTA Button */}
+        <Link href="/topup">
+          <button className="bg-yellow-400 text-black font-bold py-2 px-4 rounded-lg text-lg hover:bg-yellow-300 transition-colors w-full max-w-md">
+            Join Now
+          </button>
+        </Link>
+      </div>
+
+      {/* Info Section */}
+      <div className="text-center px-6 pb-16">
+        <h3 className="text-2xl font-bold mb-4">What is ROZO Banana?</h3>
+        <p className="text-lg max-w-md mx-auto text-gray-300">
+          ROZO Banana is your gateway to discounted AI tools — pay seamlessly
+          with stablecoins and earn in ROZO Points. Simple, crypto-native, and
+          rewarding.
+        </p>
+      </div>
+
+      {/* Footer */}
+      <div className="text-center pb-8">
+        <p className="text-sm text-gray-500">
+          © 2025 ROZO Banana · Made for crypto-native users
+        </p>
       </div>
     </div>
-  ),
-});
-
-export default function RechargePage() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <RozoPayProvider>
-        <RechargeContent />
-      </RozoPayProvider>
-    </Suspense>
   );
 }

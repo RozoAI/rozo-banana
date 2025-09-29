@@ -297,7 +297,7 @@ export default function Home() {
   // }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-orange-50">
+    <div className="min-h-screen bg-[rgb(17,17,17)]">
       <Suspense fallback={null}>
         <ReferralHandler />
       </Suspense>
@@ -308,12 +308,12 @@ export default function Home() {
           onClose={() => setToastMessage(null)}
         />
       )}
-      <header className="sticky top-0 w-full bg-white/90 backdrop-blur-md border-b border-gray-100 z-50">
+      <header className="sticky top-0 w-full bg-[rgb(17,17,17)]/90 backdrop-blur-md border-b border-gray-800 z-50">
         <div className="max-w-lg mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-2">
               <span className="text-3xl">🍌</span>
-              <span className="font-bold text-xl text-black">Banana</span>
+              <span className="font-bold text-xl text-white">Banana</span>
             </div>
             <WalletConnectButton />
           </div>
@@ -324,7 +324,7 @@ export default function Home() {
         {!address ? (
           <div className="flex flex-col justify-center items-center h-screen space-y-4">
             <div className="text-center">
-              <p className="text-lg text-gray-600 mb-4">
+              <p className="text-lg text-gray-400 mb-4">
                 Please connect your wallet to access the dashboard
               </p>
             </div>
@@ -332,13 +332,13 @@ export default function Home() {
         ) : (
           <div className="pb-20 min-h-[calc(100vh-5rem)]">
             {/* Points Display */}
-            <div className="py-6 bg-white rounded-2xl shadow-sm border border-gray-100">
+            <div className="py-6 bg-[rgb(17,17,17)] rounded-2xl shadow-sm border border-gray-800">
               <div className="text-center">
-                <p className="text-sm text-gray-500 mb-1">Points</p>
+                <p className="text-sm text-gray-400 mb-1">Points</p>
                 {points === null ? (
                   <div className="h-9 w-20 bg-gray-200 rounded animate-pulse mx-auto"></div>
                 ) : (
-                  <p className="text-3xl font-bold text-gray-900">{points}</p>
+                  <p className="text-3xl font-bold text-white">{points}</p>
                 )}
               </div>
             </div>
@@ -348,27 +348,25 @@ export default function Home() {
               {activeTab === "home" && (
                 <div className="space-y-4">
                   {/* Referral Card */}
-                  <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                    <h3 className="font-bold text-lg mb-4 text-gray-900">
-                      Share
-                    </h3>
+                  <div className="bg-[rgb(17,17,17)] rounded-2xl p-6 shadow-sm border border-gray-800">
+                    <h3 className="font-bold text-lg mb-4 text-white">Share</h3>
 
                     {/* Affiliate Name Section */}
                     <button
                       onClick={copyReferralLink}
-                      className="w-full py-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-xl font-semibold text-base hover:from-yellow-600 hover:to-orange-600 transition-all transform active:scale-[0.98]"
+                      className="w-full py-4 bg-[rgb(245,210,60)] text-black rounded-xl font-semibold text-base hover:bg-[rgb(255,220,70)] transition-all transform active:scale-[0.98]"
                     >
                       {copied ? "✓ Copied!" : "Copy Referral Link"}
                     </button>
-                    <p className="text-sm text-gray-500 mt-3 text-center">
+                    <p className="text-sm text-gray-400 mt-3 text-center">
                       Earn 10% from direct referrals
                     </p>
                   </div>
 
                   {/* Gallery Preview */}
-                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+                  <div className="bg-[rgb(17,17,17)] rounded-2xl shadow-sm border border-gray-800 p-4">
                     <div className="flex items-center justify-between mb-3">
-                      <h2 className="text-lg font-semibold text-gray-900">
+                      <h2 className="text-lg font-semibold text-white">
                         My Gallery
                       </h2>
                     </div>
@@ -377,7 +375,7 @@ export default function Home() {
                         {Array.from({ length: 12 }).map((_, idx) => (
                           <div
                             key={idx}
-                            className="w-full aspect-square bg-gray-200 rounded-lg animate-pulse"
+                            className="w-full aspect-square bg-gray-800 rounded-lg animate-pulse"
                           />
                         ))}
                       </div>
@@ -386,7 +384,7 @@ export default function Home() {
                         {galleryImages.map((img, idx) => (
                           <div
                             key={idx}
-                            className="relative w-full aspect-square overflow-hidden rounded-lg bg-gray-100 group"
+                            className="relative w-full aspect-square overflow-hidden rounded-lg bg-gray-800 group"
                           >
                             <Image
                               src={
@@ -429,9 +427,9 @@ export default function Home() {
                         ))}
                       </div>
                     ) : (
-                      <div className="text-center py-8 text-gray-500">
+                      <div className="text-center py-8 text-gray-400">
                         <p>No images yet</p>
-                        <p className="text-sm text-gray-400 mt-1">
+                        <p className="text-sm text-gray-500 mt-1">
                           Your generated images will appear here
                         </p>
                       </div>

@@ -80,13 +80,13 @@ export default function GalleryPage() {
 
   // if (!isConnected) {
   //   return (
-  //     <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-orange-50">
-  //       <header className="sticky top-0 w-full bg-white/90 backdrop-blur-md border-b border-gray-100 z-50">
+  //     <div className="min-h-screen bg-[rgb(17,17,17)]">
+  //       <header className="sticky top-0 w-full bg-[rgb(17,17,17)]/90 backdrop-blur-md border-b border-gray-800 z-50">
   //         <div className="max-w-lg mx-auto px-4 py-4">
   //           <div className="flex justify-between items-center">
   //             <div className="flex items-center space-x-2">
   //               <span className="text-3xl">🍌</span>
-  //               <span className="font-bold text-xl text-black">Banana</span>
+  //               <span className="font-bold text-xl text-white">Banana</span>
   //             </div>
   //             <WalletConnectButton />
   //           </div>
@@ -107,13 +107,13 @@ export default function GalleryPage() {
   // Authentication will only be required when generating images
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-orange-50">
-      <header className="sticky top-0 w-full bg-white/90 backdrop-blur-md border-b border-gray-100 z-50">
+    <div className="min-h-screen bg-[rgb(17,17,17)]">
+      <header className="sticky top-0 w-full bg-[rgb(17,17,17)]/90 backdrop-blur-md border-b border-gray-800 z-50">
         <div className="max-w-lg mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-2">
               <span className="text-3xl">🍌</span>
-              <span className="font-bold text-xl text-black">Banana</span>
+              <span className="font-bold text-xl text-white">Banana</span>
             </div>
             <WalletConnectButton />
           </div>
@@ -122,21 +122,21 @@ export default function GalleryPage() {
 
       <main className="max-w-lg mx-auto px-4 pb-20">
         <div className="py-6">
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h3 className="font-bold text-lg mb-4 text-gray-900">
+          <div className="bg-[rgb(17,17,17)] rounded-2xl p-6 shadow-sm border border-gray-800">
+            <h3 className="font-bold text-lg mb-4 text-white">
               Public Gallery
             </h3>
             {loading ? (
               <div className="flex flex-col items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500"></div>
-                <p className="text-gray-500 mt-4">Loading images...</p>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[rgb(245,210,60)]"></div>
+                <p className="text-gray-400 mt-4">Loading images...</p>
               </div>
             ) : error ? (
               <div className="text-center py-12">
-                <p className="text-red-600 mb-4">{error}</p>
+                <p className="text-red-400 mb-4">{error}</p>
                 <button
                   onClick={fetchGallery}
-                  className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
+                  className="px-4 py-2 bg-[rgb(245,210,60)] text-black rounded-lg hover:bg-[rgb(255,220,70)] transition-colors"
                 >
                   Try Again
                 </button>
@@ -146,7 +146,7 @@ export default function GalleryPage() {
                 {images.map((image, index) => (
                   <div
                     key={image.id || index}
-                    className="relative aspect-square rounded-lg overflow-hidden bg-gray-100"
+                    className="relative aspect-square rounded-lg overflow-hidden bg-gray-800"
                   >
                     <img
                       src={image.thumbnail || image.image_url || image.url}
@@ -210,8 +210,8 @@ export default function GalleryPage() {
             ) : (
               <div className="flex flex-col items-center justify-center py-12">
                 <span className="text-4xl mb-3">🖼️</span>
-                <p className="text-gray-500">No public images available</p>
-                <p className="text-sm text-gray-400 mt-1">
+                <p className="text-gray-400">No public images available</p>
+                <p className="text-sm text-gray-500 mt-1">
                   Public images will appear here
                 </p>
               </div>

@@ -33,16 +33,24 @@ export function WalletConnectButton() {
           is_connected: true,
         };
         localStorage.setItem("rozo_user", JSON.stringify(user));
-        console.log("👤 [WalletConnectButton] Created user object with address");
+        console.log(
+          "👤 [WalletConnectButton] Created user object with address"
+        );
       } else {
         // If rozo_user exists, validate it has the correct address
         try {
           const user = JSON.parse(existingUser);
-          if (user.address && user.address.toLowerCase() !== address.toLowerCase()) {
-            console.warn("⚠️ [WalletConnectButton] Correcting mismatched address in rozo_user", {
-              stored: user.address,
-              actual: address
-            });
+          if (
+            user.address &&
+            user.address.toLowerCase() !== address.toLowerCase()
+          ) {
+            console.warn(
+              "⚠️ [WalletConnectButton] Correcting mismatched address in rozo_user",
+              {
+                stored: user.address,
+                actual: address,
+              }
+            );
             user.address = address.toLowerCase();
             localStorage.setItem("rozo_user", JSON.stringify(user));
           }
@@ -108,7 +116,7 @@ export function WalletConnectButton() {
     return (
       <button
         disabled
-        className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-500 rounded-lg cursor-not-allowed"
+        className="flex items-center gap-2 px-4 py-2 bg-gray-800 text-gray-400 rounded-lg cursor-not-allowed"
       >
         <Loader2 className="w-4 h-4 animate-spin" />
         <span>Connecting...</span>
@@ -119,13 +127,13 @@ export function WalletConnectButton() {
   if (isConnected && address) {
     return (
       <div className="flex items-center gap-2">
-        <div className="flex items-center gap-2 px-3 py-2 bg-green-100 text-green-800 rounded-lg">
+        <div className="flex items-center gap-2 px-3 py-2 bg-green-900 text-green-300 rounded-lg">
           <Wallet className="w-4 h-4" />
           <span className="font-medium">{formatAddress(address)}</span>
         </div>
         <button
           onClick={() => disconnect()}
-          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+          className="p-2 text-red-400 hover:bg-red-900 rounded-lg transition-colors"
           title="Disconnect wallet"
         >
           <LogOut className="w-4 h-4" />
@@ -139,7 +147,7 @@ export function WalletConnectButton() {
   return (
     <button
       onClick={handleConnect}
-      className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg hover:from-yellow-600 hover:to-orange-600 transition-all transform hover:scale-105 shadow-lg"
+      className="flex items-center gap-2 px-4 py-2 bg-[rgb(245,210,60)] text-black rounded-lg hover:bg-[rgb(255,220,70)] transition-all transform hover:scale-105 shadow-lg"
     >
       {isMobile === true ? (
         <Smartphone className="w-4 h-4" />

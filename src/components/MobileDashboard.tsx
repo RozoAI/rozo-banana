@@ -153,7 +153,7 @@ export function MobileDashboard({ address }: MobileDashboardProps) {
     return (
       <div className="flex flex-col justify-center items-center h-screen space-y-4">
         <div className="text-center">
-          <p className="text-lg text-gray-600 mb-4">
+          <p className="text-lg text-gray-400 mb-4">
             Please connect your wallet to access the dashboard
           </p>
         </div>
@@ -198,13 +198,13 @@ export function MobileDashboard({ address }: MobileDashboardProps) {
   return (
     <div className="pb-20 min-h-[calc(100vh-5rem)]">
       {/* Points Display */}
-      <div className="py-6 bg-white rounded-2xl shadow-sm border border-gray-100">
+      <div className="py-6 bg-[rgb(17,17,17)] rounded-2xl shadow-sm border border-gray-800">
         <div className="text-center">
-          <p className="text-sm text-gray-500 mb-1">Points</p>
+          <p className="text-sm text-gray-400 mb-1">Points</p>
           {points === null ? (
             <div className="h-9 w-20 bg-gray-200 rounded animate-pulse mx-auto"></div>
           ) : (
-            <p className="text-3xl font-bold text-gray-900">{points}</p>
+            <p className="text-3xl font-bold text-white">{points}</p>
           )}
         </div>
       </div>
@@ -214,17 +214,17 @@ export function MobileDashboard({ address }: MobileDashboardProps) {
         {activeTab === "home" && (
           <div className="space-y-4">
             {/* Referral Card */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-              <h3 className="font-bold text-lg mb-4 text-gray-900">Share</h3>
+            <div className="bg-[rgb(17,17,17)] rounded-2xl p-6 shadow-sm border border-gray-800">
+              <h3 className="font-bold text-lg mb-4 text-white">Share</h3>
 
               {/* Affiliate Name Section */}
               <button
                 onClick={copyReferralLink}
-                className="w-full py-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-xl font-semibold text-base hover:from-yellow-600 hover:to-orange-600 transition-all transform active:scale-[0.98]"
+                className="w-full py-4 bg-[rgb(245,210,60)] text-black rounded-xl font-semibold text-base hover:bg-[rgb(255,220,70)] transition-all transform active:scale-[0.98]"
               >
                 {copied ? "✓ Copied!" : "Copy Referral Link"}
               </button>
-              <p className="text-sm text-gray-500 mt-3 text-center">
+              <p className="text-sm text-gray-400 mt-3 text-center">
                 Earn 10% from direct referrals
               </p>
             </div>

@@ -732,9 +732,9 @@ export default function NanoBananaGenerator() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-orange-50">
+    <div className="min-h-screen bg-[rgb(17,17,17)]">
       {/* Header - matching Home page */}
-      <header className="sticky top-0 w-full bg-white/90 backdrop-blur-md border-b border-gray-100 z-50">
+      <header className="sticky top-0 w-full bg-[rgb(17,17,17)]/90 backdrop-blur-md border-b border-gray-800 z-50">
         <div className="max-w-lg mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <Link
@@ -742,7 +742,7 @@ export default function NanoBananaGenerator() {
               className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
             >
               <span className="text-3xl">🍌</span>
-              <span className="font-bold text-xl text-black">Banana</span>
+              <span className="font-bold text-xl text-white">Banana</span>
             </Link>
           </div>
         </div>
@@ -751,9 +751,9 @@ export default function NanoBananaGenerator() {
       <div className="max-w-lg mx-auto px-4 py-6 mb-[5rem]">
         {/* Style Presets Section - Gallery Style */}
         {showPresets && (
-          <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-lg p-4 mb-4">
+          <div className="bg-[rgb(17,17,17)]/95 backdrop-blur-md rounded-2xl shadow-lg p-4 mb-4 border border-gray-800">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-gray-900">
+              <h2 className="text-lg font-bold text-white">
                 ✨ Choose a Style
               </h2>
               <button
@@ -782,7 +782,7 @@ export default function NanoBananaGenerator() {
                 <button
                   key={preset.id}
                   onClick={() => handlePresetSelect(preset)}
-                  className="group relative bg-white border-2 border-gray-200 hover:border-yellow-400 active:border-yellow-500 rounded-xl overflow-hidden transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+                  className="group relative bg-[rgb(17,17,17)] border-2 border-gray-700 hover:border-[rgb(245,210,60)] active:border-[rgb(245,210,60)] rounded-xl overflow-hidden transition-all transform hover:scale-[1.02] active:scale-[0.98]"
                   disabled={!isConnected}
                 >
                   {/* Preview Image Background */}
@@ -805,8 +805,8 @@ export default function NanoBananaGenerator() {
                   </div>
 
                   {/* Text Content */}
-                  <div className="p-2.5 bg-white">
-                    <div className="font-semibold text-sm text-gray-900 group-hover:text-yellow-600 transition-colors">
+                  <div className="p-2.5 bg-[rgb(17,17,17)]">
+                    <div className="font-semibold text-sm text-white group-hover:text-[rgb(245,210,60)] transition-colors">
                       {preset.title}
                     </div>
                     <div className="text-xs text-gray-500 mt-0.5">
@@ -832,7 +832,7 @@ export default function NanoBananaGenerator() {
                 <div className="relative aspect-square flex items-center justify-center">
                   <Wand2 className="w-12 h-12 text-white drop-shadow-lg transform group-hover:scale-110 group-hover:rotate-12 transition-all" />
                 </div>
-                <div className="p-2.5 bg-white">
+                <div className="p-2.5 bg-[rgb(17,17,17)]">
                   <div className="font-semibold text-sm text-purple-700 group-hover:text-purple-600 transition-colors">
                     Custom Prompt
                   </div>
@@ -846,11 +846,9 @@ export default function NanoBananaGenerator() {
         )}
 
         {/* Generate Image Card - Mobile Optimized */}
-        <div className="bg-white rounded-xl shadow-sm p-4">
+        <div className="bg-[rgb(17,17,17)] rounded-xl shadow-sm p-4 border border-gray-800">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-base font-semibold text-gray-800">
-              Generate Image
-            </h2>
+            <h2 className="text-base font-semibold ">Generate Image</h2>
             {!showPresets && (
               <button
                 onClick={() => setShowPresets(true)}
@@ -875,7 +873,7 @@ export default function NanoBananaGenerator() {
                   : "Describe what you want to create..."
               }
               className="w-full px-3 py-2.5 border-2 border-yellow-400 rounded-lg focus:outline-none focus:border-yellow-500 resize-none text-gray-700 placeholder-gray-400 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              rows={2}
+              rows={4}
               disabled={!isConnected || userCredits === 0 || !isTokenValid}
             />
             {customPrompt && (
@@ -890,7 +888,7 @@ export default function NanoBananaGenerator() {
             <div
               onDrop={handleDrop}
               onDragOver={handleDragOver}
-              className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-yellow-400 transition-colors cursor-pointer bg-gray-50"
+              className="border-2 border-dashed border-gray-800 rounded-lg p-6 text-center hover:border-yellow-400 transition-colors cursor-pointer bg-black/30"
             >
               <input
                 type="file"
@@ -1001,7 +999,7 @@ export default function NanoBananaGenerator() {
           {/* Cost and Generate Button - Mobile Optimized */}
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm">
+              <p className="text-white text-sm">
                 Cost: {CREDITS_PER_GENERATION} credits
               </p>
               <p className="text-gray-500 text-xs">
@@ -1043,7 +1041,7 @@ export default function NanoBananaGenerator() {
                   !customPrompt.trim() ||
                   uploadedImages.length === 0
                 }
-                className="px-5 py-2.5 bg-gradient-to-r from-yellow-400 to-orange-400 text-white font-medium rounded-lg hover:from-yellow-500 hover:to-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 text-sm"
+                className="px-5 py-2.5 bg-[rgb(245,210,60)] text-black font-medium rounded-lg hover:bg-[rgb(255,220,70)] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 text-sm"
               >
                 {isLoading ? (
                   <>
@@ -1130,7 +1128,7 @@ export default function NanoBananaGenerator() {
                 </>
               ) : generatedImage.response ? (
                 // Display text response
-                <div className="bg-white p-4 rounded-lg">
+                <div className="bg-[rgb(17,17,17)] p-4 rounded-lg border border-gray-800">
                   <h3 className="font-semibold text-gray-800 mb-2">
                     AI Response:
                   </h3>

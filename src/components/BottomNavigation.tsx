@@ -60,7 +60,7 @@ export function BottomNavigation({ className = "" }: BottomNavigationProps) {
 
   return (
     <div
-      className={`fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 ${className}`}
+      className={`fixed bottom-0 left-0 right-0 bg-[rgb(17,17,17)] border-t border-gray-800 ${className}`}
     >
       <div className="max-w-lg mx-auto">
         <div
@@ -74,8 +74,8 @@ export function BottomNavigation({ className = "" }: BottomNavigationProps) {
               onClick={() => handleNavigation(item.href)}
               className={`py-3 text-center transition-colors relative w-full ${
                 item.isActive
-                  ? "text-yellow-600"
-                  : "text-gray-400 hover:text-yellow-600"
+                  ? "text-[rgb(245,210,60)]"
+                  : "text-gray-400 hover:text-[rgb(245,210,60)]"
               }`}
             >
               {item.hasHotBadge && (

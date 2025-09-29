@@ -63,7 +63,11 @@ export function BottomNavigation({ className = "" }: BottomNavigationProps) {
       className={`fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 ${className}`}
     >
       <div className="max-w-lg mx-auto">
-        <div className={`grid grid-cols-${navItems.length}`}>
+        <div
+          className={`grid ${
+            navItems.length === 4 ? "grid-cols-4" : "grid-cols-3"
+          }`}
+        >
           {navItems.map((item) => (
             <button
               key={item.href}

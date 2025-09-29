@@ -1,16 +1,16 @@
 "use client";
 
 import { BottomNavigation } from "@/components/BottomNavigation";
-import { MobileDashboard } from "@/components/MobileDashboard";
 import { ShareButton } from "@/components/ShareButton";
 import { Toast } from "@/components/Toast";
 import { TwitterShareButton } from "@/components/TwitterShareButton";
 import { WalletConnectButton } from "@/components/WalletConnectButton";
+import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { imageAPI } from "@/lib/api";
+import { creditsAPI, imageAPI, pointsAPI } from "@/lib/api";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useAccount } from "wagmi";
 
 // Component to handle referral code from URL params
@@ -34,6 +34,7 @@ function ReferralHandler() {
 
 export default function Home() {
   const { address, isConnected } = useAccount();
+  const { isAuthenticated, signIn, isLoading } = useAuth();
   const [showGenerator, setShowGenerator] = useState(false);
   const [toastMessage, setToastMessage] = useState<{
     message: string;
@@ -52,7 +53,158 @@ export default function Home() {
   >([]);
   const [galleryLoading, setGalleryLoading] = useState(false);
 
+  // MobileDashboard state variables
+  const [activeTab, setActiveTab] = useState("home");
+  const [points, setPoints] = useState<number | null>(null);
+  const [credits, setCredits] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [affiliateName, setAffiliateName] = useState("");
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [nameSaved, setNameSaved] = useState(false);
+  const [userSpent, setUserSpent] = useState(0);
+  const [isTierDetailsExpanded, setIsTierDetailsExpanded] = useState(false);
+  const hasFetched = useRef(false);
+
   const isMobile = useIsMobile();
+
+  // Fetch user data when wallet is connected (address is available)
+  useEffect(() => {
+    if (address && !hasFetched.current) {
+      console.log(
+        "📊 [Profile] Wallet connected, fetching user data for:",
+        address
+      );
+      fetchUserData();
+      hasFetched.current = true;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [address]);
+
+  const fetchUserData = async () => {
+    console.log("📊 [Profile] Fetching user data for address:", address);
+    // Don't block UI - load data in background
+    try {
+      // Fetch points balance - API will use address parameter automatically
+      console.log("💰 [Profile] Fetching points balance...");
+
+      // Try to fetch points balance
+      try {
+        const balance = await pointsAPI.getBalance();
+        console.log("✅ [Profile] Points balance response:", balance);
+        setPoints(balance.balance ?? balance.points ?? 0);
+      } catch (pointsError: any) {
+        if (pointsError.response?.status === 401) {
+          console.log(
+            "🔔 [Profile] Points API requires authentication, showing default"
+          );
+          setPoints(0);
+        } else {
+          console.error("❌ [Profile] Points fetch error:", pointsError);
+          setPoints(0);
+        }
+      }
+
+      // Try to fetch credits balance
+      console.log("💳 [Profile] About to fetch credits...");
+      try {
+        const creditsData = await creditsAPI.getBalance();
+        console.log("✅ [Profile] Credits balance response:", creditsData);
+        setCredits(creditsData.credits ?? creditsData.available ?? 0);
+      } catch (creditsError: any) {
+        console.log("❌ [Profile] Credits fetch error details:", {
+          status: creditsError.response?.status,
+          data: creditsError.response?.data,
+          message: creditsError.message,
+        });
+        if (creditsError.response?.status === 401) {
+          console.log(
+            "🔔 [Profile] Credits API requires authentication, showing default"
+          );
+          setCredits(0);
+        } else {
+          console.error("❌ [Profile] Credits fetch error:", creditsError);
+          setCredits(0);
+        }
+      }
+
+      // Load saved affiliate name from localStorage
+      const savedName = localStorage.getItem(`affiliateName_${address}`);
+      if (savedName) {
+        setAffiliateName(savedName);
+      }
+
+      // Load or set user spending (mock data for now)
+      const savedSpent = localStorage.getItem(`userSpent_${address}`);
+      if (savedSpent) {
+        setUserSpent(parseFloat(savedSpent));
+      } else {
+        // Initialize with 0 spent
+        setUserSpent(0);
+        localStorage.setItem(`userSpent_${address}`, "0");
+      }
+    } catch (error: any) {
+      console.error("❌ [Profile] Failed to fetch user data:", {
+        error: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
+      // Set default values if fetch fails
+      if (points === null) setPoints(0);
+    }
+  };
+
+  const saveAffiliateName = () => {
+    if (affiliateName.trim()) {
+      // Save to localStorage
+      localStorage.setItem(`affiliateName_${address}`, affiliateName.trim());
+      setIsEditingName(false);
+      setNameSaved(true);
+      setTimeout(() => setNameSaved(false), 2000);
+    }
+  };
+
+  const copyReferralLink = () => {
+    const baseLink = `${window.location.origin}?ref=`;
+    const link = affiliateName.trim()
+      ? `${baseLink}${encodeURIComponent(affiliateName.trim())}`
+      : `${baseLink}${address}`;
+    navigator.clipboard.writeText(link);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  // Calculate user tier based on spending
+  const getUserTier = () => {
+    if (userSpent >= 1000)
+      return {
+        name: "Gold",
+        icon: "🏆",
+        color: "text-yellow-500",
+        nextTier: null,
+        nextAmount: null,
+      };
+    if (userSpent >= 100)
+      return {
+        name: "Silver",
+        icon: "🥈",
+        color: "text-gray-400",
+        nextTier: "Gold",
+        nextAmount: 1000,
+      };
+    return {
+      name: "Bronze",
+      icon: "🥉",
+      color: "text-orange-600",
+      nextTier: "Silver",
+      nextAmount: 100,
+    };
+  };
+
+  const currentTier = getUserTier();
+  const tierProgress = currentTier.nextAmount
+    ? (userSpent / currentTier.nextAmount) * 100
+    : 100;
 
   // Fetch user's personal gallery images
   useEffect(() => {
@@ -169,129 +321,126 @@ export default function Home() {
       </header>
 
       <main className="max-w-lg mx-auto px-4 mt-4 mb-20">
-        {!isConnected ? (
-          <div className="flex flex-col items-center justify-start min-h-[calc(100vh-5rem)] py-8">
-            <div className="text-center space-y-8 w-full">
-              <div className="space-y-6">
-                <span className="text-8xl block">🍌</span>
-                <div>
-                  <h1 className="text-4xl font-bold text-gray-900 mb-3">
-                    ROZO Banana
-                  </h1>
-                </div>
-
-                {/* Autoplay Video */}
-                <div className="w-full mx-auto">
-                  <video
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    className="w-full h-auto rounded-2xl shadow-lg"
-                  >
-                    <source
-                      src="https://cdn.rozo.ai/rozoog0.mp4"
-                      type="video/mp4"
-                    />
-                    Your browser does not support the video tag.
-                  </video>
-                </div>
+        {!address ? (
+          <div className="flex flex-col justify-center items-center h-screen space-y-4">
+            <div className="text-center">
+              <p className="text-lg text-gray-600 mb-4">
+                Please connect your wallet to access the dashboard
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="pb-20 min-h-[calc(100vh-5rem)]">
+            {/* Points Display */}
+            <div className="py-6 bg-white rounded-2xl shadow-sm border border-gray-100">
+              <div className="text-center">
+                <p className="text-sm text-gray-500 mb-1">Points</p>
+                {points === null ? (
+                  <div className="h-9 w-20 bg-gray-200 rounded animate-pulse mx-auto"></div>
+                ) : (
+                  <p className="text-3xl font-bold text-gray-900">{points}</p>
+                )}
               </div>
+            </div>
 
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 space-y-4">
-                <div className="flex items-center space-x-3">
-                  <span className="text-2xl">🎨</span>
-                  <p className="text-base font-medium text-gray-800 text-left">
-                    Generate with Nano Banana
-                  </p>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <span className="text-2xl">💰</span>
-                  <p className="text-base font-medium text-gray-800 text-left">
-                    <span className="font-bold text-yellow-600">10%</span>{" "}
-                    rewards from referrals
-                  </p>
-                </div>
-              </div>
+            {/* Main Content */}
+            <div className="py-6">
+              {activeTab === "home" && (
+                <div className="space-y-4">
+                  {/* Referral Card */}
+                  <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                    <h3 className="font-bold text-lg mb-4 text-gray-900">
+                      Share
+                    </h3>
 
-              {/* Gallery Preview - Only show when connected */}
-              {isConnected && (
-                <div className="mt-6 bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h2 className="text-lg font-semibold text-gray-900">
-                      My Gallery
-                    </h2>
+                    {/* Affiliate Name Section */}
+                    <button
+                      onClick={copyReferralLink}
+                      className="w-full py-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-xl font-semibold text-base hover:from-yellow-600 hover:to-orange-600 transition-all transform active:scale-[0.98]"
+                    >
+                      {copied ? "✓ Copied!" : "Copy Referral Link"}
+                    </button>
+                    <p className="text-sm text-gray-500 mt-3 text-center">
+                      Earn 10% from direct referrals
+                    </p>
                   </div>
-                  {galleryLoading ? (
-                    <div className="grid grid-cols-3 gap-3">
-                      {Array.from({ length: 12 }).map((_, idx) => (
-                        <div
-                          key={idx}
-                          className="w-full aspect-square bg-gray-200 rounded-lg animate-pulse"
-                        />
-                      ))}
+
+                  {/* Gallery Preview */}
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h2 className="text-lg font-semibold text-gray-900">
+                        My Gallery
+                      </h2>
                     </div>
-                  ) : galleryImages.length > 0 ? (
-                    <div className="grid grid-cols-3 gap-3">
-                      {galleryImages.slice(0, 12).map((img, idx) => (
-                        <div
-                          key={idx}
-                          className="relative w-full aspect-square overflow-hidden rounded-lg bg-gray-100 group"
-                        >
-                          <Image
-                            src={
-                              img.thumbnail ||
-                              img.image_url ||
-                              img.url ||
-                              "/placeholder.png"
-                            }
-                            alt={img.prompt || `Gallery ${idx + 1}`}
-                            fill
-                            className="object-cover"
-                            unoptimized
+                    {galleryLoading ? (
+                      <div className="grid grid-cols-3 gap-3">
+                        {Array.from({ length: 12 }).map((_, idx) => (
+                          <div
+                            key={idx}
+                            className="w-full aspect-square bg-gray-200 rounded-lg animate-pulse"
                           />
-                          <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            {isMobile ? (
-                              <ShareButton
-                                imageUrl={
-                                  img.thumbnail || img.image_url || img.url
-                                }
-                                prompt={img.prompt}
-                                shareId={img.id}
-                                className="text-xs px-2 py-1"
-                              >
-                                Share
-                              </ShareButton>
-                            ) : (
-                              <TwitterShareButton
-                                imageUrl={
-                                  img.thumbnail || img.image_url || img.url
-                                }
-                                prompt={img.prompt}
-                                shareId={img.id}
-                                className="text-xs px-2 py-1"
-                              >
-                                Share
-                              </TwitterShareButton>
-                            )}
+                        ))}
+                      </div>
+                    ) : galleryImages.length > 0 ? (
+                      <div className="grid grid-cols-3 gap-3">
+                        {galleryImages.map((img, idx) => (
+                          <div
+                            key={idx}
+                            className="relative w-full aspect-square overflow-hidden rounded-lg bg-gray-100 group"
+                          >
+                            <Image
+                              src={
+                                img.thumbnail ||
+                                img.image_url ||
+                                img.url ||
+                                "/placeholder.png"
+                              }
+                              alt={img.prompt || `Gallery ${idx + 1}`}
+                              fill
+                              className="object-cover"
+                              unoptimized
+                            />
+                            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              {isMobile ? (
+                                <ShareButton
+                                  imageUrl={
+                                    img.thumbnail || img.image_url || img.url
+                                  }
+                                  prompt={img.prompt}
+                                  shareId={img.id}
+                                  className="text-xs px-2 py-1"
+                                >
+                                  Share
+                                </ShareButton>
+                              ) : (
+                                <TwitterShareButton
+                                  imageUrl={
+                                    img.thumbnail || img.image_url || img.url
+                                  }
+                                  prompt={img.prompt}
+                                  shareId={img.id}
+                                  className="text-xs px-2 py-1"
+                                >
+                                  Share
+                                </TwitterShareButton>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <p>No images yet</p>
-                      <p className="text-sm text-gray-400 mt-1">
-                        Your generated images will appear here
-                      </p>
-                    </div>
-                  )}
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <p>No images yet</p>
+                        <p className="text-sm text-gray-400 mt-1">
+                          Your generated images will appear here
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
           </div>
-        ) : (
-          <MobileDashboard address={address!} />
         )}
       </main>
 

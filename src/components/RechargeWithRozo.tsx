@@ -363,7 +363,7 @@ export default function RechargeContent() {
               // Fetch user count after payment completion
               try {
                 const countData = await userAPI.getCount();
-                setUserCount(countData.count);
+                setUserCount(countData.count + 1);
                 console.log("User count fetched:", countData.count);
               } catch (error) {
                 console.error("Failed to fetch user count:", error);

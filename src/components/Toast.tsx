@@ -54,16 +54,16 @@ export function Toast({
     <div
       className={`fixed top-20 left-1/2 transform -translate-x-1/2 z-[100] transition-all duration-300 ease-out ${
         isExiting ? "opacity-0 -translate-y-5" : "opacity-100 translate-y-0"
-      }`}
+      } w-full max-w-md sm:max-w-md px-4 sm:px-0`}
     >
       <div
-        className={`flex items-center gap-3 px-4 py-3 rounded-lg border shadow-lg ${colors[type]} max-w-md backdrop-blur-sm`}
+        className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 rounded-lg border shadow-lg ${colors[type]} backdrop-blur-sm w-full`}
       >
-        <span className="text-2xl">{icons[type]}</span>
-        <p className="font-medium">{message}</p>
+        <span className="text-lg sm:text-2xl">{icons[type]}</span>
+        <p className="font-medium text-sm sm:text-base flex-1">{message}</p>
         <button
           onClick={handleClose}
-          className="ml-auto text-xl hover:opacity-70 transition-opacity duration-200"
+          className="ml-auto text-lg sm:text-xl hover:opacity-70 transition-opacity duration-200"
         >
           ×
         </button>

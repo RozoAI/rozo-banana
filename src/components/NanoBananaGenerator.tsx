@@ -2,7 +2,7 @@
 
 import { STYLE_PRESETS, StylePreset } from "@/constants/stylePresets";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { ImageIcon, Loader2, Sparkles, Wand2 } from "lucide-react";
+import { ImageIcon, Loader2, Sparkles, Wand2, X } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
@@ -566,7 +566,7 @@ export default function NanoBananaGenerator() {
     // Check if preset is disabled and show toast
     if (!isConnected) {
       setToast({
-        message: "Please connect your wallet first to use presets",
+        message: "Please top up your credit to use presets",
         type: "warning",
       });
       return;
@@ -616,7 +616,7 @@ export default function NanoBananaGenerator() {
 
     // Check if wallet is connected
     if (!isConnected) {
-      setError("Please connect your wallet first");
+      setError("Please top up your credit");
       return;
     }
 
@@ -777,128 +777,6 @@ export default function NanoBananaGenerator() {
       </header>
 
       <div className="max-w-lg mx-auto px-4 py-6 mb-[5rem]">
-        {/* Style Presets Section - Gallery Style */}
-        {showPresets && (
-          <div className="bg-[rgb(17,17,17)]/95 backdrop-blur-md rounded-2xl shadow-lg p-4 mb-4 border border-gray-800">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-white">
-                ✨ Choose a Style
-              </h2>
-              <button
-                onClick={() => setShowPresets(!showPresets)}
-                className="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full transition-all hover:rotate-90"
-              >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            {/* Gallery Grid - 2 columns with preview images */}
-            <div className="grid grid-cols-2 gap-3">
-              {STYLE_PRESETS.map((preset) => (
-                <button
-                  key={preset.id}
-                  onClick={() => handlePresetSelect(preset)}
-                  className="group relative bg-[rgb(17,17,17)] border-2 border-gray-700 hover:border-[rgb(245,210,60)] active:border-[rgb(245,210,60)] rounded-xl overflow-hidden transition-all transform hover:scale-[1.02] active:scale-[0.98]"
-                  // disabled={!isConnected}
-                >
-                  {/* Preview Image Background */}
-                  <div className="relative aspect-square bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
-                    {preset.previewImage ? (
-                      <Image
-                        src={preset.previewImage}
-                        alt={preset.title}
-                        width={200}
-                        height={200}
-                        className="w-full h-full object-cover transition-all group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-4xl drop-shadow-lg transform group-hover:scale-110 transition-transform">
-                          {preset.emoji}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Text Content */}
-                  <div className="p-2.5 bg-[rgb(17,17,17)]">
-                    <div className="font-semibold text-sm text-white group-hover:text-[rgb(245,210,60)] transition-colors">
-                      {preset.title}
-                    </div>
-                    <div className="text-xs text-gray-200 mt-0.5">
-                      {preset.description}
-                    </div>
-                  </div>
-                </button>
-              ))}
-
-              {/* Custom Prompt Option with matching style */}
-              <button
-                onClick={() => {
-                  // Check if custom prompt is disabled and show toast
-                  if (!isConnected) {
-                    setToast({
-                      message:
-                        "Please connect your wallet first to use custom prompts",
-                      type: "warning",
-                    });
-                    return;
-                  }
-
-                  if (userCredits < CREDITS_PER_GENERATION) {
-                    if (userCredits === 0) {
-                      setToast({
-                        message:
-                          "You need credits to generate images. Please top up first to continue creating amazing content!",
-                        type: "warning",
-                      });
-                    } else {
-                      setToast({
-                        message: `Insufficient credits. You need ${CREDITS_PER_GENERATION} credits to use custom prompts.`,
-                        type: "warning",
-                      });
-                    }
-                    return;
-                  }
-
-                  setCustomPrompt("");
-                  setShowPresets(false);
-                  const promptElement = document.getElementById("prompt-input");
-                  if (promptElement) {
-                    promptElement.focus();
-                  }
-                }}
-                className="group relative bg-gradient-to-br from-purple-500 to-blue-500 border-2 border-transparent hover:border-purple-400 active:border-purple-500 rounded-xl overflow-hidden transition-all transform hover:scale-[1.02] active:scale-[0.98]"
-                // disabled={!isConnected}
-              >
-                <div className="relative aspect-square flex items-center justify-center">
-                  <Wand2 className="w-12 h-12 text-white drop-shadow-lg transform group-hover:scale-110 group-hover:rotate-12 transition-all" />
-                </div>
-                <div className="p-2.5 bg-[rgb(17,17,17)]">
-                  <div className="font-semibold text-sm text-purple-300 group-hover:text-purple-500 transition-colors">
-                    Custom Prompt
-                  </div>
-                  <div className="text-xs text-gray-500 mt-0.5">
-                    Create your own
-                  </div>
-                </div>
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* Generate Image Card - Mobile Optimized */}
         <div className="bg-[rgb(17,17,17)] rounded-xl shadow-sm p-4 border border-gray-800">
           <div className="flex items-center justify-between mb-3">
@@ -1198,6 +1076,119 @@ export default function NanoBananaGenerator() {
             </div>
           )}
         </div>
+
+        {/* Style Presets Section - Gallery Style - Moved to bottom */}
+        {showPresets && (
+          <div className="bg-[rgb(17,17,17)]/95 backdrop-blur-md rounded-2xl shadow-lg p-4 mt-4 border border-gray-800">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-white">
+                ✨ Choose a Style
+              </h2>
+              <button
+                onClick={() => setShowPresets(!showPresets)}
+                className="w-8 h-8 flex items-center justify-center text-gray-200 rounded-full transition-all hover:rotate-90"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Scrollable Gallery Grid - 2 columns with preview images */}
+            <div className="max-h-64 overflow-y-auto pr-2">
+              <div className="grid grid-cols-2 gap-3">
+                {STYLE_PRESETS.map((preset) => (
+                  <button
+                    key={preset.id}
+                    onClick={() => handlePresetSelect(preset)}
+                    className="group relative bg-[rgb(17,17,17)] border-2 border-gray-700 hover:border-[rgb(245,210,60)] active:border-[rgb(245,210,60)] rounded-xl overflow-hidden transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+                    // disabled={!isConnected}
+                  >
+                    {/* Preview Image Background */}
+                    <div className="relative aspect-square bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+                      {preset.previewImage ? (
+                        <Image
+                          src={preset.previewImage}
+                          alt={preset.title}
+                          width={150}
+                          height={150}
+                          className="w-full h-full object-cover transition-all group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-4xl drop-shadow-lg transform group-hover:scale-110 transition-transform">
+                            {preset.emoji}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Text Content */}
+                    <div className="p-2.5 bg-[rgb(17,17,17)]">
+                      <div className="font-semibold text-sm text-white group-hover:text-[rgb(245,210,60)] transition-colors">
+                        {preset.title}
+                      </div>
+                      <div className="text-xs text-gray-200 mt-0.5">
+                        {preset.description}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+
+                {/* Custom Prompt Option with matching style */}
+                <button
+                  onClick={() => {
+                    // Check if custom prompt is disabled and show toast
+                    if (!isConnected) {
+                      setToast({
+                        message:
+                          "Please top up your credit to use custom prompts",
+                        type: "warning",
+                      });
+                      return;
+                    }
+
+                    if (userCredits < CREDITS_PER_GENERATION) {
+                      if (userCredits === 0) {
+                        setToast({
+                          message:
+                            "You need credits to generate images. Please top up first to continue creating amazing content!",
+                          type: "warning",
+                        });
+                      } else {
+                        setToast({
+                          message: `Insufficient credits. You need ${CREDITS_PER_GENERATION} credits to use custom prompts.`,
+                          type: "warning",
+                        });
+                      }
+                      return;
+                    }
+
+                    setCustomPrompt("");
+                    setShowPresets(false);
+                    const promptElement =
+                      document.getElementById("prompt-input");
+                    if (promptElement) {
+                      promptElement.focus();
+                    }
+                  }}
+                  className="group relative bg-gradient-to-br from-purple-500 to-blue-500 border-2 border-transparent hover:border-purple-400 active:border-purple-500 rounded-xl overflow-hidden transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+                  // disabled={!isConnected}
+                >
+                  <div className="relative aspect-square flex items-center justify-center">
+                    <Wand2 className="w-12 h-12 text-white drop-shadow-lg transform group-hover:scale-110 group-hover:rotate-12 transition-all" />
+                  </div>
+                  <div className="p-2.5 bg-[rgb(17,17,17)]">
+                    <div className="font-semibold text-sm text-purple-300 group-hover:text-purple-500 transition-colors">
+                      Custom Prompt
+                    </div>
+                    <div className="text-xs text-gray-500 mt-0.5">
+                      Create your own
+                    </div>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <BottomNavigation />

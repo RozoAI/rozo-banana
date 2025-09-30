@@ -62,7 +62,7 @@ export function BottomNavigation({ className = "" }: BottomNavigationProps) {
             <button
               key={item.href}
               onClick={() => handleNavigation(item.href)}
-              className={`py-3 text-center transition-colors relative w-full ${
+              className={`py-1.5 lg:py-3 text-center transition-colors relative w-full ${
                 item.isActive
                   ? "text-[rgb(245,210,60)]"
                   : "text-gray-400 hover:text-[rgb(245,210,60)]"

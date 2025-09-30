@@ -140,10 +140,10 @@ export default function SharePage() {
       <header className="sticky top-0 w-full bg-[rgb(17,17,17)]/90 backdrop-blur-md border-b border-gray-800 z-50">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-2">
+            <Link href="/" className="flex items-center space-x-2">
               <span className="text-3xl">🍌</span>
               <span className="font-bold text-xl text-white">ROZO Banana</span>
-            </div>
+            </Link>
             <Link
               href="/"
               className="px-4 py-2 bg-[rgb(245,210,60)] text-black rounded-lg font-semibold hover:bg-[rgb(255,220,70)] transition-colors"

@@ -29,10 +29,10 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <div className="flex items-center gap-2">
+            <Link href="/" className="flex items-center gap-2">
               <span className="text-3xl">🍌</span>
               <h1 className="text-2xl font-bold">ROZO Banana</h1>
-            </div>
+            </Link>
 
             {/* Action Buttons */}
             <div className="flex items-center gap-4">

@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { creditsAPI, imageAPI, pointsAPI } from "@/lib/api";
 import Image from "next/image";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useAccount } from "wagmi";
@@ -90,7 +91,7 @@ export default function Home() {
 
       // Try to fetch points balance
       try {
-        const balance = await pointsAPI.getBalance();
+        const balance = await pointsAPI.getBalance(address);
         console.log("✅ [Profile] Points balance response:", balance);
         setPoints(balance.balance ?? balance.points ?? 0);
       } catch (pointsError: any) {
@@ -311,10 +312,10 @@ export default function Home() {
       <header className="sticky top-0 w-full bg-[rgb(17,17,17)]/90 backdrop-blur-md border-b border-gray-800 z-50">
         <div className="max-w-lg mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-2">
+            <Link href="/" className="flex items-center space-x-2">
               <span className="text-3xl">🍌</span>
               <span className="font-bold text-xl text-white">ROZO Banana</span>
-            </div>
+            </Link>
             <WalletConnectButton />
           </div>
         </div>

@@ -7,6 +7,7 @@ import { WalletConnectButton } from "@/components/WalletConnectButton";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { imageAPI } from "@/lib/api";
 import { Eye } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
@@ -118,10 +119,10 @@ export default function GalleryPage() {
       <header className="sticky top-0 w-full bg-[rgb(17,17,17)]/90 backdrop-blur-md border-b border-gray-800 z-50">
         <div className="max-w-lg mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-2">
+            <Link href="/" className="flex items-center space-x-2">
               <span className="text-3xl">🍌</span>
               <span className="font-bold text-xl text-white">ROZO Banana</span>
-            </div>
+            </Link>
             <WalletConnectButton />
           </div>
         </div>

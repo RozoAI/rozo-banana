@@ -1,7 +1,27 @@
+"use client";
+
 import { WalletConnectButton } from "@/components/WalletConnectButton";
+import { userAPI } from "@/lib/api";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export default function LandingPage() {
+  const [userCount, setUserCount] = useState(0);
+
+  const fetchUserCount = async () => {
+    try {
+      const countData = await userAPI.getCount();
+      setUserCount(countData.count);
+    } catch (error) {
+      console.error("Failed to fetch user count:", error);
+      setUserCount(0);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserCount();
+  }, []);
+
   return (
     <div className="min-h-screen text-white font-sans lg:h-screen lg:flex lg:flex-col">
       {/* Header */}
@@ -55,11 +75,20 @@ export default function LandingPage() {
                   {/* Progress Bar */}
                   <div className="mb-6">
                     <div className="flex justify-between text-sm mb-2">
-                      <span>420 joined</span>
+                      <span>{userCount} joined</span>
                       <span>580 left</span>
                     </div>
                     <div className="w-full bg-slate-700 h-4 rounded-full overflow-hidden">
-                      <div className="h-full w-[42%] bg-[rgb(245,210,60)]"></div>
+                      <div
+                        className="h-full bg-[rgb(245,210,60)]"
+                        style={{
+                          width: `${Math.min(
+                            100,
+                            Math.round(((userCount || 0) / 1000) * 100)
+                          )}%`,
+                          transition: "width 0.5s",
+                        }}
+                      ></div>
                     </div>
                   </div>
 
@@ -98,11 +127,20 @@ export default function LandingPage() {
                 {/* Progress Bar */}
                 <div className="mb-6">
                   <div className="flex justify-between text-sm mb-2">
-                    <span>420 joined</span>
+                    <span>{userCount} joined</span>
                     <span>580 left</span>
                   </div>
                   <div className="w-full bg-slate-700 h-4 rounded-full overflow-hidden">
-                    <div className="h-full w-[42%] bg-[rgb(245,210,60)]"></div>
+                    <div
+                      className="h-full bg-[rgb(245,210,60)]"
+                      style={{
+                        width: `${Math.min(
+                          100,
+                          Math.round(((userCount || 0) / 1000) * 100)
+                        )}%`,
+                        transition: "width 0.5s",
+                      }}
+                    ></div>
                   </div>
                 </div>
 

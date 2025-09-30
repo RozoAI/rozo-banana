@@ -1,14 +1,14 @@
 "use client";
 
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { userAPI } from "@/lib/api";
 import { baseUSDC } from "@rozoai/intent-common";
 import { RozoPayButton, useRozoPayUI } from "@rozoai/intent-pay";
-import { Check, HelpCircle, Loader2, X, Zap } from "lucide-react";
+import { Check, HelpCircle, X, Zap } from "lucide-react";
 import { useState } from "react";
 import { getAddress } from "viem";
 import { useAccount } from "wagmi";
 import { BottomNavigation } from "./BottomNavigation";
-import { WalletConnectButton } from "./WalletConnectButton";
 
 interface PricingTier {
   id: string;
@@ -50,14 +50,13 @@ const DESTINATION_ADDRESS = getAddress(
 
 export default function RechargeContent() {
   // Default select the $20 plan (first tier)
-  const [selectedTier, setSelectedTier] = useState<PricingTier | null>(
-    PRICING_TIERS[0]
-  );
+  const [selectedTier, setSelectedTier] = useState<PricingTier | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [payParams, setPayParams] = useState<any>(null);
   const [showPayWithButton, setShowPayWithButton] = useState(true);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [userCount, setUserCount] = useState<number | null>(null);
   const { resetPayment } = useRozoPayUI();
   const { isConnected } = useAccount();
   const isMobile = useIsMobile();
@@ -117,6 +116,10 @@ export default function RechargeContent() {
     setPayParams(null);
     setShowPayWithButton(true);
     setError(null);
+
+    setTimeout(() => {
+      handlePayment(tier);
+    }, 100);
   };
 
   // Generates share data for the Banana OG referral (no image)
@@ -216,7 +219,7 @@ export default function RechargeContent() {
               <span className="text-3xl">🍌</span>
               <span className="font-bold text-xl text-white">ROZO Banana</span>
             </div>
-            <WalletConnectButton />
+            {/* <WalletConnectButton /> */}
           </div>
         </div>
       </header>
@@ -339,26 +342,6 @@ export default function RechargeContent() {
           </div>
         )}
 
-        {/* Pay Button */}
-        {showPayWithButton && selectedTier && (
-          <div className="mt-6">
-            <button
-              onClick={() => handlePayment(selectedTier)}
-              disabled={!selectedTier || isLoading}
-              className="w-full py-3 bg-[rgb(245,210,60)] text-black font-medium rounded-xl hover:bg-[rgb(255,220,70)] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Processing Payment...
-                </>
-              ) : (
-                <>Join</>
-              )}
-            </button>
-          </div>
-        )}
-
         {payParams && !showPayWithButton && (
           <RozoPayButton.Custom
             resetOnSuccess
@@ -375,33 +358,26 @@ export default function RechargeContent() {
               console.log("Payment started");
               setIsLoading(true);
             }}
-            onPaymentCompleted={() => {
+            onPaymentCompleted={async () => {
               console.log("Payment completed");
               setIsLoading(false);
+
+              // Fetch user count after payment completion
+              try {
+                const countData = await userAPI.getCount();
+                setUserCount(countData.count);
+                console.log("User count fetched:", countData.count);
+              } catch (error) {
+                console.error("Failed to fetch user count:", error);
+                // Set a fallback count if API fails
+                setUserCount(0);
+              }
+
               setShowSuccessModal(true);
             }}
           >
             {({ show }) => (
-              <div className="m-auto flex w-full flex-col gap-2">
-                <button
-                  className="mt-6 w-full py-3 bg-[rgb(245,210,60)] text-black font-medium rounded-xl hover:bg-[rgb(255,220,70)] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
-                  onClick={show}
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      Processing Payment...
-                    </>
-                  ) : (
-                    <>
-                      Pay{" "}
-                      {selectedTier ? `$${selectedTier.usd}` : "Select a plan"}{" "}
-                      with Crypto
-                    </>
-                  )}
-                </button>
-              </div>
+              <div className="m-auto flex w-full flex-col gap-2"></div>
             )}
           </RozoPayButton.Custom>
         )}
@@ -484,7 +460,9 @@ export default function RechargeContent() {
               <div className="mb-6">
                 <p className="text-white text-lg mb-2">
                   You are the{" "}
-                  <span className="text-[rgb(245,210,60)] font-bold">#421</span>{" "}
+                  <span className="text-[rgb(245,210,60)] font-bold">
+                    #{userCount || 0}
+                  </span>{" "}
                   ROZO OG.
                 </p>
                 <p className="text-gray-400 text-sm">

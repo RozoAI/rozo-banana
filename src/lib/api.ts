@@ -430,6 +430,11 @@ export const userAPI = {
       credits: credits.available || credits.credits || 0,
     };
   },
+
+  getCount: async (): Promise<{ balance: number; count: number }> => {
+    const { data } = await pointsApi.get(`/points-balance`);
+    return data.data;
+  },
 };
 
 // ROZO Points API (Supabase Edge Functions)

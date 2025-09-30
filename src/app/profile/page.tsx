@@ -313,7 +313,7 @@ export default function Home() {
         <div className="max-w-lg mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <HeaderLogo />
-            {/* <WalletConnectButton /> */}
+            {isConnected && <WalletConnectButton />}
           </div>
         </div>
       </header>

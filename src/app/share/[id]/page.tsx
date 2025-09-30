@@ -170,8 +170,7 @@ export default function SharePage() {
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
                 <h1 className="text-2xl font-bold text-white mb-2">
-                  AI-Generated Image <br />
-                  {getFilenameFromUrl(image.image_url)}
+                  AI-Generated Image
                 </h1>
                 {image.prompt && (
                   <p className="text-gray-400 mb-4">"{image.prompt}"</p>

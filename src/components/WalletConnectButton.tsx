@@ -151,15 +151,15 @@ export function WalletConnectButton({
   return (
     <button
       onClick={handleConnect}
-      className={`flex items-center gap-2 px-4 py-2 bg-[rgb(245,210,60)] text-black rounded-lg hover:bg-[rgb(255,220,70)] transition-all transform hover:scale-105 shadow-lg ${className}`}
+      className={`flex items-center gap-2 px-2 py-1.5 lg:px-4 lg:py-2 bg-[rgb(245,210,60)] text-black rounded-lg hover:bg-[rgb(255,220,70)] transition-all transform hover:scale-105 shadow-lg ${className}`}
     >
       {isMobile === true ? (
         <Smartphone className="w-4 h-4" />
       ) : (
         <Wallet className="w-4 h-4" />
       )}
-      <span className="font-medium">
-        {isMobile === true ? "Connect Mobile Wallet" : "Connect Wallet"}
+      <span className={`font-medium ${isMobile ? "text-sm" : "text-base"}`}>
+        Connect Wallet
       </span>
     </button>
   );

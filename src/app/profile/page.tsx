@@ -109,7 +109,7 @@ export default function Home() {
       // Try to fetch credits balance
       console.log("💳 [Profile] About to fetch credits...");
       try {
-        const creditsData = await creditsAPI.getBalance();
+        const creditsData = await creditsAPI.getBalance(address);
         console.log("✅ [Profile] Credits balance response:", creditsData);
         setCredits(creditsData.credits ?? creditsData.available ?? 0);
       } catch (creditsError: any) {
@@ -313,7 +313,7 @@ export default function Home() {
         <div className="max-w-lg mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <HeaderLogo />
-            <WalletConnectButton />
+            {/* <WalletConnectButton /> */}
           </div>
         </div>
       </header>
@@ -321,7 +321,7 @@ export default function Home() {
       <main className="max-w-lg mx-auto px-4 mt-4 mb-20">
         {!address ? (
           <div className="flex flex-col justify-center items-center min-h-[calc(100vh-10rem)] space-y-4">
-            <div className="text-center">
+            <div className="text-center mb-4">
               <p className="text-3xl font-bold text-white mb-2">👤</p>
               <p className="text-xl font-bold text-white mb-2">
                 Connect your wallet to access your profile
@@ -331,6 +331,7 @@ export default function Home() {
                 your wallet.
               </p>
             </div>
+            <WalletConnectButton />
           </div>
         ) : (
           <div className="pb-20 min-h-[calc(100vh-5rem)]">

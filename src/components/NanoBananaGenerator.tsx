@@ -12,8 +12,8 @@ import { imageAPI } from "../lib/api";
 import { BottomNavigation } from "./BottomNavigation";
 import { HeaderLogo } from "./HeaderLogo";
 import { ShareButton } from "./ShareButton";
+import { Toast } from "./Toast";
 import { TwitterShareButton } from "./TwitterShareButton";
-import { WalletConnectButton } from "./WalletConnectButton";
 
 interface GeneratedResult {
   imageUrl?: string;
@@ -72,6 +72,10 @@ export default function NanoBananaGenerator() {
   const [showPresets, setShowPresets] = useState(true);
   const hasFetched = useRef(false);
   const [isTokenValid, setIsTokenValid] = useState(false);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error" | "info" | "warning";
+  } | null>(null);
   const isMobile = useIsMobile();
   const router = useRouter();
 
@@ -347,13 +351,13 @@ export default function NanoBananaGenerator() {
       const rozoToken = localStorage.getItem("rozo_token");
       const authToken = localStorage.getItem("auth_token");
 
-      if (!rozoToken && !authToken) {
-        console.log(
-          "🔔 [NanoBanana] No authentication token found, skipping credits fetch"
-        );
-        setUserCredits(0);
-        return;
-      }
+      // if (!rozoToken && !authToken) {
+      //   console.log(
+      //     "🔔 [NanoBanana] No authentication token found, skipping credits fetch"
+      //   );
+      //   setUserCredits(0);
+      //   return;
+      // }
 
       console.log(
         "🔑 [NanoBanana] Authentication token found, fetching credits..."
@@ -361,7 +365,7 @@ export default function NanoBananaGenerator() {
 
       // Get credits balance from the Banana Backend (will use address param)
       const { creditsAPI } = await import("../lib/api");
-      const data = await creditsAPI.getBalance();
+      const data = await creditsAPI.getBalance(address);
       console.log("💳 [NanoBanana] Credits response:", data);
 
       // Extract credits value from various possible response formats
@@ -401,7 +405,7 @@ export default function NanoBananaGenerator() {
 
       // Get credits balance from the Banana Backend
       const { creditsAPI } = await import("../lib/api");
-      const data = await creditsAPI.getBalance();
+      const data = await creditsAPI.getBalance(address);
       console.log("💳 [NanoBanana] Credits response:", data);
 
       // Extract credits value from various possible response formats
@@ -559,6 +563,31 @@ export default function NanoBananaGenerator() {
 
   // Handle preset selection
   const handlePresetSelect = (preset: StylePreset) => {
+    // Check if preset is disabled and show toast
+    if (!isConnected) {
+      setToast({
+        message: "Please connect your wallet first to use presets",
+        type: "warning",
+      });
+      return;
+    }
+
+    if (userCredits < CREDITS_PER_GENERATION) {
+      if (userCredits === 0) {
+        setToast({
+          message:
+            "You need credits to generate images. Please top up first to continue creating amazing content!",
+          type: "warning",
+        });
+      } else {
+        setToast({
+          message: `Insufficient credits. You need ${CREDITS_PER_GENERATION} credits to use presets.`,
+          type: "warning",
+        });
+      }
+      return;
+    }
+
     setCustomPrompt(preset.prompt);
     setShowPresets(false);
     // Scroll to prompt input
@@ -742,7 +771,7 @@ export default function NanoBananaGenerator() {
           <div className="flex justify-between items-center">
             <HeaderLogo />
 
-            <WalletConnectButton />
+            {/* <WalletConnectButton /> */}
           </div>
         </div>
       </header>
@@ -782,7 +811,7 @@ export default function NanoBananaGenerator() {
                   key={preset.id}
                   onClick={() => handlePresetSelect(preset)}
                   className="group relative bg-[rgb(17,17,17)] border-2 border-gray-700 hover:border-[rgb(245,210,60)] active:border-[rgb(245,210,60)] rounded-xl overflow-hidden transition-all transform hover:scale-[1.02] active:scale-[0.98]"
-                  disabled={!isConnected}
+                  // disabled={!isConnected}
                 >
                   {/* Preview Image Background */}
                   <div className="relative aspect-square bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
@@ -818,6 +847,32 @@ export default function NanoBananaGenerator() {
               {/* Custom Prompt Option with matching style */}
               <button
                 onClick={() => {
+                  // Check if custom prompt is disabled and show toast
+                  if (!isConnected) {
+                    setToast({
+                      message:
+                        "Please connect your wallet first to use custom prompts",
+                      type: "warning",
+                    });
+                    return;
+                  }
+
+                  if (userCredits < CREDITS_PER_GENERATION) {
+                    if (userCredits === 0) {
+                      setToast({
+                        message:
+                          "You need credits to generate images. Please top up first to continue creating amazing content!",
+                        type: "warning",
+                      });
+                    } else {
+                      setToast({
+                        message: `Insufficient credits. You need ${CREDITS_PER_GENERATION} credits to use custom prompts.`,
+                        type: "warning",
+                      });
+                    }
+                    return;
+                  }
+
                   setCustomPrompt("");
                   setShowPresets(false);
                   const promptElement = document.getElementById("prompt-input");
@@ -826,7 +881,7 @@ export default function NanoBananaGenerator() {
                   }
                 }}
                 className="group relative bg-gradient-to-br from-purple-500 to-blue-500 border-2 border-transparent hover:border-purple-400 active:border-purple-500 rounded-xl overflow-hidden transition-all transform hover:scale-[1.02] active:scale-[0.98]"
-                disabled={!isConnected}
+                // disabled={!isConnected}
               >
                 <div className="relative aspect-square flex items-center justify-center">
                   <Wand2 className="w-12 h-12 text-white drop-shadow-lg transform group-hover:scale-110 group-hover:rotate-12 transition-all" />
@@ -1146,6 +1201,15 @@ export default function NanoBananaGenerator() {
       </div>
 
       <BottomNavigation />
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }

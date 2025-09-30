@@ -4,13 +4,11 @@ import { BottomNavigation } from "@/components/BottomNavigation";
 import { HeaderLogo } from "@/components/HeaderLogo";
 import { ShareButton } from "@/components/ShareButton";
 import { TwitterShareButton } from "@/components/TwitterShareButton";
-import { WalletConnectButton } from "@/components/WalletConnectButton";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { imageAPI } from "@/lib/api";
 import { Eye } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useAccount } from "wagmi";
 
 interface GeneratedImage {
   id: string;
@@ -23,7 +21,6 @@ interface GeneratedImage {
 }
 
 export default function GalleryPage() {
-  const { address, isConnected } = useAccount();
   const [images, setImages] = useState<GeneratedImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -120,7 +117,7 @@ export default function GalleryPage() {
         <div className="max-w-lg mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <HeaderLogo />
-            <WalletConnectButton />
+            {/* <WalletConnectButton /> */}
           </div>
         </div>
       </header>

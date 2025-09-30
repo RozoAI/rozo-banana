@@ -26,7 +26,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen text-white font-sans lg:h-screen lg:flex lg:flex-col">
       {/* Header */}
-      <div className="px-6 py-8 lg:px-12 lg:py-6 lg:flex-shrink-0">
+      <div className="px-4 py-4 lg:px-12 lg:py-6 lg:flex-shrink-0">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between">
             {/* Logo */}
@@ -54,8 +54,10 @@ export default function LandingPage() {
                 Get <span className="underline">rewards</span> that rock.
               </h3>
               <p className="text-lg lg:text-xl mb-8 max-w-2xl text-gray-300">
-                ROZO Banana is a marketplace powered by Nano Banana. It demostrates Agentic Commerce payments with stablecoins. 
-                Enjoy instant access to top AI tools, and earn 10% referral rewards on every friend you bring.
+                ROZO Banana is a marketplace powered by Nano Banana. It
+                demostrates Agentic Commerce payments with stablecoins. Enjoy
+                instant access to top AI tools, and earn 10% referral rewards on
+                every friend you bring.
               </p>
 
               {/* Mobile Payment Widget */}
@@ -65,8 +67,9 @@ export default function LandingPage() {
                     Join ROZO OG
                   </h5>
                   <p className="text-slate-300 mb-6">
-                    Become part of the first 1000 ROZO Pioneer OGs. Pay $20 to unlock
-                    Nano Banana premium features and get 1,000 ROZO Points.
+                    Become part of the first 1000 ROZO Pioneer OGs. Pay $20 to
+                    unlock Nano Banana premium features and get 1,000 ROZO
+                    Points.
                   </p>
 
                   {/* Progress Bar */}
@@ -97,8 +100,6 @@ export default function LandingPage() {
                       Join Now
                     </button>
                   </Link>
-
-
                 </div>
               </div>
 
@@ -115,8 +116,8 @@ export default function LandingPage() {
                   Join ROZO OG
                 </h5>
                 <p className="text-slate-300 mb-6">
-                  Become the first 1000 ROZO OGs. Pay $20 to unlock Nano
-                  Banana premium features and get 1,000 ROZO Points.
+                  Become the first 1000 ROZO OGs. Pay $20 to unlock Nano Banana
+                  premium features and get 1,000 ROZO Points.
                 </p>
 
                 {/* Progress Bar */}
@@ -147,7 +148,6 @@ export default function LandingPage() {
                     Join Now
                   </button>
                 </Link>
-
               </div>
             </div>
           </div>

@@ -82,10 +82,12 @@ export function ShareButton({
       }/share/${shareId}?ref=${encodeURIComponent(userReferralCode)}`;
     }
 
+    // Add hashtags and via after the URL
+    const textWithHashtags = `${text} ${shareUrl} #AI #ROZO #Banana via @ROZOai`;
+
     return {
       title: "Check out this AI-generated design!",
-      text,
-      url: shareUrl,
+      text: textWithHashtags,
     };
   };
 
@@ -95,9 +97,9 @@ export function ShareButton({
     const shareData = generateShareData();
 
     params.set("text", shareData.text);
-    if (shareData.url) {
-      params.set("url", shareData.url);
-    }
+    // if (shareData.url) {
+    //   params.set("url", shareData.url);
+    // }
 
     // Add hashtags
     params.set("hashtags", "AI,ROZO,Banana");

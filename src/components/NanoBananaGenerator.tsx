@@ -278,17 +278,15 @@ export default function NanoBananaGenerator() {
   // Preset selection handler
   const handlePresetSelect = useCallback(
     (preset: StylePreset) => {
-      if (!isConnected) {
-        showToast("Please connect your wallet to use presets", "warning");
-        return;
-      }
-
       if (userCredits < CREDITS_PER_GENERATION) {
         if (userCredits === 0) {
           showToast(
-            "You need credits to generate images. Please top up first!",
+            "Credits are needed to generate images. Please join Rozo OG. Redirecting...",
             "warning"
           );
+          setTimeout(() => {
+            router.push("/topup");
+          }, 3000);
         } else {
           showToast(
             `Insufficient credits. You need ${CREDITS_PER_GENERATION} credits to use presets.`,

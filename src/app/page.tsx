@@ -51,12 +51,11 @@ export default function LandingPage() {
                 <span className="text-[rgb(245,210,60)]">stablecoins.</span>
               </h2>
               <h3 className="text-3xl lg:text-5xl font-bold mb-6">
-                Get rewards that <span className="underline">rock.</span>
+                Get <span className="underline">rewards</span> that rock.
               </h3>
               <p className="text-lg lg:text-xl mb-8 max-w-2xl text-gray-300">
-                ROZO Banana is a marketplace powered by Nano Banana's API - but
-                crypto-native. Pay in USDC/USDT, enjoy instant access to top AI
-                tools, and earn referral rewards on every friend you bring.
+                ROZO Banana is a marketplace powered by Nano Banana. It demostrates Agentic Commerce payments with stablecoins. 
+                Enjoy instant access to top AI tools, and earn 10% referral rewards on every friend you bring.
               </p>
 
               {/* Mobile Payment Widget */}
@@ -66,7 +65,7 @@ export default function LandingPage() {
                     Join ROZO OG
                   </h5>
                   <p className="text-slate-300 mb-6">
-                    Become part of the first 1000 ROZO OGs. Pay $20 to unlock
+                    Become part of the first 1000 ROZO Pioneer OGs. Pay $20 to unlock
                     Nano Banana premium features and get 1,000 ROZO Points.
                   </p>
 
@@ -99,17 +98,13 @@ export default function LandingPage() {
                     </button>
                   </Link>
 
-                  {/* Reward Info */}
-                  <p className="text-sm text-slate-300 text-center">
-                    Earn 1,000 ROZO each month (=$10 credit) — next renewal
-                    effectively $10.
-                  </p>
+
                 </div>
               </div>
 
               {/* Features */}
               <p className="text-sm text-gray-400">
-                Any chain · Any stablecoin · Seconds · Visa-beating rewards
+                Any stablecoin with Visa-beating rewards
               </p>
             </div>
 
@@ -120,7 +115,7 @@ export default function LandingPage() {
                   Join ROZO OG
                 </h5>
                 <p className="text-slate-300 mb-6">
-                  Become part of the first 1000 ROZO OGs. Pay $20 to unlock Nano
+                  Become the first 1000 ROZO OGs. Pay $20 to unlock Nano
                   Banana premium features and get 1,000 ROZO Points.
                 </p>
 
@@ -153,11 +148,6 @@ export default function LandingPage() {
                   </button>
                 </Link>
 
-                {/* Reward Info */}
-                <p className="text-sm text-slate-300 text-center">
-                  Earn 1,000 ROZO each month (=$10 credit) — next renewal
-                  effectively $10.
-                </p>
               </div>
             </div>
           </div>

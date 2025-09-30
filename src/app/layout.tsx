@@ -1,6 +1,7 @@
 import "@rainbow-me/rainbowkit/styles.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import Head from "next/head";
 import "../lib/cryptoPolyfill";
 import { Providers } from "../providers";
 import "./globals.css";
@@ -56,6 +57,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
+      <Head>
+        <meta name="apple-mobile-web-app-title" content="Rozo Banana" />
+      </Head>
+
       <body
         className={`${inter.className} antialiased bg-[rgb(17,17,17)] text-white`}
       >

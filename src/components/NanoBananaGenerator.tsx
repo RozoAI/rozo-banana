@@ -4,13 +4,13 @@ import { STYLE_PRESETS, StylePreset } from "@/constants/stylePresets";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { ImageIcon, Loader2, Sparkles, Wand2 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { useAccount, useConnect, useDisconnect, useSignMessage } from "wagmi";
 import { injected } from "wagmi/connectors";
 import { imageAPI } from "../lib/api";
 import { BottomNavigation } from "./BottomNavigation";
+import { HeaderLogo } from "./HeaderLogo";
 import { ShareButton } from "./ShareButton";
 import { TwitterShareButton } from "./TwitterShareButton";
 import { WalletConnectButton } from "./WalletConnectButton";
@@ -740,10 +740,7 @@ export default function NanoBananaGenerator() {
       <header className="sticky top-0 w-full bg-[rgb(17,17,17)]/90 backdrop-blur-md border-b border-gray-800 z-50">
         <div className="max-w-lg mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
-            <Link href="/" className="flex items-center space-x-2">
-              <span className="text-3xl">🍌</span>
-              <span className="font-bold text-xl text-white">ROZO Banana</span>
-            </Link>
+            <HeaderLogo />
 
             <WalletConnectButton />
           </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { HeaderLogo } from "@/components/HeaderLogo";
 import { WalletConnectButton } from "@/components/WalletConnectButton";
 import { userAPI } from "@/lib/api";
 import Link from "next/link";
@@ -29,10 +30,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2">
-              <span className="text-3xl">🍌</span>
-              <h1 className="text-2xl font-bold">ROZO Banana</h1>
-            </Link>
+            <HeaderLogo />
 
             {/* Action Buttons */}
             <div className="flex items-center gap-4">

@@ -1,9 +1,9 @@
 "use client";
 
 import { Check, Loader2, Zap } from "lucide-react";
-import Link from "next/link";
 import { useState } from "react";
 import { useAccount } from "wagmi";
+import { HeaderLogo } from "./HeaderLogo";
 
 interface PricingTier {
   id: string;
@@ -211,10 +211,7 @@ export default function RozoPayment() {
       <header className="sticky top-0 w-full bg-white/90 backdrop-blur-md border-b border-gray-100 z-50">
         <div className="max-w-lg mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
-            <Link href="/" className="flex items-center space-x-2">
-              <span className="text-3xl">🍌</span>
-              <span className="font-bold text-xl text-white">ROZO Banana</span>
-            </Link>
+            <HeaderLogo />
             <button
               onClick={() => window.history.back()}
               className="text-gray-600 hover:text-gray-800"

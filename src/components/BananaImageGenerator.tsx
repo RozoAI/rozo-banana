@@ -1,11 +1,19 @@
-'use client';
+"use client";
 
-import { AlertCircle, Copy, Download, Loader2, Sparkles, Upload, Wallet } from 'lucide-react';
-import Image from 'next/image';
-import React, { useEffect, useState } from 'react';
-import { useAccount, useConnect, useDisconnect } from 'wagmi';
-import { injected } from 'wagmi/connectors';
-import { imageAPI, pointsAPI } from '../lib/api';
+import {
+  AlertCircle,
+  Copy,
+  Download,
+  Loader2,
+  Sparkles,
+  Upload,
+  Wallet,
+} from "lucide-react";
+import Image from "next/image";
+import React, { useState } from "react";
+import { useAccount, useConnect, useDisconnect } from "wagmi";
+import { injected } from "wagmi/connectors";
+import { imageAPI, pointsAPI } from "../lib/api";
 
 interface GeneratedImage {
   url: string;
@@ -26,29 +34,31 @@ export default function BananaImageGenerator() {
   const { address, isConnected } = useAccount();
   const { connect } = useConnect();
   const { disconnect } = useDisconnect();
-  
-  const [prompt, setPrompt] = useState('');
+
+  const [prompt, setPrompt] = useState("");
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  const [generatedImage, setGeneratedImage] = useState<GeneratedImage | null>(null);
+  const [generatedImage, setGeneratedImage] = useState<GeneratedImage | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [userPoints, setUserPoints] = useState<number>(0);
   const [isFirstGeneration, setIsFirstGeneration] = useState(true);
   const [authToken, setAuthToken] = useState<string | null>(null);
-  
+
   // Image generation options
-  const [selectedModel, setSelectedModel] = useState('openai/dall-e-3');
-  const [imageSize, setImageSize] = useState('1024x1024');
-  const [imageQuality, setImageQuality] = useState('standard');
-  const [imageStyle, setImageStyle] = useState('vivid');
+  const [selectedModel, setSelectedModel] = useState("openai/dall-e-3");
+  const [imageSize, setImageSize] = useState("1024x1024");
+  const [imageQuality, setImageQuality] = useState("standard");
+  const [imageStyle, setImageStyle] = useState("vivid");
 
   // Connect wallet
   const handleConnectWallet = async () => {
     try {
       await connect({ connector: injected() });
     } catch (err) {
-      console.error('Failed to connect wallet:', err);
-      setError('Failed to connect wallet');
+      console.error("Failed to connect wallet:", err);
+      setError("Failed to connect wallet");
     }
   };
 
@@ -60,7 +70,7 @@ export default function BananaImageGenerator() {
 
     try {
       // Check if we already have a valid token
-      const existingToken = localStorage.getItem('rozo_token');
+      const existingToken = localStorage.getItem("rozo_token");
       if (existingToken) {
         setAuthToken(existingToken);
         await fetchUserPoints(existingToken);
@@ -74,11 +84,11 @@ export default function BananaImageGenerator() {
       // Import signMessage from wagmi if not already imported
       // This would need to be done through the parent component or useSignMessage hook
       // For now, return false to indicate auth is needed
-      console.log('[authenticateUser] Need to sign message for authentication');
-      setError('Please sign the message in your wallet to generate images');
+      console.log("[authenticateUser] Need to sign message for authentication");
+      setError("Please sign the message in your wallet to generate images");
       return false;
     } catch (err) {
-      console.error('Authentication failed:', err);
+      console.error("Authentication failed:", err);
       return false;
     }
   };
@@ -87,26 +97,29 @@ export default function BananaImageGenerator() {
     try {
       const data = await pointsAPI.getBalance();
       setUserPoints(data.balance || data.points || 0);
-      
+
       // Check if user has generated images before
       const historyData = await pointsAPI.getHistory();
-      const hasGeneratedBefore = historyData.history?.some((item: any) => 
-        item.reason === 'Image generation' || item.reason === 'Free trial generation'
+      const hasGeneratedBefore = historyData.history?.some(
+        (item: any) =>
+          item.reason === "Image generation" ||
+          item.reason === "Free trial generation"
       );
       setIsFirstGeneration(!hasGeneratedBefore);
     } catch (err) {
-      console.error('Failed to fetch user points:', err);
+      console.error("Failed to fetch user points:", err);
     }
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        setError('Image size must be less than 5MB');
+      if (file.size > 5 * 1024 * 1024) {
+        // 5MB limit
+        setError("Image size must be less than 5MB");
         return;
       }
-      
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setUploadedImage(reader.result as string);
@@ -118,12 +131,12 @@ export default function BananaImageGenerator() {
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
-      setError('Please enter a prompt describing what you want to generate');
+      setError("Please enter a prompt describing what you want to generate");
       return;
     }
 
     if (!uploadedImage) {
-      setError('Please upload an image first');
+      setError("Please upload an image first");
       return;
     }
 
@@ -140,7 +153,7 @@ export default function BananaImageGenerator() {
       });
 
       if (!data || data.error) {
-        throw new Error(data?.error || 'Failed to generate image');
+        throw new Error(data?.error || "Failed to generate image");
       }
 
       setGeneratedImage({
@@ -148,7 +161,7 @@ export default function BananaImageGenerator() {
         prompt: data.prompt,
         timestamp: data.metadata?.timestamp || new Date().toISOString(),
         pointsDeducted: data.metadata?.pointsDeducted || data.credits_used || 0,
-        wasFreeTrial: data.metadata?.wasFreeTrial || false
+        wasFreeTrial: data.metadata?.wasFreeTrial || false,
       });
 
       // Update user points
@@ -164,10 +177,10 @@ export default function BananaImageGenerator() {
       }
     } catch (err: any) {
       // Check if authentication is required
-      if (err.message === 'AUTH_REQUIRED' || err.response?.status === 401) {
+      if (err.message === "AUTH_REQUIRED" || err.response?.status === 401) {
         // User needs to connect wallet and authenticate
         if (!isConnected) {
-          setError('Please connect your wallet to generate images');
+          setError("Please connect your wallet to generate images");
           setIsLoading(false);
           return;
         }
@@ -191,15 +204,16 @@ export default function BananaImageGenerator() {
           });
 
           if (!data || data.error) {
-            throw new Error(data?.error || 'Failed to generate image');
+            throw new Error(data?.error || "Failed to generate image");
           }
 
           setGeneratedImage({
             url: data.imageUrl || data.image?.url || data.url,
             prompt: data.prompt,
             timestamp: data.metadata?.timestamp || new Date().toISOString(),
-            pointsDeducted: data.metadata?.pointsDeducted || data.credits_used || 0,
-            wasFreeTrial: data.metadata?.wasFreeTrial || false
+            pointsDeducted:
+              data.metadata?.pointsDeducted || data.credits_used || 0,
+            wasFreeTrial: data.metadata?.wasFreeTrial || false,
           });
 
           // Update user points
@@ -209,14 +223,22 @@ export default function BananaImageGenerator() {
             setUserPoints(data.credits_remaining);
           }
         } catch (retryErr) {
-          setError(retryErr instanceof Error ? retryErr.message : 'Failed to generate image after authentication');
+          setError(
+            retryErr instanceof Error
+              ? retryErr.message
+              : "Failed to generate image after authentication"
+          );
         }
-      } else if (err.response?.data?.error?.toLowerCase().includes('insufficient') ||
-                 err.response?.data?.error?.toLowerCase().includes('credits')) {
+      } else if (
+        err.response?.data?.error?.toLowerCase().includes("insufficient") ||
+        err.response?.data?.error?.toLowerCase().includes("credits")
+      ) {
         // Insufficient credits error
-        setError('Insufficient credits. Please top up to continue generating images.');
+        setError(
+          "Insufficient credits. Please top up to continue generating images."
+        );
       } else {
-        setError(err instanceof Error ? err.message : 'An error occurred');
+        setError(err instanceof Error ? err.message : "An error occurred");
       }
     } finally {
       setIsLoading(false);
@@ -230,7 +252,7 @@ export default function BananaImageGenerator() {
       const response = await fetch(generatedImage.url);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `banana-${Date.now()}.png`;
       document.body.appendChild(a);
@@ -238,7 +260,7 @@ export default function BananaImageGenerator() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (err) {
-      console.error('Download failed:', err);
+      console.error("Download failed:", err);
     }
   };
 
@@ -256,27 +278,33 @@ export default function BananaImageGenerator() {
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <Sparkles className="w-8 h-8 text-yellow-500 mr-3" />
-              <h1 className="text-3xl font-bold text-gray-800">Nano Banana Generator</h1>
+              <h1 className="text-3xl font-bold text-gray-800">
+                Nano Banana Generator
+              </h1>
             </div>
-            
+
             <div className="flex items-center gap-4">
               {isConnected && (
                 <div className="bg-yellow-100 px-4 py-2 rounded-lg">
                   <span className="text-sm text-gray-600">Points: </span>
                   <span className="font-bold text-gray-800">{userPoints}</span>
                   {isFirstGeneration && (
-                    <span className="ml-2 text-xs text-green-600 font-semibold">First Free!</span>
+                    <span className="ml-2 text-xs text-green-600 font-semibold">
+                      First Free!
+                    </span>
                   )}
                 </div>
               )}
-              
+
               {isConnected ? (
                 <button
                   onClick={() => disconnect()}
                   className="flex items-center gap-2 bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
                 >
                   <Wallet className="w-4 h-4" />
-                  <span className="text-sm">{address?.slice(0, 6)}...{address?.slice(-4)}</span>
+                  <span className="text-sm">
+                    {address?.slice(0, 6)}...{address?.slice(-4)}
+                  </span>
                 </button>
               ) : (
                 <button
@@ -323,7 +351,9 @@ export default function BananaImageGenerator() {
                       <div className="flex flex-col items-center">
                         <Upload className="w-12 h-12 text-gray-400 mb-2" />
                         <p className="text-sm text-gray-600">
-                          {isConnected ? 'Click to upload image' : 'Connect wallet to upload'}
+                          {isConnected
+                            ? "Click to upload image"
+                            : "Connect wallet to upload"}
                         </p>
                       </div>
                     )}
@@ -339,7 +369,7 @@ export default function BananaImageGenerator() {
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   placeholder="Describe any transformation you can imagine. Your creativity is the only limit!"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent resize-none"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent resize-none text-white"
                   rows={4}
                   disabled={!isConnected}
                 />
@@ -358,7 +388,9 @@ export default function BananaImageGenerator() {
                   >
                     <option value="openai/dall-e-3">DALL-E 3</option>
                     <option value="openai/dall-e-2">DALL-E 2</option>
-                    <option value="stabilityai/stable-diffusion-xl-1024-v1-0">Stable Diffusion XL</option>
+                    <option value="stabilityai/stable-diffusion-xl-1024-v1-0">
+                      Stable Diffusion XL
+                    </option>
                   </select>
                 </div>
 
@@ -392,7 +424,11 @@ export default function BananaImageGenerator() {
                 ) : (
                   <>
                     <Sparkles className="w-5 h-5 mr-2" />
-                    {!isConnected ? 'Generate Image' : isFirstGeneration ? 'Generate (Free Trial)' : `Generate (${POINTS_PER_GENERATION} Points)`}
+                    {!isConnected
+                      ? "Generate Image"
+                      : isFirstGeneration
+                      ? "Generate (Free Trial)"
+                      : `Generate (${POINTS_PER_GENERATION} Points)`}
                   </>
                 )}
               </button>
@@ -403,7 +439,6 @@ export default function BananaImageGenerator() {
                   <span>{error}</span>
                 </div>
               )}
-
             </div>
 
             {/* Output Section */}
@@ -419,19 +454,19 @@ export default function BananaImageGenerator() {
                         className="object-contain rounded"
                       />
                     </div>
-                    
+
                     {generatedImage.wasFreeTrial && (
                       <div className="bg-green-50 border border-green-200 text-green-700 px-3 py-2 rounded-lg mb-3 text-sm">
-                        This was your free trial generation! 
+                        This was your free trial generation!
                       </div>
                     )}
-                    
+
                     {generatedImage.pointsDeducted > 0 && (
                       <div className="bg-blue-50 border border-blue-200 text-blue-700 px-3 py-2 rounded-lg mb-3 text-sm">
                         {generatedImage.pointsDeducted} points used
                       </div>
                     )}
-                    
+
                     <div className="flex gap-2">
                       <button
                         onClick={handleDownload}
@@ -452,7 +487,9 @@ export default function BananaImageGenerator() {
                 ) : (
                   <div className="text-center">
                     <Sparkles className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500">Your generated image will appear here</p>
+                    <p className="text-gray-500">
+                      Your generated image will appear here
+                    </p>
                   </div>
                 )}
               </div>

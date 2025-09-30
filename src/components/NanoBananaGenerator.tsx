@@ -5,6 +5,7 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 import { ImageIcon, Loader2, Sparkles, Wand2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { useAccount, useConnect, useDisconnect, useSignMessage } from "wagmi";
 import { injected } from "wagmi/connectors";
@@ -12,6 +13,7 @@ import { imageAPI } from "../lib/api";
 import { BottomNavigation } from "./BottomNavigation";
 import { ShareButton } from "./ShareButton";
 import { TwitterShareButton } from "./TwitterShareButton";
+import { WalletConnectButton } from "./WalletConnectButton";
 
 interface GeneratedResult {
   imageUrl?: string;
@@ -71,6 +73,7 @@ export default function NanoBananaGenerator() {
   const hasFetched = useRef(false);
   const [isTokenValid, setIsTokenValid] = useState(false);
   const isMobile = useIsMobile();
+  const router = useRouter();
 
   // Helper function to check if JWT token is valid
   const checkTokenValidity = (): boolean => {
@@ -741,6 +744,8 @@ export default function NanoBananaGenerator() {
               <span className="text-3xl">🍌</span>
               <span className="font-bold text-xl text-white">ROZO Banana</span>
             </Link>
+
+            <WalletConnectButton />
           </div>
         </div>
       </header>
@@ -806,7 +811,7 @@ export default function NanoBananaGenerator() {
                     <div className="font-semibold text-sm text-white group-hover:text-[rgb(245,210,60)] transition-colors">
                       {preset.title}
                     </div>
-                    <div className="text-xs text-gray-500 mt-0.5">
+                    <div className="text-xs text-gray-200 mt-0.5">
                       {preset.description}
                     </div>
                   </div>
@@ -830,7 +835,7 @@ export default function NanoBananaGenerator() {
                   <Wand2 className="w-12 h-12 text-white drop-shadow-lg transform group-hover:scale-110 group-hover:rotate-12 transition-all" />
                 </div>
                 <div className="p-2.5 bg-[rgb(17,17,17)]">
-                  <div className="font-semibold text-sm text-purple-700 group-hover:text-purple-600 transition-colors">
+                  <div className="font-semibold text-sm text-purple-300 group-hover:text-purple-500 transition-colors">
                     Custom Prompt
                   </div>
                   <div className="text-xs text-gray-500 mt-0.5">
@@ -869,14 +874,12 @@ export default function NanoBananaGenerator() {
                   ? "Authorize first to start creating"
                   : "Describe what you want to create..."
               }
-              className="w-full px-3 py-2.5 border-2 border-yellow-400 rounded-lg focus:outline-none focus:border-yellow-500 resize-none text-gray-700 placeholder-gray-400 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-3 py-2.5 border-2 border-yellow-400 rounded-lg focus:outline-none focus:border-yellow-500 resize-none text-gray-700 placeholder-gray-400 text-sm disabled:opacity-50 disabled:cursor-not-allowed text-white"
               rows={4}
               disabled={!isConnected || userCredits === 0 || !isTokenValid}
             />
             {customPrompt && (
-              <p className="text-xs text-gray-500 mt-1">
-                💡 Upload an image to transform it
-              </p>
+              <p className="text-xs mt-1">💡 Upload an image to transform it</p>
             )}
           </div>
 
@@ -900,14 +903,14 @@ export default function NanoBananaGenerator() {
               {!isConnected || userCredits === 0 || !isTokenValid ? (
                 <div className="opacity-50">
                   <ImageIcon className="w-10 h-10 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-600 text-sm mb-1">
+                  <p className="text-sm mb-1">
                     {userCredits === 0
                       ? "Top up to upload images"
                       : !isTokenValid
                       ? "Authorize to upload images"
                       : "Tap to upload images"}
                   </p>
-                  <p className="text-gray-400 text-xs">
+                  <p className="text-gray-100 text-xs">
                     Select 0-9 images (PNG, JPG up to 5MB each)
                   </p>
                 </div>
@@ -999,14 +1002,14 @@ export default function NanoBananaGenerator() {
               <p className="text-white text-sm">
                 Cost: {CREDITS_PER_GENERATION} credits
               </p>
-              <p className="text-gray-500 text-xs">
+              <p className="text-gray-300 text-xs">
                 Balance: {userCredits} credits
               </p>
             </div>
 
             {userCredits === 0 ? (
               <button
-                onClick={() => (window.location.href = "/")}
+                onClick={() => router.push("/topup")}
                 className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all flex items-center gap-2 text-sm"
               >
                 <Sparkles className="w-5 h-5" />

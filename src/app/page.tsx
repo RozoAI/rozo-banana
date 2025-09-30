@@ -76,7 +76,7 @@ export default function LandingPage() {
                   <div className="mb-6">
                     <div className="flex justify-between text-sm mb-2">
                       <span>{userCount} joined</span>
-                      <span>580 left</span>
+                      <span>{1000 - userCount} left</span>
                     </div>
                     <div className="w-full bg-slate-700 h-4 rounded-full overflow-hidden">
                       <div
@@ -84,7 +84,9 @@ export default function LandingPage() {
                         style={{
                           width: `${Math.min(
                             100,
-                            Math.round(((userCount || 0) / 1000) * 100)
+                            Math.round(
+                              ((userCount || 0) / (1000 - userCount)) * 100
+                            )
                           )}%`,
                           transition: "width 0.5s",
                         }}
@@ -128,7 +130,7 @@ export default function LandingPage() {
                 <div className="mb-6">
                   <div className="flex justify-between text-sm mb-2">
                     <span>{userCount} joined</span>
-                    <span>580 left</span>
+                    <span>{1000 - userCount} left</span>
                   </div>
                   <div className="w-full bg-slate-700 h-4 rounded-full overflow-hidden">
                     <div
@@ -136,7 +138,9 @@ export default function LandingPage() {
                       style={{
                         width: `${Math.min(
                           100,
-                          Math.round(((userCount || 0) / 1000) * 100)
+                          Math.round(
+                            ((userCount || 0) / (1000 - userCount)) * 100
+                          )
                         )}%`,
                         transition: "width 0.5s",
                       }}

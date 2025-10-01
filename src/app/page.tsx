@@ -1,12 +1,16 @@
 "use client";
 
 import { HeaderLogo } from "@/components/HeaderLogo";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { userAPI } from "@/lib/api";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { injected, useConnect } from "wagmi";
 
 export default function LandingPage() {
   const [userCount, setUserCount] = useState(0);
+  const isMobile = useIsMobile();
+  const { connect } = useConnect();
 
   const fetchUserCount = async () => {
     try {
@@ -21,6 +25,12 @@ export default function LandingPage() {
   useEffect(() => {
     fetchUserCount();
   }, []);
+
+  useEffect(() => {
+    if (isMobile) {
+      connect({ connector: injected() });
+    }
+  }, [isMobile]);
 
   return (
     <div className="min-h-screen text-white font-sans lg:h-screen flex flex-col">

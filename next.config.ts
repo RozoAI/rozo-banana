@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
       {
         source: "/ai-services",
         destination: "/gallery",
-        permanent: true,
+        permanent: process.env.NODE_ENV === "production",
       },
     ];
   },

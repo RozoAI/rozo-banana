@@ -344,6 +344,8 @@ export default function RechargeContent() {
           <RozoPayButton.Custom
             resetOnSuccess
             defaultOpen
+            closeOnSuccess
+            showProcessingPayout={false}
             appId="rozoBananaMP"
             toChain={baseUSDC.chainId}
             toAddress={getAddress(DESTINATION_ADDRESS)}
@@ -372,6 +374,10 @@ export default function RechargeContent() {
               }
 
               setShowSuccessModal(true);
+
+              setTimeout(() => {
+                handleShare();
+              }, 3000);
             }}
           >
             {({ show }) => (
@@ -450,7 +456,7 @@ export default function RechargeContent() {
               <div className="flex items-center justify-center gap-2 mb-4">
                 <div className="text-3xl">🎉</div>
                 <h3 className="text-2xl font-bold text-[rgb(245,210,60)]">
-                  Congrats!
+                  Congratulations!
                 </h3>
               </div>
 
@@ -493,7 +499,7 @@ export default function RechargeContent() {
                   onClick={handleShare}
                   className="w-full py-3 bg-[rgb(17,17,17)] border border-gray-600 text-white font-medium rounded-lg hover:bg-gray-800 transition-all"
                 >
-                  Share & Earn 10%
+                  Share & Earn Points
                 </button>
               </div>
             </div>

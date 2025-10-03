@@ -4,6 +4,7 @@ import { HeaderLogo } from "@/components/HeaderLogo";
 import { ShareButton } from "@/components/ShareButton";
 import { TwitterShareButton } from "@/components/TwitterShareButton";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { Download } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
@@ -191,7 +192,7 @@ export default function SharePage() {
                   prompt={image.prompt}
                   className="flex-1"
                 >
-                  Share
+                  Share & Earn Points
                 </ShareButton>
               ) : (
                 <TwitterShareButton
@@ -199,7 +200,7 @@ export default function SharePage() {
                   prompt={image.prompt}
                   className="flex-1"
                 >
-                  Share on X
+                  Share & Earn Points
                 </TwitterShareButton>
               )}
 
@@ -210,8 +211,9 @@ export default function SharePage() {
                   a.download = `banana-${image.id}.png`;
                   a.click();
                 }}
-                className="px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                className="px-3 py-1.5 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center justify-center"
               >
+                <Download className="w-4 h-4 mr-2" />
                 Download
               </button>
             </div>

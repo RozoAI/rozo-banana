@@ -6,6 +6,7 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 import { creditsAPI, imageAPI } from "@/lib/api";
 import {
   ArrowLeft,
+  Download,
   ImageIcon,
   Loader2,
   Sparkles,
@@ -84,6 +85,9 @@ export default function NanoBananaGenerator() {
   const [userCredits, setUserCredits] = useState<number>(0);
   const [showPresets, setShowPresets] = useState(true);
   const [hasSelectedPreset, setHasSelectedPreset] = useState(false);
+  const [selectedPreset, setSelectedPreset] = useState<StylePreset | null>(
+    null
+  );
   const [toast, setToast] = useState<ToastState | null>(null);
 
   // Utility functions
@@ -297,6 +301,7 @@ export default function NanoBananaGenerator() {
       }
 
       setCustomPrompt(preset.prompt);
+      setSelectedPreset(preset);
       setShowPresets(false);
       setHasSelectedPreset(true);
 
@@ -425,15 +430,24 @@ export default function NanoBananaGenerator() {
     setShowPresets(true);
     setHasSelectedPreset(false);
     setCustomPrompt("");
+    setGeneratedImage(null);
+    setUploadedImages([]);
   }, []);
 
   return (
     <div className="min-h-screen bg-[rgb(17,17,17)]">
       {/* Header - matching Home page */}
-      <header className="sticky top-0 w-full bg-[rgb(17,17,17)]/90 backdrop-blur-md border-b border-gray-800 z-50">
+      <header className="sticky top-0 w-full bg-[rgb(17,17,17)]/90 backdrop-blur-md border-b border-gray-600 z-50">
         <div className="max-w-lg mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <HeaderLogo />
+
+            {isConnected && showPresets && (
+              <div className="text-sm">
+                <span>Credits: </span>
+                <span className="font-bold">{userCredits}</span>
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -449,212 +463,244 @@ export default function NanoBananaGenerator() {
                 disabled={isLoading}
               >
                 <ArrowLeft className="w-4 h-4" />
-                Back to Styles
+                Back to Presets
               </button>
             )}
 
-            <div className="bg-[rgb(17,17,17)] rounded-xl shadow-sm p-4 border border-gray-800">
+            <div className="bg-[rgb(17,17,17)] rounded-xl shadow-sm p-4 border border-gray-600 mb-4">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-base font-semibold ">Generate Image</h2>
+                <h2 className="text-base font-semibold ">
+                  {generatedImage ? "Generated Image" : "Generate Image"}
+                </h2>
               </div>
-
-              {/* Custom Prompt Input - Mobile Optimized */}
-              <div className="mb-4">
-                <textarea
-                  id="prompt-input"
-                  value={customPrompt}
-                  onChange={(e) => setCustomPrompt(e.target.value)}
-                  placeholder={
-                    userCredits === 0
-                      ? "Top up credits to start creating"
-                      : !isAuthenticated
-                      ? "Authorize first to start creating"
-                      : "Describe what you want to create..."
-                  }
-                  className="w-full px-3 py-2.5 border-2 border-yellow-400 rounded-lg focus:outline-none focus:border-yellow-500 resize-none text-gray-700 placeholder-gray-400 text-sm disabled:opacity-50 disabled:cursor-not-allowed text-white"
-                  rows={4}
-                  disabled={
-                    !isConnected || userCredits === 0 || !isAuthenticated
-                  }
-                />
-                {customPrompt && (
-                  <p className="text-xs mt-1">
-                    💡 Upload an image to transform it
-                  </p>
-                )}
-              </div>
-
-              {/* Image Upload Area - Mobile Optimized */}
-              <div className="mb-4">
-                <div
-                  onDrop={handleDrop}
-                  onDragOver={handleDragOver}
-                  className="border-2 border-dashed border-gray-800 rounded-lg p-6 text-center hover:border-yellow-400 transition-colors cursor-pointer bg-black/30"
-                >
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handleImageUpload}
-                    className="hidden"
-                    id="image-upload"
-                    disabled={
-                      !isConnected || userCredits === 0 || !isAuthenticated
-                    }
-                  />
-
-                  {!isConnected || userCredits === 0 || !isAuthenticated ? (
-                    <div className="opacity-50">
-                      <ImageIcon className="w-10 h-10 text-gray-400 mx-auto mb-2" />
-                      <p className="text-sm mb-1">
-                        {userCredits === 0
-                          ? "Top up to upload images"
-                          : !isAuthenticated
-                          ? "Authorize to upload images"
-                          : "Tap to upload images"}
-                      </p>
-                      <p className="text-gray-100 text-xs">
-                        Select 0-9 images (PNG, JPG up to 5MB each)
-                      </p>
-                    </div>
-                  ) : uploadedImages.length > 0 ? (
-                    <div>
-                      <div className="grid grid-cols-3 gap-2 mb-2">
-                        {uploadedImages.map((img, idx) => (
-                          <div key={idx} className="relative aspect-square">
-                            <Image
-                              src={img}
-                              alt={`Upload ${idx + 1}`}
-                              fill
-                              className="object-cover rounded"
-                            />
-                            <button
-                              onClick={() => {
-                                setUploadedImages((prev) =>
-                                  prev.filter((_, i) => i !== idx)
-                                );
-                              }}
-                              className="absolute top-1 right-1 w-6 h-6 flex items-center justify-center bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-md"
-                            >
-                              <svg
-                                className="w-3 h-3"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M6 18L18 6M6 6l12 12"
-                                />
-                              </svg>
-                            </button>
+              {!generatedImage && (
+                <>
+                  {/* Custom Prompt Input - Mobile Optimized */}
+                  <div className="mb-4">
+                    {/* Selected Preset Display */}
+                    {selectedPreset && (
+                      <div className="mb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">
+                            {selectedPreset.emoji}
+                          </span>
+                          <div>
+                            <p className="text-sm font-semibold text-yellow-500">
+                              {selectedPreset.title}
+                            </p>
+                            <p className="text-xs text-gray-200">
+                              {selectedPreset.description}
+                            </p>
                           </div>
-                        ))}
-                        {/* Add more images button */}
-                        {uploadedImages.length < MAX_IMAGES && (
-                          <label
-                            htmlFor="image-upload"
-                            className="relative aspect-square cursor-pointer"
-                          >
-                            <div className="w-full h-full border-2 border-dashed border-gray-300 rounded flex items-center justify-center hover:border-yellow-400 hover:bg-yellow-50 transition-colors">
-                              <svg
-                                className="w-8 h-8 text-gray-400"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                                />
-                              </svg>
-                            </div>
-                          </label>
-                        )}
+                        </div>
                       </div>
-                      <p className="text-xs text-gray-500 text-center">
-                        {uploadedImages.length}/{MAX_IMAGES} images uploaded
+                    )}
+
+                    <textarea
+                      id="prompt-input"
+                      value={customPrompt}
+                      onChange={(e) => {
+                        setCustomPrompt(e.target.value);
+                      }}
+                      placeholder={
+                        userCredits === 0
+                          ? "Top up credits to start creating"
+                          : !isAuthenticated
+                          ? "Authorize first to start creating"
+                          : "Describe what you want to create..."
+                      }
+                      className="w-full px-3 py-2.5 border-2 border-yellow-400 rounded-lg focus:outline-none focus:border-yellow-500 resize-none text-gray-700 placeholder-gray-400 text-sm disabled:opacity-50 disabled:cursor-not-allowed text-white"
+                      rows={4}
+                      disabled={
+                        !isConnected || userCredits === 0 || !isAuthenticated
+                      }
+                    />
+                    {customPrompt && (
+                      <p className="text-xs mt-1">
+                        💡 Upload an image to transform it
                       </p>
+                    )}
+                  </div>
+
+                  {/* Image Upload Area - Mobile Optimized */}
+                  <div className="mb-4">
+                    <div
+                      onDrop={handleDrop}
+                      onDragOver={handleDragOver}
+                      className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center hover:border-yellow-400 transition-colors cursor-pointer bg-black/30"
+                    >
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleImageUpload}
+                        className="hidden"
+                        id="image-upload"
+                        disabled={
+                          !isConnected || userCredits === 0 || !isAuthenticated
+                        }
+                      />
+
+                      {!isConnected || userCredits === 0 || !isAuthenticated ? (
+                        <div className="opacity-50">
+                          <ImageIcon className="w-10 h-10 text-gray-400 mx-auto mb-2" />
+                          <p className="text-sm mb-1">
+                            {userCredits === 0
+                              ? "Top up to upload images"
+                              : !isAuthenticated
+                              ? "Authorize to upload images"
+                              : "Tap to upload images"}
+                          </p>
+                          <p className="text-gray-100 text-xs">
+                            Select 0-9 images (PNG, JPG up to 5MB each)
+                          </p>
+                        </div>
+                      ) : uploadedImages.length > 0 ? (
+                        <div>
+                          <div className="grid grid-cols-3 gap-2 mb-2">
+                            {uploadedImages.map((img, idx) => (
+                              <div key={idx} className="relative aspect-square">
+                                <Image
+                                  src={img}
+                                  alt={`Upload ${idx + 1}`}
+                                  fill
+                                  className="object-cover rounded"
+                                />
+                                <button
+                                  onClick={() => {
+                                    setUploadedImages((prev) =>
+                                      prev.filter((_, i) => i !== idx)
+                                    );
+                                  }}
+                                  className="absolute top-1 right-1 w-6 h-6 flex items-center justify-center bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-md"
+                                >
+                                  <svg
+                                    className="w-3 h-3"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M6 18L18 6M6 6l12 12"
+                                    />
+                                  </svg>
+                                </button>
+                              </div>
+                            ))}
+                            {/* Add more images button */}
+                            {uploadedImages.length < MAX_IMAGES && (
+                              <label
+                                htmlFor="image-upload"
+                                className="relative aspect-square cursor-pointer"
+                              >
+                                <div className="w-full h-full border-2 border-dashed border-gray-600 rounded flex items-center justify-center hover:border-yellow-400 hover:bg-yellow-800/50 transition-colors group">
+                                  <svg
+                                    className="w-8 h-8 text-gray-600 group-hover:text-yellow-400 transition-colors"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                                    />
+                                  </svg>
+                                </div>
+                              </label>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-500 text-center">
+                            {uploadedImages.length}/{MAX_IMAGES} images uploaded
+                          </p>
+                        </div>
+                      ) : (
+                        <label
+                          htmlFor="image-upload"
+                          className="cursor-pointer"
+                        >
+                          <ImageIcon className="w-10 h-10 text-gray-400 mx-auto mb-2" />
+                          <p className="text-gray-600 text-sm mb-1">
+                            Tap to upload images
+                          </p>
+                          <p className="text-gray-400 text-xs">
+                            Select 0-{MAX_IMAGES} images (PNG, JPG up to 5MB
+                            each)
+                          </p>
+                        </label>
+                      )}
                     </div>
-                  ) : (
-                    <label htmlFor="image-upload" className="cursor-pointer">
-                      <ImageIcon className="w-10 h-10 text-gray-400 mx-auto mb-2" />
-                      <p className="text-gray-600 text-sm mb-1">
-                        Tap to upload images
-                      </p>
-                      <p className="text-gray-400 text-xs">
-                        Select 0-{MAX_IMAGES} images (PNG, JPG up to 5MB each)
-                      </p>
-                    </label>
-                  )}
-                </div>
-              </div>
+                  </div>
+                </>
+              )}
 
               {/* Cost and Generate Button - Mobile Optimized */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-white font-bold text-sm">
-                    Cost: {CREDITS_PER_GENERATION} credits
-                  </p>
-                  <p className="text-gray-300 text-xs">
-                    Balance: {userCredits} credits
-                  </p>
-                </div>
+              {!generatedImage && (
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-white font-bold text-sm">
+                      Cost: {CREDITS_PER_GENERATION} credits
+                    </p>
+                    <p className="text-gray-300 text-xs">
+                      Balance: {userCredits} credits
+                    </p>
+                  </div>
 
-                {userCredits === 0 ? (
-                  <button
-                    onClick={() => router.push("/topup")}
-                    className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all flex items-center gap-2 text-sm"
-                  >
-                    <Sparkles className="w-5 h-5" />
-                    Top Up
-                  </button>
-                ) : !isAuthenticated ? (
-                  <button
-                    onClick={handleAuthorize}
-                    disabled={isLoading}
-                    className="px-5 py-2.5 bg-gradient-to-r from-orange-400 to-orange-600 text-white font-medium rounded-lg hover:from-orange-500 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 text-sm"
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        Authorizing...
-                      </>
-                    ) : (
-                      <>
-                        <Wand2 className="w-5 h-5" />
-                        Authorize
-                      </>
-                    )}
-                  </button>
-                ) : (
-                  <button
-                    onClick={handleGenerate}
-                    disabled={
-                      isLoading ||
-                      !customPrompt.trim() ||
-                      uploadedImages.length === 0
-                    }
-                    className="px-5 py-2.5 bg-[rgb(245,210,60)] text-black font-medium rounded-lg hover:bg-[rgb(255,220,70)] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 text-sm"
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-5 h-5" />
-                        Generate
-                      </>
-                    )}
-                  </button>
-                )}
-              </div>
+                  {userCredits === 0 ? (
+                    <button
+                      onClick={() => router.push("/topup")}
+                      className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all flex items-center gap-2 text-sm"
+                    >
+                      <Sparkles className="w-5 h-5" />
+                      Top Up
+                    </button>
+                  ) : !isAuthenticated ? (
+                    <button
+                      onClick={handleAuthorize}
+                      disabled={isLoading}
+                      className="px-5 py-2.5 bg-gradient-to-r from-orange-400 to-orange-600 text-white font-medium rounded-lg hover:from-orange-500 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 text-sm"
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          Authorizing...
+                        </>
+                      ) : (
+                        <>
+                          <Wand2 className="w-5 h-5" />
+                          Authorize
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleGenerate}
+                      disabled={
+                        isLoading ||
+                        !customPrompt.trim() ||
+                        uploadedImages.length === 0
+                      }
+                      className="px-5 py-2.5 bg-[rgb(245,210,60)] text-black font-medium rounded-lg hover:bg-[rgb(255,220,70)] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 text-sm"
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-5 h-5" />
+                          Generate
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+              )}
 
               {/* Error Message */}
               {error && (
@@ -663,7 +709,7 @@ export default function NanoBananaGenerator() {
                     <span>{error}</span>
                     {userCredits === 0 && error.includes("top up") && (
                       <button
-                        onClick={() => (window.location.href = "/")}
+                        onClick={() => router.push("/topup")}
                         className="ml-3 px-3 py-1 bg-yellow-500 text-white text-xs rounded hover:bg-yellow-600 transition-colors"
                       >
                         Top Up
@@ -679,7 +725,7 @@ export default function NanoBananaGenerator() {
                   {generatedImage.imageUrl ? (
                     // Display image if available
                     <>
-                      <div className="relative w-full h-[400px] mb-4">
+                      <div className="relative w-full h-[400px] my-4">
                         <Image
                           src={generatedImage.imageUrl}
                           alt="Generated"
@@ -688,18 +734,7 @@ export default function NanoBananaGenerator() {
                         />
                       </div>
                       <div className="flex gap-2 mt-3">
-                        <button
-                          onClick={() => {
-                            const a = document.createElement("a");
-                            a.href = generatedImage.imageUrl!;
-                            a.download = `banana-${Date.now()}.png`;
-                            a.click();
-                          }}
-                          className="flex-1 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                        >
-                          Download Image
-                        </button>
-                        {isMobile ? (
+                        {!isMobile ? (
                           <ShareButton
                             imageUrl={generatedImage.imageUrl}
                             prompt={generatedImage.prompt}
@@ -709,24 +744,35 @@ export default function NanoBananaGenerator() {
                                 .pop()
                                 ?.split(".")[0]
                             }
-                            className="px-4 py-2"
+                            className="px-4 py-2 flex-1"
                           >
-                            Share
+                            Share & Earn Points
                           </ShareButton>
                         ) : (
                           <TwitterShareButton
                             imageUrl={generatedImage.imageUrl}
                             prompt={generatedImage.prompt}
-                            className="px-4 py-2"
+                            className="flex-1"
                           >
-                            Share
+                            Share & Earn Points
                           </TwitterShareButton>
                         )}
+                        <button
+                          onClick={() => {
+                            const a = document.createElement("a");
+                            a.href = generatedImage.imageUrl!;
+                            a.download = `banana-${Date.now()}.png`;
+                            a.click();
+                          }}
+                          className="px-3 py-1.5 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors cursor-pointer"
+                        >
+                          <Download className="size-5" />
+                        </button>
                       </div>
                     </>
                   ) : generatedImage.response ? (
                     // Display text response
-                    <div className="bg-[rgb(17,17,17)] p-4 rounded-lg border border-gray-800">
+                    <div className="bg-[rgb(17,17,17)] p-4 rounded-lg border border-gray-600">
                       <h3 className="font-semibold text-gray-800 mb-2">
                         AI Response:
                       </h3>
@@ -749,7 +795,7 @@ export default function NanoBananaGenerator() {
 
         {/* Style Presets Section - Gallery Style - Moved to bottom */}
         {showPresets && (
-          <div className="bg-[rgb(17,17,17)]/95 backdrop-blur-md rounded-2xl shadow-lg p-4 mt-4 border border-gray-800">
+          <div className="bg-[rgb(17,17,17)]/95 backdrop-blur-md rounded-2xl shadow-lg p-4 mt-4 border border-gray-600">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-white">
                 ✨ Choose a Style
@@ -794,7 +840,7 @@ export default function NanoBananaGenerator() {
                     {/* Text Content */}
                     <div className="p-2.5 bg-[rgb(17,17,17)]">
                       <div className="font-semibold text-sm text-white group-hover:text-[rgb(245,210,60)] transition-colors">
-                        {preset.title}
+                        {preset.emoji} {preset.title}
                       </div>
                       <div className="text-xs text-gray-200 mt-0.5">
                         {preset.description}
@@ -831,7 +877,7 @@ export default function NanoBananaGenerator() {
 
                     setCustomPrompt("");
                     setShowPresets(false);
-                    setHasSelectedPreset(false);
+                    setHasSelectedPreset(true);
                     const promptElement =
                       document.getElementById("prompt-input");
                     if (promptElement) {

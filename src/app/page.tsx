@@ -4,8 +4,28 @@ import { HeaderLogo } from "@/components/HeaderLogo";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { userAPI } from "@/lib/api";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import { injected, useConnect } from "wagmi";
+
+// Component to handle referral code from URL params
+function ReferralHandler() {
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const referralCode = searchParams.get("ref");
+    if (referralCode) {
+      // Save referral code to localStorage and cookie
+      localStorage.setItem("referralCode", referralCode);
+      document.cookie = `referralCode=${referralCode}; path=/; max-age=${
+        60 * 60 * 24 * 30
+      }`; // 30 days
+      console.log("Referral code saved:", referralCode);
+    }
+  }, [searchParams]);
+
+  return null;
+}
 
 export default function LandingPage() {
   const [userCount, setUserCount] = useState(0);
@@ -34,6 +54,9 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen text-white font-sans lg:h-screen flex flex-col">
+      <Suspense fallback={null}>
+        <ReferralHandler />
+      </Suspense>
       {/* Header */}
       <div className="px-4 py-4 lg:px-12 lg:py-6 lg:flex-shrink-0">
         <div className="max-w-7xl mx-auto">

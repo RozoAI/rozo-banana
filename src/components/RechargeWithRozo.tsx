@@ -2,14 +2,16 @@
 
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { userAPI } from "@/lib/api";
+import { useAppKit } from "@reown/appkit/react";
 import { baseUSDC } from "@rozoai/intent-common";
 import { RozoPayButton, useRozoPayUI } from "@rozoai/intent-pay";
 import { Check, HelpCircle, X, Zap } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getAddress } from "viem";
 import { useAccount } from "wagmi";
 import { BottomNavigation } from "./BottomNavigation";
 import { HeaderLogo } from "./HeaderLogo";
+import { WalletConnectButton } from "./WalletConnectButton";
 
 interface PricingTier {
   id: string;
@@ -60,6 +62,7 @@ export default function RechargeContent() {
   const [userCount, setUserCount] = useState<number | null>(null);
   const { resetPayment } = useRozoPayUI();
   const { isConnected } = useAccount();
+  const { open } = useAppKit();
   const isMobile = useIsMobile();
 
   const handlePayment = async (tier?: PricingTier) => {
@@ -111,8 +114,22 @@ export default function RechargeContent() {
     }
   };
 
+  const [needAutoHandlePayment, setNeedAutoHandlePayment] = useState(false);
+  useEffect(() => {
+    if (isConnected && selectedTier && needAutoHandlePayment) {
+      handlePayment(selectedTier);
+      setNeedAutoHandlePayment(false);
+    }
+  }, [isConnected]);
+
   const handleSelectTier = (tier: PricingTier) => {
-    setSelectedTier(tier);
+    if (!isConnected) {
+      setNeedAutoHandlePayment(true);
+      setSelectedTier(tier);
+      open();
+      return;
+    }
+
     // Reset payment state when changing tiers
     setPayParams(null);
     setShowPayWithButton(true);
@@ -217,7 +234,7 @@ export default function RechargeContent() {
         <div className="max-w-lg mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <HeaderLogo />
-            {/* <WalletConnectButton /> */}
+            <WalletConnectButton />
           </div>
         </div>
       </header>
@@ -346,6 +363,7 @@ export default function RechargeContent() {
             defaultOpen
             closeOnSuccess
             showProcessingPayout={false}
+            connectedWalletOnly
             appId="rozoBananaMP"
             toChain={baseUSDC.chainId}
             toAddress={getAddress(DESTINATION_ADDRESS)}
@@ -370,7 +388,7 @@ export default function RechargeContent() {
               } catch (error) {
                 console.error("Failed to fetch user count:", error);
                 // Set a fallback count if API fails
-                setUserCount(0);
+                setUserCount(userCount || 1);
               }
 
               setShowSuccessModal(true);
@@ -380,9 +398,7 @@ export default function RechargeContent() {
               }, 3000);
             }}
           >
-            {({ show }) => (
-              <div className="m-auto flex w-full flex-col gap-2"></div>
-            )}
+            {() => <div />}
           </RozoPayButton.Custom>
         )}
 

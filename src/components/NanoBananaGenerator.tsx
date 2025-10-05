@@ -9,15 +9,15 @@ import {
   Download,
   ImageIcon,
   Loader2,
+  Lock,
   Sparkles,
   Wand2,
   X,
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
-import { injected } from "wagmi/connectors";
 import { BottomNavigation } from "./BottomNavigation";
 import { HeaderLogo } from "./HeaderLogo";
 import { ShareButton } from "./ShareButton";
@@ -99,31 +99,16 @@ export default function NanoBananaGenerator() {
     setError(null);
   }, []);
 
-  // Wallet handlers
-  const handleConnectWallet = useCallback(async () => {
-    try {
-      await connect({ connector: injected() });
-    } catch (err) {
-      console.error("Failed to connect wallet:", err);
-      setError("Failed to connect wallet");
-    }
-  }, [connect]);
-
-  const handleDisconnect = useCallback(async () => {
-    try {
-      await disconnect();
-      setUserCredits(0);
-      setGeneratedImage(null);
-      setUploadedImages([]);
-      setCustomPrompt("");
-    } catch (err) {
-      console.error("Failed to disconnect:", err);
-    }
-  }, [disconnect]);
+  const hasFetchedCredits = useRef(false);
+  const [needToWaitForCredits, setNeedToWaitForCredits] = useState(false);
 
   // Fetch user credits
   const fetchUserCredits = useCallback(async () => {
-    if (!address) return;
+    if (!address) {
+      setUserCredits(0);
+      return;
+    }
+    setNeedToWaitForCredits(true);
 
     try {
       const data = await creditsAPI.getBalance(address);
@@ -135,15 +120,19 @@ export default function NanoBananaGenerator() {
     } catch (error) {
       console.error("Failed to fetch credits:", error);
       setUserCredits(0);
+    } finally {
+      hasFetchedCredits.current = true;
+      setNeedToWaitForCredits(false);
     }
-  }, [address]);
+  }, []);
 
   // Load credits when wallet is connected
   useEffect(() => {
-    if (isConnected && address) {
+    if (address && !hasFetchedCredits.current) {
+      hasFetchedCredits.current = true;
       fetchUserCredits();
     }
-  }, [isConnected, address, fetchUserCredits]);
+  }, [address]);
 
   // Authentication handler
   const handleAuthorize = useCallback(async () => {
@@ -153,7 +142,9 @@ export default function NanoBananaGenerator() {
     clearError();
 
     try {
-      await signIn();
+      const referralCode = localStorage.getItem("referralCode");
+
+      await signIn(referralCode || undefined);
       await fetchUserCredits();
       showToast("Successfully authenticated!", "success");
     } catch (err) {
@@ -282,7 +273,11 @@ export default function NanoBananaGenerator() {
   // Preset selection handler
   const handlePresetSelect = useCallback(
     (preset: StylePreset) => {
-      if (userCredits < CREDITS_PER_GENERATION) {
+      if (
+        userCredits < CREDITS_PER_GENERATION &&
+        isConnected &&
+        hasFetchedCredits.current
+      ) {
         if (userCredits === 0) {
           showToast(
             "Credits are needed to generate images. Please join Rozo OG. Redirecting...",
@@ -473,6 +468,7 @@ export default function NanoBananaGenerator() {
                   {generatedImage ? "Generated Image" : "Generate Image"}
                 </h2>
               </div>
+
               {!generatedImage && (
                 <>
                   {/* Custom Prompt Input - Mobile Optimized */}
@@ -496,25 +492,37 @@ export default function NanoBananaGenerator() {
                       </div>
                     )}
 
-                    <textarea
-                      id="prompt-input"
-                      value={customPrompt}
-                      onChange={(e) => {
-                        setCustomPrompt(e.target.value);
-                      }}
-                      placeholder={
-                        userCredits === 0
-                          ? "Top up credits to start creating"
-                          : !isAuthenticated
-                          ? "Authorize first to start creating"
-                          : "Describe what you want to create..."
-                      }
-                      className="w-full px-3 py-2.5 border-2 border-yellow-400 rounded-lg focus:outline-none focus:border-yellow-500 resize-none text-gray-700 placeholder-gray-400 text-sm disabled:opacity-50 disabled:cursor-not-allowed text-white"
-                      rows={4}
-                      disabled={
-                        !isConnected || userCredits === 0 || !isAuthenticated
-                      }
-                    />
+                    {/* Show textarea only for Custom Prompt (when selectedPreset is null) */}
+                    {!selectedPreset && (
+                      <textarea
+                        id="prompt-input"
+                        value={customPrompt}
+                        onChange={(e) => {
+                          setCustomPrompt(e.target.value);
+                        }}
+                        placeholder={
+                          userCredits === 0
+                            ? "Top up credits to start creating"
+                            : !isAuthenticated
+                            ? "Authorize first to start creating"
+                            : "Describe what you want to create..."
+                        }
+                        className="w-full px-3 py-2.5 border-2 border-yellow-400 rounded-lg focus:outline-none focus:border-yellow-500 resize-none text-gray-700 placeholder-gray-400 text-sm disabled:opacity-50 disabled:cursor-not-allowed text-white"
+                        rows={4}
+                        disabled={
+                          !isConnected || userCredits === 0 || !isAuthenticated
+                        }
+                      />
+                    )}
+
+                    {/* Show full preset text when preset is selected */}
+                    {selectedPreset && (
+                      <div className="w-full px-3 py-2.5 mb-4 rounded-lg bg-gray-800/50 text-white text-sm">
+                        <div className="whitespace-pre-wrap">
+                          {customPrompt}
+                        </div>
+                      </div>
+                    )}
                     {customPrompt && (
                       <p className="text-xs mt-1">
                         💡 Upload an image to transform it
@@ -671,7 +679,7 @@ export default function NanoBananaGenerator() {
                         </>
                       ) : (
                         <>
-                          <Wand2 className="w-5 h-5" />
+                          <Lock className="w-5 h-5" />
                           Authorize
                         </>
                       )}
@@ -816,7 +824,7 @@ export default function NanoBananaGenerator() {
                     key={preset.id}
                     onClick={() => handlePresetSelect(preset)}
                     className="group relative bg-[rgb(17,17,17)] border-2 border-gray-700 hover:border-[rgb(245,210,60)] active:border-[rgb(245,210,60)] rounded-xl overflow-hidden transition-all transform hover:scale-[1.02] active:scale-[0.98]"
-                    // disabled={!isConnected}
+                    disabled={needToWaitForCredits}
                   >
                     {/* Preview Image Background */}
                     <div className="relative aspect-square bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
@@ -878,6 +886,7 @@ export default function NanoBananaGenerator() {
                     setCustomPrompt("");
                     setShowPresets(false);
                     setHasSelectedPreset(true);
+                    setSelectedPreset(null);
                     const promptElement =
                       document.getElementById("prompt-input");
                     if (promptElement) {

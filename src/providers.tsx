@@ -3,7 +3,9 @@
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import * as React from "react";
+import { Suspense } from "react";
 import { Config, WagmiProvider } from "wagmi";
+import { ReferralHandler } from "./components/ReferralHandler";
 import { wagmiAdapter } from "./lib/walletConnect";
 
 // Create QueryClient outside component to prevent re-initialization
@@ -65,6 +67,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
             showRecentTransactions={false}
             modalSize="compact"
           >
+            <Suspense fallback={null}>
+              <ReferralHandler />
+            </Suspense>
             {children}
           </RainbowKitProvider>
         </QueryClientProvider>

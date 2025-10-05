@@ -61,7 +61,7 @@ export default function RechargeContent() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [userCount, setUserCount] = useState<number | null>(null);
   const { resetPayment } = useRozoPayUI();
-  const { isConnected } = useAccount();
+  const { isConnected, isDisconnected } = useAccount();
   const { open } = useAppKit();
   const isMobile = useIsMobile();
 
@@ -116,16 +116,22 @@ export default function RechargeContent() {
 
   const [needAutoHandlePayment, setNeedAutoHandlePayment] = useState(false);
   useEffect(() => {
+    if (isDisconnected) {
+      setShowPayWithButton(true);
+      setNeedAutoHandlePayment(true);
+    }
+
     if (isConnected && selectedTier && needAutoHandlePayment) {
       handlePayment(selectedTier);
       setNeedAutoHandlePayment(false);
     }
-  }, [isConnected]);
+  }, [isConnected, isDisconnected, needAutoHandlePayment]);
 
   const handleSelectTier = (tier: PricingTier) => {
+    setSelectedTier(tier);
+
     if (!isConnected) {
       setNeedAutoHandlePayment(true);
-      setSelectedTier(tier);
       open();
       return;
     }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { authAPI } from "@/lib/api";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useAppKit } from "@reown/appkit/react";
 import { Loader2, LogOut, Smartphone, Wallet } from "lucide-react";
@@ -116,6 +117,11 @@ export function WalletConnectButton({
     // }
   };
 
+  const handleDisconnect = () => {
+    disconnect();
+    authAPI.logout();
+  };
+
   if (isConnecting || isPending) {
     return (
       <button
@@ -136,7 +142,7 @@ export function WalletConnectButton({
           <span className="font-medium">{formatAddress(address)}</span>
         </div>
         <button
-          onClick={() => disconnect()}
+          onClick={handleDisconnect}
           className="p-2 text-red-400 hover:bg-red-900 rounded-lg transition-colors"
           title="Disconnect wallet"
         >

@@ -9,8 +9,9 @@ import { WalletConnectButton } from "@/components/WalletConnectButton";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { creditsAPI, imageAPI, pointsAPI } from "@/lib/api";
+import { Eye } from "lucide-react";
 import Image from "next/image";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useAccount } from "wagmi";
 
@@ -66,8 +67,10 @@ export default function Home() {
   const [userSpent, setUserSpent] = useState(0);
   const [isTierDetailsExpanded, setIsTierDetailsExpanded] = useState(false);
   const hasFetched = useRef(false);
+  const hasFetchedGallery = useRef(false);
 
   const isMobile = useIsMobile();
+  const router = useRouter();
 
   // Fetch user data when wallet is connected (address is available)
   useEffect(() => {
@@ -78,6 +81,16 @@ export default function Home() {
       );
       fetchUserData();
       hasFetched.current = true;
+    } else if (!address) {
+      // Reset fetch flags when wallet disconnects
+      hasFetched.current = false;
+      hasFetchedGallery.current = false;
+      // Clear state when disconnecting
+      setPoints(null);
+      setCredits(null);
+      setGalleryImages([]);
+      setAffiliateName("");
+      setUserSpent(0);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [address]);
@@ -210,7 +223,7 @@ export default function Home() {
   // Fetch user's personal gallery images
   useEffect(() => {
     const fetchGalleryImages = async () => {
-      if (!isConnected || !address) return; // Only fetch if user is connected
+      if (!isConnected || !address || hasFetchedGallery.current) return; // Only fetch if user is connected and not already fetched
 
       setGalleryLoading(true);
       try {
@@ -238,6 +251,7 @@ export default function Home() {
         } else {
           setGalleryImages([]);
         }
+        hasFetchedGallery.current = true;
       } catch (error) {
         console.error("Failed to fetch gallery images:", error);
         setGalleryImages([]);
@@ -245,6 +259,11 @@ export default function Home() {
         setGalleryLoading(false);
       }
     };
+
+    // Reset gallery fetch flag when address changes
+    if (address) {
+      hasFetchedGallery.current = false;
+    }
 
     fetchGalleryImages();
   }, [isConnected, address]);
@@ -384,11 +403,11 @@ export default function Home() {
                         ))}
                       </div>
                     ) : galleryImages.length > 0 ? (
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-2 gap-3">
                         {galleryImages.map((img, idx) => (
                           <div
-                            key={idx}
-                            className="relative w-full aspect-square overflow-hidden rounded-lg bg-gray-800 group"
+                            key={img.id || idx}
+                            className="relative aspect-square rounded-lg overflow-hidden bg-gray-800"
                           >
                             <Image
                               src={
@@ -397,35 +416,59 @@ export default function Home() {
                                 img.url ||
                                 "/placeholder.png"
                               }
-                              alt={img.prompt || `Gallery ${idx + 1}`}
+                              alt={img.prompt || `Generated image ${idx + 1}`}
                               fill
                               className="object-cover"
                               unoptimized
                             />
-                            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                              {isMobile ? (
-                                <ShareButton
-                                  imageUrl={
-                                    img.thumbnail || img.image_url || img.url
+
+                            {/* Always visible overlay for mobile-friendly experience */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent">
+                              {/* Top action buttons */}
+                              <div className="absolute top-2 right-2 flex gap-2">
+                                <button
+                                  onClick={() =>
+                                    router.push(`/share/${img.file_name}`)
                                   }
-                                  prompt={img.prompt}
-                                  shareId={img.id}
-                                  className="text-xs px-2 py-1"
+                                  className="bg-white/90 hover:bg-white text-gray-700 rounded-full p-1.5 shadow-sm transition-colors"
+                                  title="View details"
                                 >
-                                  Share
-                                </ShareButton>
-                              ) : (
-                                <TwitterShareButton
-                                  imageUrl={
-                                    img.thumbnail || img.image_url || img.url
-                                  }
-                                  prompt={img.prompt}
-                                  shareId={img.id}
-                                  className="text-xs px-2 py-1"
-                                >
-                                  Share
-                                </TwitterShareButton>
-                              )}
+                                  <Eye className="size-4" />
+                                </button>
+                              </div>
+
+                              {/* Bottom content */}
+                              <div className="absolute bottom-0 left-0 right-0 p-2">
+                                <div className="flex gap-2">
+                                  {isMobile ? (
+                                    <ShareButton
+                                      imageUrl={
+                                        img.thumbnail ||
+                                        img.image_url ||
+                                        img.url
+                                      }
+                                      prompt={img.prompt}
+                                      shareId={img.id}
+                                      className="text-xs px-3 py-1.5 bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 flex-1"
+                                    >
+                                      Share
+                                    </ShareButton>
+                                  ) : (
+                                    <TwitterShareButton
+                                      imageUrl={
+                                        img.thumbnail ||
+                                        img.image_url ||
+                                        img.url
+                                      }
+                                      prompt={img.prompt}
+                                      shareId={img.id}
+                                      className="text-xs px-3 py-1.5 bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 flex-1"
+                                    >
+                                      Share
+                                    </TwitterShareButton>
+                                  )}
+                                </div>
+                              </div>
                             </div>
                           </div>
                         ))}

@@ -7,6 +7,10 @@ interface ToastProps {
   type?: "success" | "error" | "info" | "warning";
   duration?: number;
   onClose?: () => void;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
 }
 
 export function Toast({
@@ -14,6 +18,7 @@ export function Toast({
   type = "success",
   duration = 5000,
   onClose,
+  action,
 }: ToastProps) {
   const [isVisible, setIsVisible] = useState(true);
   const [isExiting, setIsExiting] = useState(false);
@@ -57,16 +62,31 @@ export function Toast({
       } w-full max-w-md sm:max-w-md px-4 sm:px-0`}
     >
       <div
-        className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 rounded-lg border shadow-lg ${colors[type]} backdrop-blur-sm w-full`}
+        className={`rounded-lg border shadow-lg ${colors[type]} backdrop-blur-sm w-full`}
       >
-        <span className="text-lg sm:text-2xl">{icons[type]}</span>
-        <p className="font-medium text-sm sm:text-base flex-1">{message}</p>
-        <button
-          onClick={handleClose}
-          className="ml-auto text-lg sm:text-xl hover:opacity-70 transition-opacity duration-200"
-        >
-          ×
-        </button>
+        <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3">
+          <span className="text-lg sm:text-2xl">{icons[type]}</span>
+          <p className="font-medium text-sm sm:text-base flex-1">{message}</p>
+          <button
+            onClick={handleClose}
+            className="ml-auto text-lg sm:text-xl hover:opacity-70 transition-opacity duration-200"
+          >
+            ×
+          </button>
+        </div>
+        {action && (
+          <div className="px-3 sm:px-4 pb-2 sm:pb-3">
+            <button
+              onClick={() => {
+                action.onClick();
+                handleClose();
+              }}
+              className="w-full bg-yellow-500/20 hover:bg-yellow-500/30 text-sm font-medium py-2 px-3 rounded-md transition-colors duration-200 border border-yellow-500/30"
+            >
+              {action.label}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

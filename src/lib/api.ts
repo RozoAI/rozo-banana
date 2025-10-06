@@ -172,8 +172,8 @@ const handleAuthError = (error: any) => {
       "❌ [handleAuthError] User token invalid/expired, logging out..."
     );
     if (typeof window !== "undefined") {
-      localStorage.removeItem("rozo_token");
-      localStorage.removeItem("auth_token");
+      // localStorage.removeItem("rozo_token");
+      // localStorage.removeItem("auth_token");
       localStorage.removeItem("rozo_user");
       localStorage.removeItem("userAddress");
       localStorage.removeItem("rozo_signed_addresses");

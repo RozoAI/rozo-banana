@@ -55,11 +55,20 @@ export function useAuth() {
       if (address) {
         delete globalAuthState[address];
       }
-      authAPI.logout();
+    } else if (isConnected && address) {
+      const haveToken =
+        localStorage.getItem("rozo_token") ||
+        localStorage.getItem("auth_token");
+      if (haveToken) {
+        setIsAuthenticated(true);
+      }
     }
   }, [isConnected, address]);
 
-  const signIn = async (referralCode?: string, requireSignature: boolean = false) => {
+  const signIn = async (
+    referralCode?: string,
+    requireSignature: boolean = false
+  ) => {
     if (!address || isAuthenticated || isLoading || globalSignInInProgress) {
       return;
     }
@@ -85,7 +94,9 @@ export function useAuth() {
 
       // Check if we already have a valid token and don't require a new signature
       if (!requireSignature) {
-        const existingToken = localStorage.getItem("rozo_token") || localStorage.getItem("auth_token");
+        const existingToken =
+          localStorage.getItem("rozo_token") ||
+          localStorage.getItem("auth_token");
         const existingUser = localStorage.getItem("rozo_user");
 
         if (existingToken && existingUser) {
@@ -104,13 +115,16 @@ export function useAuth() {
         try {
           const signedAddresses = JSON.parse(itemSigned);
           // Check if the signed address matches current address (case insensitive)
-          if (signedAddresses.address?.toLowerCase() === address?.toLowerCase()) {
+          if (
+            signedAddresses.address?.toLowerCase() === address?.toLowerCase()
+          ) {
             signature = signedAddresses.signature;
             token =
               localStorage.getItem("rozo_token") ||
               localStorage.getItem("auth_token") ||
               "";
-            is_new_user = localStorage.getItem("is_new_user") === "true" || false;
+            is_new_user =
+              localStorage.getItem("is_new_user") === "true" || false;
             user = localStorage.getItem("rozo_user");
           }
         } catch (e) {
@@ -179,21 +193,21 @@ export function useAuth() {
         setIsLoading(false);
         return true;
 
-        // Store user data
-        if (user) {
-          localStorage.setItem("rozo_user", JSON.stringify(user));
-          console.log("💾 [useAuth] User data stored in localStorage");
-        }
+        // // Store user data
+        // if (user) {
+        //   localStorage.setItem("rozo_user", JSON.stringify(user));
+        //   console.log("💾 [useAuth] User data stored in localStorage");
+        // }
 
-        // Store first login flag
-        if (is_new_user) {
-          localStorage.setItem("welcome_new_user", "true");
-          // if (referral_applied) {
-          //   localStorage.setItem('referral_bonus_applied', 'true');
-          // }
-        } else {
-          localStorage.setItem("welcome_back_user", "true");
-        }
+        // // Store first login flag
+        // if (is_new_user) {
+        //   localStorage.setItem("welcome_new_user", "true");
+        //   // if (referral_applied) {
+        //   //   localStorage.setItem('referral_bonus_applied', 'true');
+        //   // }
+        // } else {
+        //   localStorage.setItem("welcome_back_user", "true");
+        // }
       }
     } catch (error) {
       console.error("Sign in failed:", error);

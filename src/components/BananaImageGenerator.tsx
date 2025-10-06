@@ -176,6 +176,7 @@ export default function BananaImageGenerator() {
         setIsFirstGeneration(false);
       }
     } catch (err: any) {
+      console.error("Failed to generate image:", err);
       // Check if authentication is required
       if (err.message === "AUTH_REQUIRED" || err.response?.status === 401) {
         // User needs to connect wallet and authenticate

@@ -12,7 +12,6 @@ import {
   Lock,
   Sparkles,
   Wand2,
-  X,
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -59,6 +58,10 @@ interface ImageGenerationResponse {
 interface ToastState {
   message: string;
   type: "success" | "error" | "info" | "warning";
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
 }
 
 const CREDITS_PER_GENERATION = 5;
@@ -91,9 +94,16 @@ export default function NanoBananaGenerator() {
   const [toast, setToast] = useState<ToastState | null>(null);
 
   // Utility functions
-  const showToast = useCallback((message: string, type: ToastState["type"]) => {
-    setToast({ message, type });
-  }, []);
+  const showToast = useCallback(
+    (
+      message: string,
+      type: ToastState["type"],
+      action?: ToastState["action"]
+    ) => {
+      setToast({ message, type, action });
+    },
+    []
+  );
 
   const clearError = useCallback(() => {
     setError(null);
@@ -124,7 +134,7 @@ export default function NanoBananaGenerator() {
       hasFetchedCredits.current = true;
       setNeedToWaitForCredits(false);
     }
-  }, []);
+  }, [address]);
 
   // Load credits when wallet is connected
   useEffect(() => {
@@ -280,16 +290,21 @@ export default function NanoBananaGenerator() {
       ) {
         if (userCredits === 0) {
           showToast(
-            "Credits are needed to generate images. Please join Rozo OG. Redirecting...",
-            "warning"
+            "Credits are needed to generate images. Please join Rozo OG.",
+            "warning",
+            {
+              label: "Click to Topup",
+              onClick: () => router.push("/topup"),
+            }
           );
-          setTimeout(() => {
-            router.push("/topup");
-          }, 3000);
         } else {
           showToast(
             `Insufficient credits. You need ${CREDITS_PER_GENERATION} credits to use presets.`,
-            "warning"
+            "warning",
+            {
+              label: "Click to Topup",
+              onClick: () => router.push("/topup"),
+            }
           );
         }
         return;
@@ -467,6 +482,26 @@ export default function NanoBananaGenerator() {
                 <h2 className="text-base font-semibold ">
                   {generatedImage ? "Generated Image" : "Generate Image"}
                 </h2>
+
+                {!isAuthenticated && (
+                  <button
+                    onClick={handleAuthorize}
+                    disabled={isLoading}
+                    className="px-3 py-1.5 bg-gradient-to-r from-orange-400 to-orange-600 text-white font-medium rounded-md hover:from-orange-500 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-1 text-xs"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Authorizing...
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="w-4 h-4" />
+                        Authorize
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
 
               {!generatedImage && (
@@ -545,7 +580,10 @@ export default function NanoBananaGenerator() {
                         className="hidden"
                         id="image-upload"
                         disabled={
-                          !isConnected || userCredits === 0 || !isAuthenticated
+                          !isConnected ||
+                          userCredits === 0 ||
+                          !isAuthenticated ||
+                          isLoading
                         }
                       />
 
@@ -666,25 +704,7 @@ export default function NanoBananaGenerator() {
                       <Sparkles className="w-5 h-5" />
                       Top Up
                     </button>
-                  ) : !isAuthenticated ? (
-                    <button
-                      onClick={handleAuthorize}
-                      disabled={isLoading}
-                      className="px-5 py-2.5 bg-gradient-to-r from-orange-400 to-orange-600 text-white font-medium rounded-lg hover:from-orange-500 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 text-sm"
-                    >
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                          Authorizing...
-                        </>
-                      ) : (
-                        <>
-                          <Lock className="w-5 h-5" />
-                          Authorize
-                        </>
-                      )}
-                    </button>
-                  ) : (
+                  ) : isAuthenticated ? (
                     <button
                       onClick={handleGenerate}
                       disabled={
@@ -706,7 +726,7 @@ export default function NanoBananaGenerator() {
                         </>
                       )}
                     </button>
-                  )}
+                  ) : null}
                 </div>
               )}
 
@@ -808,12 +828,12 @@ export default function NanoBananaGenerator() {
               <h2 className="text-lg font-bold text-white">
                 ✨ Choose a Style
               </h2>
-              <button
+              {/* <button
                 onClick={() => setShowPresets(!showPresets)}
                 className="w-8 h-8 flex items-center justify-center text-gray-200 rounded-full transition-all hover:rotate-90"
               >
                 <X className="w-4 h-4" />
-              </button>
+              </button> */}
             </div>
 
             {/* Scrollable Gallery Grid - 2 columns with preview images */}
@@ -872,12 +892,20 @@ export default function NanoBananaGenerator() {
                       if (userCredits === 0) {
                         showToast(
                           "You need credits to generate images. Please top up first!",
-                          "warning"
+                          "warning",
+                          {
+                            label: "Click to Topup",
+                            onClick: () => router.push("/topup"),
+                          }
                         );
                       } else {
                         showToast(
                           `Insufficient credits. You need ${CREDITS_PER_GENERATION} credits to use custom prompts.`,
-                          "warning"
+                          "warning",
+                          {
+                            label: "Click to Topup",
+                            onClick: () => router.push("/topup"),
+                          }
                         );
                       }
                       return;
@@ -922,6 +950,7 @@ export default function NanoBananaGenerator() {
           message={toast.message}
           type={toast.type}
           onClose={() => setToast(null)}
+          action={toast.action}
         />
       )}
     </div>

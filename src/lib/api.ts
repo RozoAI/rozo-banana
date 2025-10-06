@@ -457,6 +457,7 @@ export const rozoAPI = {
         points: data.balance || 0,
         lifetime_points: data.lifetime_points || data.total_earned || 0,
         level: data.level || 1,
+        status_rank: data.status_rank || 0,
       };
     } else if (data.success && data.data) {
       // Wrapped format
@@ -465,6 +466,7 @@ export const rozoAPI = {
         points: data.data.current_points || data.data.balance || 0,
         lifetime_points: data.data.lifetime_points || 0,
         level: data.data.level || 1,
+        status_rank: data.data.status_rank || 0,
       };
     }
 
@@ -474,6 +476,7 @@ export const rozoAPI = {
       points: 0,
       lifetime_points: 0,
       level: 1,
+      status_rank: 0,
     };
   },
 

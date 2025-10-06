@@ -16,7 +16,7 @@ import {
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { useAccount, useConnect, useDisconnect } from "wagmi";
+import { useAccount } from "wagmi";
 import { BottomNavigation } from "./BottomNavigation";
 import { HeaderLogo } from "./HeaderLogo";
 import { ShareButton } from "./ShareButton";
@@ -71,8 +71,6 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 export default function NanoBananaGenerator() {
   // Hooks
   const { address, isConnected } = useAccount();
-  const { connect } = useConnect();
-  const { disconnect } = useDisconnect();
   const { isAuthenticated, isLoading: authLoading, signIn } = useAuth();
   const isMobile = useIsMobile();
   const router = useRouter();

@@ -58,6 +58,7 @@ export default function Home() {
   // MobileDashboard state variables
   const [activeTab, setActiveTab] = useState("home");
   const [points, setPoints] = useState<number | null>(null);
+  const [rank, setRank] = useState<number | null>(null);
   const [credits, setCredits] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -107,6 +108,7 @@ export default function Home() {
         const balance = await pointsAPI.getBalance(address);
         console.log("✅ [Profile] Points balance response:", balance);
         setPoints(balance.balance ?? balance.points ?? 0);
+        setRank(balance.status_rank ?? 0);
       } catch (pointsError: any) {
         if (pointsError.response?.status === 401) {
           console.log(
@@ -354,15 +356,25 @@ export default function Home() {
           </div>
         ) : (
           <div className="pb-20 min-h-[calc(100vh-5rem)]">
-            {/* Points Display */}
+            {/* Points & Rank Display */}
             <div className="py-6 bg-[rgb(17,17,17)] rounded-2xl shadow-sm border border-gray-800">
-              <div className="text-center">
-                <p className="text-sm text-gray-400 mb-1">Points</p>
-                {points === null ? (
-                  <div className="h-9 w-20 bg-gray-200 rounded animate-pulse mx-auto"></div>
-                ) : (
-                  <p className="text-3xl font-bold text-white">{points}</p>
-                )}
+              <div className="flex justify-between items-center px-4">
+                <div className="text-center flex-1">
+                  <p className="text-sm text-gray-400 mb-1">Points</p>
+                  {points === null ? (
+                    <div className="h-9 w-20 bg-gray-200 rounded animate-pulse"></div>
+                  ) : (
+                    <p className="text-3xl font-bold text-white">{points}</p>
+                  )}
+                </div>
+                <div className="text-center flex-1">
+                  <p className="text-sm text-gray-400 mb-1">OG Rank</p>
+                  {rank === null ? (
+                    <div className="h-9 w-12 bg-gray-200 rounded animate-pulse ml-auto"></div>
+                  ) : (
+                    <p className="text-3xl font-bold text-white">#{rank}</p>
+                  )}
+                </div>
               </div>
             </div>
 

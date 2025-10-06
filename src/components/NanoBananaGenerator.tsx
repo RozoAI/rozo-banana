@@ -485,7 +485,7 @@ export default function NanoBananaGenerator() {
                   {generatedImage ? "Generated Image" : "Generate Image"}
                 </h2>
 
-                {!isAuthenticated && (
+                {!isAuthenticated && address && (
                   <button
                     onClick={handleAuthorize}
                     disabled={isLoading}

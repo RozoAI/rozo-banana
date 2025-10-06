@@ -7,6 +7,7 @@ interface ToastProps {
   type?: "success" | "error" | "info" | "warning";
   duration?: number;
   onClose?: () => void;
+  withIcon?: boolean;
   action?: {
     label: string;
     onClick: () => void;
@@ -18,6 +19,7 @@ export function Toast({
   type = "success",
   duration = 5000,
   onClose,
+  withIcon = true,
   action,
 }: ToastProps) {
   const [isVisible, setIsVisible] = useState(true);
@@ -65,7 +67,9 @@ export function Toast({
         className={`rounded-lg border shadow-lg ${colors[type]} backdrop-blur-sm w-full`}
       >
         <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3">
-          <span className="text-lg sm:text-2xl">{icons[type]}</span>
+          {withIcon && (
+            <span className="text-lg sm:text-2xl">{icons[type]}</span>
+          )}
           <p className="font-medium text-sm sm:text-base flex-1">{message}</p>
           <button
             onClick={handleClose}

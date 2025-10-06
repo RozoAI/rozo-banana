@@ -62,6 +62,7 @@ interface ToastState {
     label: string;
     onClick: () => void;
   };
+  withIcon?: boolean;
 }
 
 const CREDITS_PER_GENERATION = 5;
@@ -96,9 +97,10 @@ export default function NanoBananaGenerator() {
     (
       message: string,
       type: ToastState["type"],
-      action?: ToastState["action"]
+      action?: ToastState["action"],
+      withIcon?: boolean
     ) => {
-      setToast({ message, type, action });
+      setToast({ message, type, action, withIcon });
     },
     []
   );
@@ -291,9 +293,10 @@ export default function NanoBananaGenerator() {
             "Credits are needed to generate images. Please join Rozo OG.",
             "warning",
             {
-              label: "Click to Topup",
+              label: "Join ROZO OG",
               onClick: () => router.push("/topup"),
-            }
+            },
+            false
           );
         } else {
           showToast(
@@ -302,7 +305,8 @@ export default function NanoBananaGenerator() {
             {
               label: "Click to Topup",
               onClick: () => router.push("/topup"),
-            }
+            },
+            false
           );
         }
         return;
@@ -881,7 +885,9 @@ export default function NanoBananaGenerator() {
                     if (!isConnected) {
                       showToast(
                         "Please connect your wallet to use custom prompts",
-                        "warning"
+                        "warning",
+                        undefined,
+                        false
                       );
                       return;
                     }
@@ -892,9 +898,10 @@ export default function NanoBananaGenerator() {
                           "You need credits to generate images. Please top up first!",
                           "warning",
                           {
-                            label: "Click to Topup",
+                            label: "Join ROZO OG",
                             onClick: () => router.push("/topup"),
-                          }
+                          },
+                          false
                         );
                       } else {
                         showToast(
@@ -903,7 +910,8 @@ export default function NanoBananaGenerator() {
                           {
                             label: "Click to Topup",
                             onClick: () => router.push("/topup"),
-                          }
+                          },
+                          false
                         );
                       }
                       return;

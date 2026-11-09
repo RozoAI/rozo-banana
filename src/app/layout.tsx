@@ -38,9 +38,12 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 
   return {
+    // The home page and /topup are public and should be indexed (founder
+    // 2026-11-10, Search Console audit). Per-user routes (/history, /profile)
+    // and user-generated /share pages opt back out in their own layouts.
     robots: {
-      index: false,
-      follow: false,
+      index: true,
+      follow: true,
     },
     other: {
       "fc:miniapp": JSON.stringify(embedConfig),

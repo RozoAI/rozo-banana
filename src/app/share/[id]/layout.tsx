@@ -5,6 +5,10 @@ interface Props {
   children: React.ReactNode;
 }
 
+// User-generated share pages are thin, near-duplicate pages: keep them out of
+// the index but let link equity flow (the root layout is index,follow).
+const SHARE_ROBOTS = { index: false, follow: true };
+
 const getFilenameFromUrl = (url: string): string => {
   try {
     const urlObj = new URL(url);
@@ -37,6 +41,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }
 
     return {
+      robots: SHARE_ROBOTS,
       title: "AI-Generated Image | ROZO Banana",
       description:
         "Check out this amazing AI-generated image created with ROZO Banana! Transform your ideas into stunning visuals.",
@@ -77,6 +82,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   } catch (error) {
     return {
+      robots: SHARE_ROBOTS,
       title: "AI-Generated Image | ROZO Banana",
       description:
         "Check out this amazing AI-generated image created with ROZO Banana!",
